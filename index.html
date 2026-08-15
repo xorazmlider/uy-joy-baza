@@ -1,1 +1,1104 @@
-test
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Xorazm Uy-Joy Baza</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f5f7;
+      color: #222;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 15px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    .form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    input {
+      padding: 13px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 13px;
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      background: #1677ff;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .status {
+      margin-top: 15px;
+      padding: 12px;
+      background: #eef4ff;
+      border-radius: 8px;
+    }
+
+    .home {
+      background: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="card">
+
+    <h1>🏠 Xorazm Uy-Joy Baza</h1>
+
+    <h2>Yangi uy qo‘shish</h2>
+
+    <div class="form">
+
+      <input id="title" placeholder="Uy nomi">
+
+      <input id="city" placeholder="Shahar">
+
+      <input id="area" placeholder="Hudud">
+
+      <input id="rooms" type="number" placeholder="Xonalar">
+
+      <input id="m2" type="number" placeholder="m²">
+
+      <input id="price" type="number" placeholder="Narx">
+
+      <input id="type" placeholder="Turi">
+
+      <input id="finish" placeholder="Ta’miri">
+
+    </div>
+
+    <button onclick="addHome()">
+      UYNI SAQLASH
+    </button>
+
+    <div id="status" class="status">
+      Tayyor
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h2>🏠 Uylar ro‘yxati</h2>
+
+    <button onclick="loadHomes()">
+      🔄 Yangilash
+    </button>
+
+    <div id="homes"></div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+alert("JavaScript ishlayapti!");
+
+
+const SUPABASE_URL =
+"https://rmelwwzaagyzedcrdpvkva.supabase.co";
+
+
+const SUPABASE_KEY =
+"sb_publishable_itMmxW5YPm87O6tADGIEYw_xrs2xNe-";
+
+
+const db =
+window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+
+function setStatus(message) {
+
+  document.getElementById("status").innerText =
+    message;
+
+}
+
+
+async function addHome() {
+
+  setStatus("Saqlanmoqda...");
+
+
+  const title =
+    document.getElementById("title").value;
+
+  const city =
+    document.getElementById("city").value;
+
+  const area =
+    document.getElementById("area").value;
+
+  const rooms =
+    document.getElementById("rooms").value;
+
+  const m2 =
+    document.getElementById("m2").value;
+
+  const price =
+    document.getElementById("price").value;
+
+  const type =
+    document.getElementById("type").value;
+
+  const finish =
+    document.getElementById("finish").value;
+
+
+  const { data, error } =
+    await db
+      .from("homes")
+      .insert([
+
+        {
+          title: title,
+          city: city,
+          area: area,
+          rooms: rooms ? Number(rooms) : null,
+          m2: m2 ? Number(m2) : null,
+          price: price ? Number(price) : null,
+          type: type,
+          finish: finish
+        }
+
+      ])
+      .select();
+
+
+  if (error) {
+
+    console.log(error);
+
+    setStatus(
+      "❌ XATO: " +
+      error.message
+    );
+
+    return;
+
+  }
+
+
+  setStatus(
+    "✅ Uy muvaffaqiyatli saqlandi!"
+  );
+
+
+  document.getElementById("title").value = "";
+  document.getElementById("city").value = "";
+  document.getElementById("area").value = "";
+  document.getElementById("rooms").value = "";
+  document.getElementById("m2").value = "";
+  document.getElementById("price").value = "";
+  document.getElementById("type").value = "";
+  document.
+[16.08.2026 2:38] Alisher Xudayberganov: getElementById("finish").value = "";
+
+
+  loadHomes();
+
+}
+
+
+async function loadHomes() {
+
+  const box =
+    document.getElementById("homes");
+
+
+  box.innerHTML =
+    "Yuklanmoqda...";
+
+
+  const { data, error } =
+    await db
+      .from("homes")
+      .select("*")
+      .order("id", {
+        ascending: false
+      });
+
+
+  if (error) {
+
+    box.innerHTML =
+      "❌ XATO: " +
+      error.message;
+
+    console.log(error);
+
+    return;
+
+  }
+
+
+  if (!data || data.length === 0) {
+
+    box.innerHTML =
+      "Hozircha uylar yo‘q.";
+
+    return;
+
+  }
+
+
+  box.innerHTML =
+
+    data.map(function(home) {
+
+      return `
+
+        <div class="home">
+
+          <h3>
+            🏠 ${home.title || ""}
+          </h3>
+
+          <p>
+            📍 Shahar:
+            ${home.city || ""}
+          </p>
+
+          <p>
+            📌 Hudud:
+            ${home.area || ""}
+          </p>
+
+          <p>
+            🛏 Xonalar:
+            ${home.rooms || ""}
+          </p>
+
+          <p>
+            📐 Maydon:
+            ${home.m2 || ""} m²
+          </p>
+
+          <p>
+            💰 Narx:
+            ${home.price || ""}
+          </p>
+
+          <p>
+            🏷 Turi:
+            ${home.type || ""}
+          </p>
+
+          <p>
+            🔨 Ta’miri:
+            ${home.finish || ""}
+          </p>
+
+        </div>
+
+      `;
+
+    }).join("");
+
+}
+
+
+loadHomes();
+
+</script>
+
+</body>
+</html>
+[16.08.2026 3:05] Alisher Xudayberganov: <!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Xorazm Uy-Joy Baza</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .box {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 6px 0;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 13px;
+      margin-top: 10px;
+      background: #1677ff;
+      color: white;
+      border: 0;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .home {
+      border: 1px solid #ddd;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+
+<h1>🏠 Xorazm Uy-Joy Baza</h1>
+
+<h2>Yangi uy</h2>
+
+<input id="title" placeholder="Uy nomi">
+<input id="city" placeholder="Shahar">
+<input id="area" placeholder="Hudud">
+<input id="rooms" type="number" placeholder="Xonalar">
+<input id="m2" type="number" placeholder="m²">
+<input id="price" type="number" placeholder="Narx">
+<input id="type" placeholder="Turi">
+<input id="finish" placeholder="Ta'miri">
+
+<button onclick="addHome()">UYNI SAQLASH</button>
+
+<p id="status">Tayyor</p>
+
+<hr>
+
+<h2>🏠 Uylar</h2>
+
+<div id="homes">Yuklanmoqda...</div>
+
+</div>
+
+<script>
+
+const SUPABASE_URL =
+"https://rmelwwzaagyzdcrdpkva.supabase.co";
+
+const SUPABASE_KEY =
+"BU_YERGA_SHU_PROJECTNING_YANGI_PUBLISHABLE_KEYINI_QOYING";
+
+
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+
+async function addHome() {
+
+  document.getElementById("status").innerText =
+    "Saqlanmoqda...";
+
+  const home = {
+
+    title: document.getElementById("title").value,
+    city: document.getElementById("city").value,
+    area: document.getElementById("area").value,
+
+    rooms:
+      Number(document.getElementById("rooms").value) || null,
+
+    m2:
+      Number(document.getElementById("m2").value) || null,
+
+    price:
+      Number(document.getElementById("price").value) || null,
+
+    type: document.getElementById("type").value,
+    finish: document.getElementById("finish").value
+  };
+
+
+  const { error } =
+    await db
+      .from("homes")
+      .insert(home);
+
+
+  if (error) {
+
+    console.error(error);
+
+    document.getElementById("status").innerText =
+      "❌ XATO: " + error.message;
+
+    return;
+  }
+
+
+  document.getElementById("status").innerText =
+    "✅ Uy saqlandi!";
+
+  loadHomes();
+}
+
+
+async function loadHomes() {
+
+  const { data, error } =
+    await db
+      .from("homes")
+      .select("*")
+      .order("id", { ascending: false });
+
+
+  if (error) {
+
+    document.getElementById("homes").innerText =
+      "❌ XATO: " + error.message;
+
+    return;
+  }
+
+
+  if (!data.length) {
+
+    document.getElementById("homes").innerText =
+      "Hozircha uylar yo‘q.";
+
+    return;
+  }
+
+
+  document.getElementById("homes").innerHTML =
+    data.map(home => `
+
+      <div class="home">
+
+        <b>${home.title || ""}</b><br>
+
+        📍 ${home.city || ""}<br>
+
+        📌 ${home.area || ""}<br>
+
+        🛏 ${home.rooms || ""} xona<br>
+
+        📐 ${home.m2 || ""} m²<br>
+
+        💰 ${home.price || ""}<br>
+
+        🏠 ${home.type || ""}<br>
+
+        🔨 ${home.finish || ""}
+
+      </div>
+
+    `).join("");
+}
+
+
+loadHomes();
+
+</script>
+
+</body>
+</html>
+[16.08.2026 3:24] Alisher Xudayberganov: <!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Xorazm Uylar Bazasi</title>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      color: #222;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 18px;
+      border: none;
+      border-radius: 10px;
+      background: #1677ff;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #095dcc;
+    }
+
+    .delete-btn {
+      background: #e53935;
+      margin-top: 10px;
+    }
+
+    .delete-btn:hover {
+      background: #c62828;
+    }
+
+    .status {
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      display: none;
+    }
+
+    .success {
+      background: #d8f5df;
+      color: #14752c;
+    }
+
+    .error {
+      background: #ffe0e0;
+      color: #b00020;
+    }
+
+    .house {
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      background: #fafafa;
+    }
+
+    .house strong {
+      color: #1677ff;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .count {
+      background: #1677ff;
+      color: white;
+      padding: 7px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+
+      .card {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>🏠 Xorazm Uylar Bazasi</h1>
+
+  <!-- Xabar -->
+  <div id="status" class="status"></div>
+
+  <!-- Yangi uy qo‘shish -->
+  <div class="card">
+
+    <h2>➕ Yangi uy qo‘shish</h2>
+
+    <label>Uy turi</label>
+    <select id="type">
+      <option value="">Tanlang</option>
+      <option value="Hovli">Hovli</option>
+      <option value="Kvartira">Kvartira</option>
+      <option value="Dacha">Dacha</option>
+      <option value="Tijorat">Tijorat</option>
+      <option value="Boshqa">Boshqa</option>
+    </select>
+
+    <label>Xonalar soni</label>
+    <input
+      type="number"
+      id="rooms"
+      placeholder="Masalan: 5"
+    >
+
+    <label>Ta'mir holati</label>
+    <select id="finish">
+      <option value="">Tanlang</option>
+      <option value="Remontli">Remontli</option>
+      <option value="Remontsız">Remontsız</option>
+      <option value="Yangi remont">Yangi remont</option>
+      <option value="Qurilish holatida">Qurilish holatida</option>
+    </select>
+
+    <label>Izoh</label>
+    <textarea
+      id="note"
+      placeholder="Uy haqida qo‘shimcha ma'lumot..."
+    ></textarea>
+
+    <button onclick="addHouse()">
+      💾 Saqlash
+    </button>
+
+  </div>
+
+
+  <!-- Uylar -->
+  <div class="card">
+
+    <div class="top">
+      <h2>🏘 Uylar ro‘yxati</h2>
+
+      <span
+        id="count"
+        class="count"
+      >
+        0 ta
+      </span>
+    </div>
+
+    <div id="houses">
+      Yuklanmoqda...
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+  // ==========================================
+  // SUPABASE SOZLAMALARI
+  // ==========================================
+[16.08.2026 3:24] Alisher Xudayberganov: const SUPABASE_URL =
+    "https://rmelwwzaagyzdcrdpkva.supabase.co";
+
+  const SUPABASE_KEY =
+    "sb_publishable_itMmxW5YPm87O6tADGIEYw_xrs2xNe-";
+
+
+  // Supabase ulanishi
+  const supabaseClient =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+
+  // ==========================================
+  // XABAR CHIQARISH
+  // ==========================================
+
+  function showStatus(message, type = "success") {
+
+    const status =
+      document.getElementById("status");
+
+    status.innerText = message;
+
+    status.className =
+      "status " + type;
+
+    status.style.display = "block";
+
+    setTimeout(() => {
+      status.style.display = "none";
+    }, 4000);
+  }
+
+
+  // ==========================================
+  // UY QO‘SHISH
+  // ==========================================
+
+  async function addHouse() {
+
+    const type =
+      document.getElementById("type").value;
+
+    const rooms =
+      document.getElementById("rooms").value;
+
+    const finish =
+      document.getElementById("finish").value;
+
+    const note =
+      document.getElementById("note").value;
+
+
+    // Tekshirish
+    if (!type) {
+      showStatus(
+        "Uy turini tanlang!",
+        "error"
+      );
+      return;
+    }
+
+
+    if (!rooms) {
+      showStatus(
+        "Xonalar sonini kiriting!",
+        "error"
+      );
+      return;
+    }
+
+
+    // Bazaga yozish
+    const { data, error } =
+      await supabaseClient
+        .from("homes")
+        .insert([
+          {
+            type: type,
+            rooms: Number(rooms),
+            finish: finish,
+            note: note
+          }
+        ])
+        .select();
+
+
+    // Xato
+    if (error) {
+
+      console.error(error);
+
+      showStatus(
+        "Xatolik: " + error.message,
+        "error"
+      );
+
+      return;
+    }
+
+
+    // Muvaffaqiyatli
+    showStatus(
+      "✅ Uy muvaffaqiyatli saqlandi!"
+    );
+
+
+    // Formani tozalash
+    document.getElementById("type").value = "";
+
+    document.getElementById("rooms").value = "";
+
+    document.getElementById("finish").value = "";
+
+    document.getElementById("note").value = "";
+
+
+    // Ro‘yxatni yangilash
+    loadHouses();
+
+  }
+
+
+  // ==========================================
+  // UYLARNI YUKLASH
+  // ==========================================
+
+  async function loadHouses() {
+
+    const housesDiv =
+      document.getElementById("houses");
+
+    housesDiv.innerHTML =
+      "Yuklanmoqda...";
+
+
+    const { data, error } =
+      await supabaseClient
+        .from("homes")
+        .select("*")
+        .order("created_at", {
+          ascending: false
+        });
+
+
+    if (error) {
+
+      console.error(error);
+
+      housesDiv.innerHTML = `
+        <div style="
+          color:#b00020;
+          padding:15px;
+          background:#ffe0e0;
+          border-radius:10px;
+        ">
+          ❌ Bazadan ma'lumot olishda xatolik:<br><br>
+          ${error.message}
+        </div>
+      `;
+
+      return;
+    }
+
+
+    // Soni
+    document.getElementById("count").innerText =
+      data.length + " ta";
+
+
+    // Agar uy yo‘q bo‘lsa
+    if (data.length === 0) {
+
+      housesDiv.innerHTML = `
+        <div style="
+          text-align:center;
+          padding:30px;
+          color:#777;
+        ">
+          Hozircha uylar yo‘q.
+        </div>
+      `;
+
+      return;
+    }
+
+
+    // Ro‘yxat
+    housesDiv.innerHTML = "";
+
+
+    data.forEach(house => {
+
+      const div =
+        document.createElement("div");
+
+      div.className = "house";
+
+
+      div.innerHTML = `
+
+        <div>
+          <strong>Uy turi:</strong>
+          ${escapeHTML(house.type || "-")}
+        </div>
+
+        <div>
+          <strong>Xonalar:</strong>
+          ${house.rooms || "-"}
+        </div>
+
+        <div>
+          <strong>Ta'mir:</strong>
+          ${escapeHTML(house.finish || "-")}
+        </div>
+
+        <div>
+          <strong>Izoh:</strong>
+          ${escapeHTML(house.note || "-")}
+        </div>
+
+        <button
+          class="delete-btn"
+          onclick="deleteHouse('${house.id}')"
+        >
+          🗑 O‘chirish
+        </button>
+
+      `;
+[16.08.2026 3:24] Alisher Xudayberganov: housesDiv.appendChild(div);
+
+    });
+
+  }
+
+
+  // ==========================================
+  // UYNI O‘CHIRISH
+  // ==========================================
+
+  async function deleteHouse(id) {
+
+    const confirmDelete =
+      confirm(
+        "Bu uyni o‘chirishni xohlaysizmi?"
+      );
+
+
+    if (!confirmDelete) {
+      return;
+    }
+
+
+    const { error } =
+      await supabaseClient
+        .from("homes")
+        .delete()
+        .eq("id", id);
+
+
+    if (error) {
+
+      console.error(error);
+
+      showStatus(
+        "O‘chirishda xatolik: " +
+        error.message,
+        "error"
+      );
+
+      return;
+    }
+
+
+    showStatus(
+      "🗑 Uy o‘chirildi."
+    );
+
+
+    loadHouses();
+
+  }
+
+
+  // ==========================================
+  // XAVFSIZ MATN
+  // ==========================================
+
+  function escapeHTML(text) {
+
+    const div =
+      document.createElement("div");
+
+    div.textContent = text;
+
+    return div.innerHTML;
+
+  }
+
+
+  // ==========================================
+  // DASTUR ISHGA TUSHGANDA
+  // ==========================================
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+      loadHouses();
+
+    }
+  );
+
+</script>
+
+</body>
+</html>
