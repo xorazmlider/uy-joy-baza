@@ -1,1 +1,98 @@
-test
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Xorazm Uy-Joy Baza</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<h1>🏠 Xorazm Uy-Joy Baza</h1>
+
+<h2>Yangi uy qo‘shish</h2>
+
+<input id="title" placeholder="Uy nomi"><br><br>
+<input id="city" placeholder="Shahar"><br><br>
+<input id="area" placeholder="Hudud"><br><br>
+<input id="rooms" placeholder="Xonalar"><br><br>
+<input id="m2" placeholder="m²"><br><br>
+<input id="price" placeholder="Narx"><br><br>
+<input id="type" placeholder="Turi"><br><br>
+<input id="finish" placeholder="Ta’miri"><br><br>
+
+<button onclick="addHome()">UYNI SAQLASH</button>
+
+<hr>
+
+<h2>Uylar ro‘yxati</h2>
+<div id="homes"></div>
+
+<script>
+
+const SUPABASE_URL = "sb_publishable_itMmxW5YPm87O6tADGIEYw_xrs2xNe";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZWx3d3phYWd5emRjcmRwa3ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4MDUxNzEsImV4cCI6MjEwMjM4MTE3MX0.bbmIJEwvaKw7bgg-gcj2hbq7NtDINBCuXbLhXoiQCqY";
+
+const db = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+async function addHome() {
+
+  const { error } = await db
+    .from("homes")
+    .insert({
+      title: document.getElementById("title").value,
+      city: document.getElementById("city").value,
+      area: document.getElementById("area").value,
+      rooms: Number(document.getElementById("rooms").value),
+      m2: Number(document.getElementById("m2").value),
+      price: Number(document.getElementById("price").value),
+      type: document.getElementById("type").value,
+      finish: document.getElementById("finish").value
+    });
+
+  if (error) {
+    alert("Xato: " + error.message);
+    return;
+  }
+
+  alert("Uy saqlandi ✅");
+  loadHomes();
+}
+
+async function loadHomes() {
+
+  const { data, error } = await db
+    .from("homes")
+    .select("*")
+    .order("id", { ascending: false });
+
+  if (error) {
+    document.getElementById("homes").innerHTML =
+      "Xato: " + error.message;
+    return;
+  }
+
+  document.getElementById("homes").innerHTML =
+    data.map(home => `
+      <div style="border:1px solid #ddd;padding:10px;margin:10px 0">
+        <b>${home.title || ""}</b><br>
+        Shahar: ${home.city || ""}<br>
+        Hudud: ${home.area || ""}<br>
+        Xonalar: ${home.rooms || ""}<br>
+        Maydon: ${home.m2 || ""} m²<br>
+        Narx: ${home.price || ""}<br>
+        Turi: ${home.type || ""}<br>
+        Ta’miri: ${home.finish || ""}
+      </div>
+    `).join("");
+}
+
+loadHomes();
+
+</script>
+
+</body>
+</html>
