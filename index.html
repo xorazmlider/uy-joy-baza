@@ -1,40 +1,37 @@
-<!DOCTYPE html>
+[16.08.2026 2:38] Alisher Xudayberganov: <!DOCTYPE html>
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Xorazm Uy-Joy Baza</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #f4f6f8;
+      background: #f3f5f7;
       color: #222;
     }
 
     .container {
-      max-width: 1100px;
+      max-width: 1000px;
       margin: auto;
       padding: 20px;
-    }
-
-    h1 {
-      margin-bottom: 20px;
     }
 
     .card {
       background: white;
       padding: 20px;
-      border-radius: 15px;
       margin-bottom: 20px;
-      box-shadow: 0 3px 15px rgba(0,0,0,.08);
+      border-radius: 15px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin-top: 0;
     }
 
     .form {
@@ -43,48 +40,38 @@
       gap: 10px;
     }
 
-    input, button {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
+    input {
+      padding: 13px;
       border: 1px solid #ddd;
+      border-radius: 8px;
       font-size: 15px;
     }
 
     button {
+      margin-top: 15px;
+      padding: 13px;
+      width: 100%;
+      border: none;
+      border-radius: 8px;
       background: #1677ff;
       color: white;
-      border: none;
-      cursor: pointer;
+      font-size: 16px;
       font-weight: bold;
-    }
-
-    button:hover {
-      opacity: .9;
-    }
-
-    .save {
-      margin-top: 15px;
     }
 
     .status {
       margin-top: 15px;
-      padding: 10px;
+      padding: 12px;
+      background: #eef4ff;
       border-radius: 8px;
-      background: #eef5ff;
     }
 
     .home {
-      border: 1px solid #ddd;
-      padding: 15px;
-      border-radius: 10px;
-      margin-top: 10px;
       background: #fafafa;
-    }
-
-    .price {
-      font-size: 18px;
-      font-weight: bold;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -93,9 +80,9 @@
 
 <div class="container">
 
-  <h1>🏠 Xorazm Uy-Joy Baza</h1>
-
   <div class="card">
+
+    <h1>🏠 Xorazm Uy-Joy Baza</h1>
 
     <h2>Yangi uy qo‘shish</h2>
 
@@ -109,9 +96,9 @@
 
       <input id="rooms" type="number" placeholder="Xonalar">
 
-      <input id="m2" type="number" step="0.01" placeholder="m²">
+      <input id="m2" type="number" placeholder="m²">
 
-      <input id="price" type="number" step="0.01" placeholder="Narx">
+      <input id="price" type="number" placeholder="Narx">
 
       <input id="type" placeholder="Turi">
 
@@ -119,7 +106,7 @@
 
     </div>
 
-    <button class="save" onclick="addHome()">
+    <button onclick="addHome()">
       UYNI SAQLASH
     </button>
 
@@ -135,7 +122,7 @@
     <h2>🏠 Uylar ro‘yxati</h2>
 
     <button onclick="loadHomes()">
-      Yangilash
+      🔄 Yangilash
     </button>
 
     <div id="homes"></div>
@@ -147,38 +134,53 @@
 
 <script>
 
+alert("JavaScript ishlayapti!");
+
+
 const SUPABASE_URL =
-  "https://rmelwwzaagyzedcrdpvkva.supabase.co";
+"https://rmelwwzaagyzedcrdpvkva.supabase.co";
+
 
 const SUPABASE_KEY =
-  "sb_publishable_itMmxW5YPm87O6tADGIEYw_xrs2xNe-";
+"sb_publishable_itMmxW5YPm87O6tADGIEYw_xrs2xNe-";
 
-const db = window.supabase.createClient(
+
+const db =
+window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
 
 
-function status(text) {
-  document.getElementById("status").innerText = text;
+function setStatus(message) {
+
+  document.getElementById("status").innerText =
+    message;
+
 }
 
 
 async function addHome() {
 
-  status("Saqlanmoqda...");
+  setStatus("Saqlanmoqda...");
 
-  const title = document.getElementById("title").value;
-  const city = document.getElementById("city").value;
-  const area = document.getElementById("area").value;
 
-  const roomsValue =
+  const title =
+    document.getElementById("title").value;
+
+  const city =
+    document.getElementById("city").value;
+
+  const area =
+    document.getElementById("area").value;
+
+  const rooms =
     document.getElementById("rooms").value;
 
-  const m2Value =
+  const m2 =
     document.getElementById("m2").value;
 
-  const priceValue =
+  const price =
     document.getElementById("price").value;
 
   const type =
@@ -188,125 +190,156 @@ async function addHome() {
     document.getElementById("finish").value;
 
 
-  const { data, error } = await db
-    .from("homes")
-    .insert([
-      {
-        title: title,
-        city: city,
-        area: area,
-        rooms: roomsValue ? Number(roomsValue) : null,
-        m2: m2Value ? Number(m2Value) : null,
-        price: priceValue ? Number(priceValue) : null,
-        type: type,
-        finish: finish
-      }
-    ])
-    .select();
+  const { data, error } =
+    await db
+      .from("homes")
+      .insert([
+
+        {
+          title: title,
+          city: city,
+          area: area,
+          rooms: rooms ? Number(rooms) : null,
+          m2: m2 ? Number(m2) : null,
+          price: price ? Number(price) : null,
+          type: type,
+          finish: finish
+        }
+
+      ])
+      .select();
 
 
   if (error) {
 
-    console.error(error);
+    console.log(error);
 
-    status(
-      "XATO: " + error.message
+    setStatus(
+      "❌ XATO: " +
+      error.message
     );
 
     return;
+
   }
 
 
-  status("✅ Uy muvaffaqiyatli saqlandi!");
+  setStatus(
+    "✅ Uy muvaffaqiyatli saqlandi!"
+  );
+
 
   document.getElementById("title").value = "";
   document.getElementById("city").value = "";
   document.getElementById("area").value = "";
   document.getElementById("rooms").value = "";
   document.getElementById("m2").value = "";
-[16.08.2026 2:21] Alisher Xudayberganov: document.getElementById("price").value = "";
+  document.getElementById("price").value = "";
   document.getElementById("type").value = "";
-  document.getElementById("finish").value = "";
+  document.
+[16.08.2026 2:38] Alisher Xudayberganov: getElementById("finish").value = "";
+
 
   loadHomes();
-}
 
+}
 
 
 async function loadHomes() {
 
-  const homesDiv =
+  const box =
     document.getElementById("homes");
 
-  homesDiv.innerHTML =
+
+  box.innerHTML =
     "Yuklanmoqda...";
 
 
-  const { data, error } = await db
-    .from("homes")
-    .select("*")
-    .order("id", {
-      ascending: false
-    });
+  const { data, error } =
+    await db
+      .from("homes")
+      .select("*")
+      .order("id", {
+        ascending: false
+      });
 
 
   if (error) {
 
-    homesDiv.innerHTML =
-      "XATO: " + error.message;
+    box.innerHTML =
+      "❌ XATO: " +
+      error.message;
 
-    console.error(error);
+    console.log(error);
 
     return;
+
   }
 
 
   if (!data || data.length === 0) {
 
-    homesDiv.innerHTML =
+    box.innerHTML =
       "Hozircha uylar yo‘q.";
 
     return;
+
   }
 
 
-  homesDiv.innerHTML =
-    data.map(home => `
+  box.innerHTML =
 
-      <div class="home">
+    data.map(function(home) {
 
-        <h3>
-          ${home.title || "Nomsiz uy"}
-        </h3>
+      return `
 
-        <div>
-          📍 ${home.city || ""}
-          ${home.area ? " — " + home.area : ""}
+        <div class="home">
+
+          <h3>
+            🏠 ${home.title || ""}
+          </h3>
+
+          <p>
+            📍 Shahar:
+            ${home.city || ""}
+          </p>
+
+          <p>
+            📌 Hudud:
+            ${home.area || ""}
+          </p>
+
+          <p>
+            🛏 Xonalar:
+            ${home.rooms || ""}
+          </p>
+
+          <p>
+            📐 Maydon:
+            ${home.m2 || ""} m²
+          </p>
+
+          <p>
+            💰 Narx:
+            ${home.price || ""}
+          </p>
+
+          <p>
+            🏷 Turi:
+            ${home.type || ""}
+          </p>
+
+          <p>
+            🔨 Ta’miri:
+            ${home.finish || ""}
+          </p>
+
         </div>
 
-        <div>
-          🛏 Xonalar: ${home.rooms || ""}
-        </div>
+      `;
 
-        <div>
-          📐 Maydon: ${home.m2 || ""} m²
-        </div>
+    }).join("");
 
-        <div class="price">
-          💰 ${home.price || ""}
-        </div>
-
-        <div>
-          🏠 Turi: ${home.type || ""}
-        </div>
-
-        <div>
-          🔨 Ta’miri: ${home.finish || ""}
-        </div>
-
-      </div>
-
-    `).join("");
 }
 
 
@@ -316,5 +349,3 @@ loadHomes();
 
 </body>
 </html>
-<script>
-  alert("JavaScript ishlayapti!");
