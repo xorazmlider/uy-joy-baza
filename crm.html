@@ -1,0 +1,1235 @@
+[16.08.2026 23:10] Alisher Xudayberganov: <!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Xorazm Uylar CRM</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  color: #222;
+}
+
+header {
+  background: #111;
+  color: white;
+  padding: 18px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-inner {
+  max-width: 1200px;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+
+.logo {
+  font-size: 21px;
+  font-weight: bold;
+}
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px;
+}
+
+.login {
+  max-width: 420px;
+  margin: 70px auto;
+  background: white;
+  padding: 25px;
+  border-radius: 18px;
+  box-shadow: 0 5px 25px rgba(0,0,0,.08);
+}
+
+.login h1 {
+  text-align: center;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  margin-top: 7px;
+}
+
+textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+label {
+  display: block;
+  margin-top: 14px;
+  font-weight: bold;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 17px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.primary {
+  background: #111;
+  color: white;
+}
+
+.login-btn {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.logout {
+  background: #e53935;
+  color: white;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.stat {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 3px 15px rgba(0,0,0,.05);
+}
+
+.stat-number {
+  font-size: 28px;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+.toolbar {
+  background: white;
+  padding: 15px;
+  border-radius: 15px;
+  margin-bottom: 20px;
+}
+
+.home {
+  background: white;
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 15px;
+  box-shadow: 0 3px 15px rgba(0,0,0,.05);
+}
+
+.home-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.info {
+  line-height: 1.8;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+.edit {
+  background: #1976d2;
+  color: white;
+}
+
+.delete {
+  background: #e53935;
+  color: white;
+}
+
+.phone {
+  color: #087f23;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.form-box {
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 15px;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.form-buttons {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.cancel {
+  background: #ddd;
+}
+
+.message {
+  text-align: center;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+@media (max-width: 700px) {
+
+  .container {
+    padding: 10px;
+  }
+
+  .dashboard {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full {
+    grid-column: auto;
+  }
+
+  .header-inner {
+    align-items: flex-start;
+  }
+
+  .logo {
+    font-size: 18px;
+  }
+
+}
+
+@media (max-width: 450px) {
+
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .header-inner {
+    flex-direction: column;
+  }
+
+  .logout {
+    width: 100%;
+  }
+
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+
+<div id="loginPage" class="login">
+
+  <h1>🏠 Xorazm Uylar CRM</h1>
+
+  <p style="text-align:center;color:#777;">
+    CRM tizimiga kirish
+  </p>
+
+  <input
+    id="email"
+    type="email"
+    placeholder="Email"
+  >
+
+  <input
+    id="password"
+    type="password"
+    placeholder="Parol"
+  >
+
+  <button
+    class="primary login-btn"
+    onclick="login()"
+  >
+    KIRISH
+  </button>
+
+  <div id="loginMessage" class="message"></div>
+
+</div>
+
+
+<!-- CRM -->
+
+<div id="crmPage" class="hidden">
+
+<header>
+
+  <div class="header-inner">
+
+    <div class="logo">
+      🏠 Xorazm Uylar CRM
+    </div>
+
+    <button
+      class="logout"
+      onclick="logout()"
+    >
+      Chiqish
+    </button>
+
+  </div>
+
+</header>
+
+
+<div class="container">
+
+  <!-- STATISTICS -->
+
+  <div class="dashboard">
+
+    <div class="stat">
+[16.08.2026 23:10] Alisher Xudayberganov: <div>🏠 Jami uylar</div>
+      <div
+        id="totalHomes"
+        class="stat-number"
+      >
+        0
+      </div>
+    </div>
+
+    <div class="stat">
+      <div>🟢 Sotuvda</div>
+      <div
+        id="saleHomes"
+        class="stat-number"
+      >
+        0
+      </div>
+    </div>
+
+    <div class="stat">
+      <div>🔴 Sotilgan</div>
+      <div
+        id="soldHomes"
+        class="stat-number"
+      >
+        0
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- SEARCH -->
+
+  <div class="toolbar">
+
+    <input
+      id="search"
+      type="text"
+      placeholder="🔎 Ism, telefon, shahar, manzil bo‘yicha qidiring..."
+      oninput="searchHomes()"
+    >
+
+  </div>
+
+
+  <!-- ADD FORM -->
+
+  <div
+    id="formBox"
+    class="form-box hidden"
+  >
+
+    <h2 id="formTitle">
+      ➕ Yangi uy qo‘shish
+    </h2>
+
+    <div class="form-grid">
+
+      <div class="full">
+        <label>Uy nomi</label>
+        <input id="title">
+      </div>
+
+      <div>
+        <label>Shahar / tuman</label>
+        <input id="city">
+      </div>
+
+      <div>
+        <label>Manzil</label>
+        <input id="area">
+      </div>
+
+      <div>
+        <label>Xonalar</label>
+        <input id="rooms" type="number">
+      </div>
+
+      <div>
+        <label>Maydon m²</label>
+        <input id="m2" type="number" step="0.01">
+      </div>
+
+      <div>
+        <label>Narx</label>
+        <input id="price" type="number" step="0.01">
+      </div>
+
+      <div>
+        <label>Uy turi</label>
+        <select id="type">
+          <option value="">Tanlang</option>
+          <option value="Hovli">Hovli</option>
+          <option value="Kvartira">Kvartira</option>
+          <option value="Dacha">Dacha</option>
+          <option value="Yer">Yer</option>
+          <option value="Boshqa">Boshqa</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Remont</label>
+        <select id="finish">
+          <option value="">Tanlang</option>
+          <option value="Remontli">Remontli</option>
+          <option value="Yangi remont">Yangi remont</option>
+          <option value="Ta'mir talab">Ta'mir talab</option>
+          <option value="Qora suvoq">Qora suvoq</option>
+          <option value="Remontsız">Remontsız</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Sotuvchi</label>
+        <input id="seller">
+      </div>
+
+      <div>
+        <label>Telefon</label>
+        <input id="phone" type="tel">
+      </div>
+
+      <div>
+        <label>Status</label>
+        <select id="status">
+          <option value="Yangi">Yangi</option>
+          <option value="Tekshirilmoqda">Tekshirilmoqda</option>
+          <option value="Sotuvda">Sotuvda</option>
+          <option value="Sotilgan">Sotilgan</option>
+        </select>
+      </div>
+
+      <div class="full">
+        <label>Izoh</label>
+        <textarea id="note"></textarea>
+      </div>
+
+    </div>
+
+
+    <div class="form-buttons">
+
+      <button
+        class="primary"
+        onclick="saveHome()"
+      >
+        SAQLASH
+      </button>
+
+      <button
+        class="cancel"
+        onclick="closeForm()"
+      >
+        BEKOR
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <button
+    class="primary"
+    onclick="openAddForm()"
+    style="margin-bottom:20px;"
+  >
+    ➕ YANGI UY
+  </button>
+
+
+  <!-- HOMES -->
+
+  <div id="homesList"></div>
+
+</div>
+
+</div>
+
+
+<script>
+
+const SUPABASE_URL =
+"https://rmelwwzaagyzdcrdpkva.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable_itMmxW5YPm87O6tADGIEYw_xrs2xNe-";
+
+let token = "";
+
+let homes = [];
+
+let editId = null;
+
+
+/* LOGIN */
+
+async function login() {
+
+  const email =
+    document.getElementById("email").value.trim();
+
+  const password =
+    document.getElementById("password").value;
+
+  const msg =
+    document.getElementById("loginMessage");
+
+  if (!email || !password) {
+
+    msg.textContent =
+      "Email va parolni kiriting.";
+
+    return;
+  }
+
+  try {
+
+    const response = await fetch(
+      SUPABASE_URL +
+      "/auth/v1/token?grant_type=password",
+      {
+
+        method: "POST",
+
+        headers: {
+
+          "apikey": SUPABASE_KEY,
+
+          "Content-Type":
+[16.08.2026 23:10] Alisher Xudayberganov: "application/json"
+
+        },
+
+        body: JSON.stringify({
+
+          email,
+          password
+
+        })
+
+      }
+    );
+
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error_description ||
+        data.msg ||
+        "Login xatosi"
+      );
+
+    }
+
+    token =
+      data.access_token;
+
+    document
+      .getElementById("loginPage")
+      .classList.add("hidden");
+
+    document
+      .getElementById("crmPage")
+      .classList.remove("hidden");
+
+    loadHomes();
+
+  } catch(error) {
+
+    msg.textContent =
+      "❌ " + error.message;
+
+  }
+
+}
+
+
+/* LOAD HOMES */
+
+async function loadHomes() {
+
+  try {
+
+    const response = await fetch(
+      SUPABASE_URL +
+      "/rest/v1/homes?select=*&order=created_at.desc",
+      {
+
+        headers: {
+
+          "apikey": SUPABASE_KEY,
+
+          "Authorization":
+            "Bearer " + token
+
+        }
+
+      }
+    );
+
+    if (!response.ok) {
+
+      throw new Error(
+        await response.text()
+      );
+
+    }
+
+    homes =
+      await response.json();
+
+    updateStats();
+
+    showHomes(homes);
+
+  } catch(error) {
+
+    alert(
+      "Bazani yuklashda xatolik."
+    );
+
+    console.error(error);
+
+  }
+
+}
+
+
+/* STATISTICS */
+
+function updateStats() {
+
+  document.getElementById("totalHomes")
+    .textContent = homes.length;
+
+  document.getElementById("saleHomes")
+    .textContent =
+      homes.filter(
+        h => h.status === "Sotuvda"
+      ).length;
+
+  document.getElementById("soldHomes")
+    .textContent =
+      homes.filter(
+        h => h.status === "Sotilgan"
+      ).length;
+
+}
+
+
+/* SHOW HOMES */
+
+function showHomes(data) {
+
+  const list =
+    document.getElementById("homesList");
+
+  if (!data.length) {
+
+    list.innerHTML =
+      "<p>🏠 Hozircha uylar yo‘q.</p>";
+
+    return;
+
+  }
+
+  list.innerHTML =
+    data.map(home => `
+
+      <div class="home">
+
+        <div class="home-title">
+          🏠 ${safe(home.title || "Nomsiz")}
+        </div>
+
+        <div class="info">
+
+          📍 <b>Joy:</b>
+          ${safe(home.city || "-")}
+          ${home.area
+            ? " — " + safe(home.area)
+            : ""}
+          <br>
+
+          🚪 <b>Xonalar:</b>
+          ${home.rooms ?? "-"}
+          <br>
+
+          📐 <b>Maydon:</b>
+          ${home.m2 ?? "-"} m²
+          <br>
+
+          💰 <b>Narx:</b>
+          ${home.price ?? "-"}
+          <br>
+
+          🏠 <b>Turi:</b>
+          ${safe(home.type || "-")}
+          <br>
+
+          🔨 <b>Remont:</b>
+          ${safe(home.finish || "-")}
+          <br>
+
+          👤 <b>Sotuvchi:</b>
+          ${safe(home.seller || "-")}
+          <br>
+
+          📞 <b>Telefon:</b>
+          <a
+            class="phone"
+            href="tel:${safe(home.phone || "")}"
+          >
+            ${safe(home.phone || "-")}
+          </a>
+          <br>
+
+          📌 <b>Status:</b>
+          ${safe(home.status || "-")}
+          <br>
+
+          📝 <b>Izoh:</b>
+          ${safe(home.note || "-")}
+
+        </div>
+
+
+        <div class="actions">
+
+          <button
+            class="edit"
+            onclick="editHome(${home.id})"
+          >
+            ✏️ Tahrirlash
+          </button>
+
+          <button
+            class="delete"
+            onclick="deleteHome(${home.id})"
+          >
+            🗑 O‘chirish
+          </button>
+
+        </div>
+
+      </div>
+
+    `).join("");
+
+}
+
+
+/* SEARCH */
+
+function searchHomes() {
+
+  const q =
+    document
+      .getElementById("search")
+      .value
+      .toLowerCase()
+      .trim();
+
+  if (!q) {
+
+    showHomes(homes);
+
+    return;
+
+  }
+
+  const result =
+    homes.filter(home => {
+
+      const text = [
+
+        home.title,
+        home.city,
+        home.area,
+        home.seller,
+        home.phone,
+        home.type,
+        home.finish,
+        home.status,
+        home.note
+
+      ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+      return text.includes(q);
+
+    });
+
+  showHomes(result);
+
+}
+
+
+/* OPEN ADD */
+
+function openAddForm() {
+
+  editId = null;
+
+  clearForm();
+
+  document
+    .getElementById("formTitle")
+    .
+[16.08.2026 23:10] Alisher Xudayberganov: textContent =
+      "➕ Yangi uy qo‘shish";
+
+  document
+    .getElementById("formBox")
+    .classList.remove("hidden");
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+}
+
+
+/* EDIT */
+
+function editHome(id) {
+
+  const home =
+    homes.find(
+      h => h.id === id
+    );
+
+  if (!home) return;
+
+  editId = id;
+
+  document.getElementById("formTitle")
+    .textContent =
+      "✏️ Uyni tahrirlash";
+
+  document.getElementById("title").value =
+    home.title || "";
+
+  document.getElementById("city").value =
+    home.city || "";
+
+  document.getElementById("area").value =
+    home.area || "";
+
+  document.getElementById("rooms").value =
+    home.rooms ?? "";
+
+  document.getElementById("m2").value =
+    home.m2 ?? "";
+
+  document.getElementById("price").value =
+    home.price ?? "";
+
+  document.getElementById("type").value =
+    home.type || "";
+
+  document.getElementById("finish").value =
+    home.finish || "";
+
+  document.getElementById("seller").value =
+    home.seller || "";
+
+  document.getElementById("phone").value =
+    home.phone || "";
+
+  document.getElementById("status").value =
+    home.status || "Yangi";
+
+  document.getElementById("note").value =
+    home.note || "";
+
+  document
+    .getElementById("formBox")
+    .classList.remove("hidden");
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+}
+
+
+/* SAVE */
+
+async function saveHome() {
+
+  const data = {
+
+    title:
+      document.getElementById("title")
+      .value.trim(),
+
+    city:
+      document.getElementById("city")
+      .value.trim(),
+
+    area:
+      document.getElementById("area")
+      .value.trim(),
+
+    rooms:
+      document.getElementById("rooms")
+      .value
+      ? Number(
+          document.getElementById("rooms").value
+        )
+      : null,
+
+    m2:
+      document.getElementById("m2")
+      .value
+      ? Number(
+          document.getElementById("m2").value
+        )
+      : null,
+
+    price:
+      document.getElementById("price")
+      .value
+      ? Number(
+          document.getElementById("price").value
+        )
+      : null,
+
+    type:
+      document.getElementById("type").value
+      || null,
+
+    finish:
+      document.getElementById("finish").value
+      || null,
+
+    seller:
+      document.getElementById("seller")
+      .value.trim(),
+
+    phone:
+      document.getElementById("phone")
+      .value.trim(),
+
+    status:
+      document.getElementById("status")
+      .value,
+
+    note:
+      document.getElementById("note")
+      .value.trim()
+
+  };
+
+
+  try {
+
+    let response;
+
+
+    if (editId) {
+
+      response = await fetch(
+        SUPABASE_URL +
+        "/rest/v1/homes?id=eq." +
+        editId,
+        {
+
+          method: "PATCH",
+
+          headers: {
+
+            "apikey": SUPABASE_KEY,
+
+            "Authorization":
+              "Bearer " + token,
+
+            "Content-Type":
+              "application/json",
+
+            "Prefer":
+              "return=minimal"
+
+          },
+
+          body:
+            JSON.stringify(data)
+
+        }
+      );
+
+    } else {
+
+      response = await fetch(
+        SUPABASE_URL +
+        "/rest/v1/homes",
+        {
+
+          method: "POST",
+
+          headers: {
+
+            "apikey": SUPABASE_KEY,
+
+            "Authorization":
+              "Bearer " + token,
+
+            "Content-Type":
+              "application/json",
+
+            "Prefer":
+              "return=minimal"
+
+          },
+
+          body:
+            JSON.stringify(data)
+
+        }
+      );
+
+    }
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        await response.text()
+      );
+
+    }
+
+
+    alert(
+      editId
+        ? "✅ Uy yangilandi!"
+        : "✅ Uy qo‘shildi!"
+    );
+
+
+    closeForm();
+
+    loadHomes();
+
+
+  } catch(error) {
+
+    alert(
+      "❌ Saqlashda xatolik."
+    );
+
+    console.error(error);
+
+  }
+
+}
+
+
+/* DELETE */
+
+async function deleteHome(id) {
+
+  if (
+    !confirm(
+      "Bu uyni o‘chirishga ishonchingiz komilmi?"
+    )
+  ) {
+    return;
+  }
+
+
+  try {
+
+    const response = await fetch(
+      SUPABASE_URL +
+      "/rest/v1/homes?id=eq." +
+      id,
+      {
+
+        method: "DELETE",
+[16.08.2026 23:10] Alisher Xudayberganov: headers: {
+
+          "apikey": SUPABASE_KEY,
+
+          "Authorization":
+            "Bearer " + token
+
+        }
+
+      }
+    );
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        await response.text()
+      );
+
+    }
+
+
+    loadHomes();
+
+
+  } catch(error) {
+
+    alert(
+      "❌ O‘chirishda xatolik."
+    );
+
+    console.error(error);
+
+  }
+
+}
+
+
+/* CLOSE */
+
+function closeForm() {
+
+  document
+    .getElementById("formBox")
+    .classList.add("hidden");
+
+  clearForm();
+
+  editId = null;
+
+}
+
+
+/* CLEAR */
+
+function clearForm() {
+
+  [
+    "title",
+    "city",
+    "area",
+    "rooms",
+    "m2",
+    "price",
+    "seller",
+    "phone",
+    "note"
+  ].forEach(id => {
+
+    document.getElementById(id).value = "";
+
+  });
+
+  document.getElementById("type").value = "";
+
+  document.getElementById("finish").value = "";
+
+  document.getElementById("status").value =
+    "Yangi";
+
+}
+
+
+/* LOGOUT */
+
+function logout() {
+
+  token = "";
+
+  homes = [];
+
+  document
+    .getElementById("crmPage")
+    .classList.add("hidden");
+
+  document
+    .getElementById("loginPage")
+    .classList.remove("hidden");
+
+  document.getElementById("password")
+    .value = "";
+
+}
+
+
+/* SECURITY */
+
+function safe(value) {
+
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+</script>
+
+</body>
+</html>
