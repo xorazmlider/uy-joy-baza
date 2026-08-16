@@ -1,324 +1,643 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Uy e’lonini yuborish</title>
+<title>Xorazm Uylar CRM</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<style>
+* {
+  box-sizing: border-box;
+}
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      color: #222;
-    }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f3f5f7;
+  color: #222;
+}
 
-    .container {
-      max-width: 600px;
-      margin: 30px auto;
-      padding: 20px;
-    }
+header {
+  background: #111;
+  color: white;
+  padding: 18px;
+}
 
-    .card {
-      background: white;
-      padding: 25px;
-      border-radius: 18px;
-      box-shadow: 0 5px 25px rgba(0,0,0,0.08);
-    }
+.header {
+  max-width: 1100px;
+  margin: auto;
+  text-align: center;
+}
 
-    h1 {
-      text-align: center;
-      margin-bottom: 8px;
-    }
+.logo {
+  font-size: 25px;
+  font-weight: bold;
+}
 
-    .subtitle {
-      text-align: center;
-      color: #777;
-      margin-bottom: 25px;
-    }
+.subtitle {
+  margin-top: 7px;
+  opacity: .7;
+}
 
-    label {
-      display: block;
-      margin-top: 15px;
-      margin-bottom: 7px;
-      font-weight: bold;
-    }
+.container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 20px;
+}
 
-    input,
-    select,
-    textarea {
-      width: 100%;
-      padding: 13px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      font-size: 16px;
-      outline: none;
-    }
+.menu {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
 
-    textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
+.menu button {
+  background: white;
+  border: 0;
+  border-radius: 18px;
+  padding: 30px 15px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,.07);
+}
 
-    input:focus,
-    select:focus,
-    textarea:focus {
-      border-color: #333;
-    }
+.menu button:hover {
+  transform: translateY(-2px);
+}
 
-    button {
-      width: 100%;
-      margin-top: 25px;
-      padding: 15px;
-      border: none;
-      border-radius: 10px;
-      background: #111;
-      color: white;
-      font-size: 17px;
-      font-weight: bold;
-      cursor: pointer;
-    }
+.icon {
+  display: block;
+  font-size: 38px;
+  margin-bottom: 12px;
+}
 
-    button:disabled {
-      background: #999;
-    }
+.section {
+  display: none;
+  background: white;
+  padding: 20px;
+  border-radius: 18px;
+  margin-top: 20px;
+}
 
-    #message {
-      margin-top: 18px;
-      padding: 12px;
-      border-radius: 10px;
-      display: none;
-      text-align: center;
-    }
+.section.active {
+  display: block;
+}
 
-    .success {
-      display: block !important;
-      background: #e8f8ed;
-      color: #137333;
-    }
+.back {
+  background: #ddd;
+  border: 0;
+  padding: 11px 17px;
+  border-radius: 10px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
 
-    .error {
-      display: block !important;
-      background: #fdeaea;
-      color: #c5221f;
-    }
-  </style>
+h2 {
+  margin-top: 0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+textarea {
+  min-height: 90px;
+}
+
+.save {
+  margin-top: 20px;
+  background: #111;
+  color: white;
+  border: 0;
+  padding: 14px 22px;
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+.status {
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+.home-card {
+  border: 1px solid #eee;
+  padding: 17px;
+  border-radius: 14px;
+  margin-top: 12px;
+}
+
+@media(max-width:700px) {
+
+  .menu {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .menu button {
+    padding: 25px 10px;
+    font-size: 16px;
+  }
+
+  .icon {
+    font-size: 32px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full {
+    grid-column: auto;
+  }
+}
+
+@media(max-width:400px) {
+
+  .menu {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
 </head>
 
 <body>
 
-<div class="container">
+<header>
 
-  <div class="card">
+  <div class="header">
 
-    <h1>🏠 Uy e’lonini yuborish</h1>
-
-    <div class="subtitle">
-      Uy ma’lumotlarini to‘ldiring
+    <div class="logo">
+      🏠 XORAZM UYLAR CRM
     </div>
 
-    <form id="homeForm">
-
-      <label>Uy nomi</label>
-      <input
-        type="text"
-        id="title"
-        placeholder="Masalan: 3 xonali uy"
-        required
-      >
-
-      <label>Shahar / tuman</label>
-      <input
-        type="text"
-        id="city"
-        placeholder="Masalan: Urganch"
-        required
-      >
-
-      <label>Manzil</label>
-      <input
-        type="text"
-        id="area"
-        placeholder="Masalan: Al-Xorazmiy ko‘chasi"
-      >
-
-      <label>Xonalar soni</label>
-      <input
-        type="number"
-        id="rooms"
-        placeholder="Masalan: 3"
-      >
-
-      <label>Maydon (m²)</label>
-      <input
-        type="number"
-        id="m2"
-        placeholder="Masalan: 120"
-        step="0.01"
-      >
-
-      <label>Narxi</label>
-      <input
-        type="number"
-        id="price"
-        placeholder="Masalan: 85000"
-        step="0.01"
-      >
-
-      <label>Uy turi</label>
-      <select id="type">
-        <option value="">Tanlang</option>
-        <option value="Hovli">Hovli</option>
-        <option value="Kvartira">Kvartira</option>
-        <option value="Dacha">Dacha</option>
-        <option value="Yer">Yer</option>
-        <option value="Boshqa">Boshqa</option>
-      </select>
-
-      <label>Remont holati</label>
-      <select id="finish">
-        <option value="">Tanlang</option>
-        <option value="Remontli">Remontli</option>
-        <option value="Remontsız">Remontsız</option>
-        <option value="Yangi remont">Yangi remont</option>
-        <option value="Qora suvoq">Qora suvoq</option>
-        <option value="Ta’mir talab">Ta’mir talab</option>
-      </select>
-
-      <label>Sotuvchi ismi</label>
-      <input
-        type="text"
-        id="seller"
-        placeholder="Ism familiya"
-        required
-      >
-
-      <label>Telefon raqam</label>
-      <input
-        type="tel"
-        id="phone"
-        placeholder="+998 90 123 45 67"
-        required
-      >
-
-      <label>Holati</label>
-      <select id="status">
-        <option value="Yangi">Yangi</option>
-[16.08.2026 22:00] Alisher Xudayberganov: <option value="Tekshirilmoqda">Tekshirilmoqda</option>
-        <option value="Sotuvda">Sotuvda</option>
-      </select>
-
-      <label>Qo‘shimcha ma’lumot</label>
-      <textarea
-        id="note"
-        placeholder="Uy haqida qo‘shimcha ma’lumot..."
-      ></textarea>
-
-      <button type="submit" id="submitBtn">
-        E’LONNI YUBORISH
-      </button>
-
-      <div id="message"></div>
-
-    </form>
+    <div class="subtitle">
+      Uy-joy savdosi boshqaruv tizimi
+    </div>
 
   </div>
+
+</header>
+
+
+<div class="container">
+
+
+<!-- ASOSIY MENYU -->
+
+<div id="menu" class="menu">
+
+  <button onclick="openSection('homeAdd')">
+    <span class="icon">🏠</span>
+    Uy qo‘shish
+  </button>
+
+  <button onclick="openSection('buyerAdd')">
+    <span class="icon">👤</span>
+    Xaridor qo‘shish
+  </button>
+
+  <button onclick="openSection('sellerAdd')">
+    <span class="icon">👤</span>
+    Sotuvchi qo‘shish
+  </button>
+
+  <button onclick="openHomes()">
+    <span class="icon">🏘️</span>
+    Uylar
+  </button>
+
+  <button onclick="openSection('buyers')">
+    <span class="icon">👥</span>
+    Xaridorlar
+  </button>
+
+  <button onclick="openSection('sellers')">
+    <span class="icon">📋</span>
+    Sotuvchilar
+  </button>
+
+</div>
+
+
+<!-- UY QO‘SHISH -->
+
+<div id="homeAdd" class="section">
+
+  <button class="back" onclick="backMenu()">
+    ← Asosiy menyu
+  </button>
+
+  <h2>🏠 Yangi uy qo‘shish</h2>
+
+  <div class="form-grid">
+
+    <div class="full">
+      <label>Uy nomi</label>
+      <input id="home_title">
+    </div>
+
+    <div>
+      <label>Shahar / tuman</label>
+      <input id="home_city">
+    </div>
+
+    <div>
+      <label>Manzil</label>
+      <input id="home_area">
+    </div>
+
+    <div>
+      <label>Xonalar</label>
+      <input id="home_rooms" type="number">
+    </div>
+
+    <div>
+      <label>Maydon m²</label>
+      <input id="home_m2" type="number">
+    </div>
+
+    <div>
+      <label>Narx</label>
+      <input id="home_price" type="number">
+    </div>
+
+    <div>
+      <label>Uy turi</label>
+      <select id="home_type">
+[16.08.2026 23:37] Alisher Xudayberganov: <option value="">Tanlang</option>
+        <option>Hovli</option>
+        <option>Kvartira</option>
+        <option>Dacha</option>
+        <option>Yer</option>
+        <option>Boshqa</option>
+      </select>
+    </div>
+
+    <div>
+      <label>Remont</label>
+      <select id="home_finish">
+        <option value="">Tanlang</option>
+        <option>Remontli</option>
+        <option>Yangi remont</option>
+        <option>Ta'mir talab</option>
+        <option>Qora suvoq</option>
+      </select>
+    </div>
+
+    <div>
+      <label>Sotuvchi</label>
+      <input id="home_seller">
+    </div>
+
+    <div>
+      <label>Telefon</label>
+      <input id="home_phone" type="tel">
+    </div>
+
+    <div>
+      <label>Status</label>
+      <select id="home_status">
+        <option>Yangi</option>
+        <option>Sotuvda</option>
+        <option>Sotilgan</option>
+      </select>
+    </div>
+
+    <div class="full">
+      <label>Izoh</label>
+      <textarea id="home_note"></textarea>
+    </div>
+
+  </div>
+
+  <button class="save" onclick="saveHome()">
+    💾 SAQLASH
+  </button>
+
+  <div id="homeStatus" class="status"></div>
+
+</div>
+
+
+<!-- XARIDOR QO‘SHISH -->
+
+<div id="buyerAdd" class="section">
+
+  <button class="back" onclick="backMenu()">
+    ← Asosiy menyu
+  </button>
+
+  <h2>👤 Xaridor qo‘shish</h2>
+
+  <div class="form-grid">
+
+    <div>
+      <label>Ism</label>
+      <input id="buyer_name">
+    </div>
+
+    <div>
+      <label>Telefon</label>
+      <input id="buyer_phone" type="tel">
+    </div>
+
+    <div>
+      <label>Kerakli shahar</label>
+      <input id="buyer_city">
+    </div>
+
+    <div>
+      <label>Budjet</label>
+      <input id="buyer_budget">
+    </div>
+
+    <div>
+      <label>Kerakli xonalar</label>
+      <input id="buyer_rooms" type="number">
+    </div>
+
+    <div>
+      <label>Uy turi</label>
+      <select id="buyer_type">
+        <option value="">Tanlang</option>
+        <option>Hovli</option>
+        <option>Kvartira</option>
+        <option>Dacha</option>
+        <option>Yer</option>
+      </select>
+    </div>
+
+    <div class="full">
+      <label>Izoh</label>
+      <textarea id="buyer_note"></textarea>
+    </div>
+
+  </div>
+
+  <button class="save" onclick="saveBuyer()">
+    💾 SAQLASH
+  </button>
+
+  <div id="buyerStatus" class="status"></div>
+
+</div>
+
+
+<!-- SOTUVCHI QO‘SHISH -->
+
+<div id="sellerAdd" class="section">
+
+  <button class="back" onclick="backMenu()">
+    ← Asosiy menyu
+  </button>
+
+  <h2>👤 Sotuvchi qo‘shish</h2>
+
+  <div class="form-grid">
+
+    <div>
+      <label>Ism</label>
+      <input id="seller_name">
+    </div>
+
+    <div>
+      <label>Telefon</label>
+      <input id="seller_phone" type="tel">
+    </div>
+
+    <div>
+      <label>Shahar / tuman</label>
+      <input id="seller_city">
+    </div>
+
+    <div>
+      <label>Uy turi</label>
+      <select id="seller_type">
+        <option value="">Tanlang</option>
+        <option>Hovli</option>
+        <option>Kvartira</option>
+        <option>Dacha</option>
+        <option>Yer</option>
+      </select>
+    </div>
+
+    <div class="full">
+      <label>Izoh</label>
+      <textarea id="seller_note"></textarea>
+    </div>
+
+  </div>
+
+  <button class="save" onclick="saveSeller()">
+    💾 SAQLASH
+  </button>
+
+  <div id="sellerStatus" class="status"></div>
+
+</div>
+
+
+<!-- UYLAR -->
+
+<div id="homes" class="section">
+
+  <button class="back" onclick="backMenu()">
+    ← Asosiy menyu
+  </button>
+
+  <h2>🏘️ Uylar</h2>
+
+  <div id="homesList">
+    Yuklanmoqda...
+  </div>
+
+</div>
+
+
+<!-- XARIDORLAR -->
+
+<div id="buyers" class="section">
+
+  <button class="back" onclick="backMenu()">
+    ← Asosiy menyu
+  </button>
+
+  <h2>👥 Xaridorlar</h2>
+
+  <p>
+    Xaridorlar bo‘limi bazaga ulanish uchun
+    keyingi bosqichda tayyorlanadi.
+  </p>
+
+</div>
+
+
+<!-- SOTUVCHILAR -->
+
+<div id="sellers" class="section">
+
+  <button class="back" onclick="backMenu()">
+    ← Asosiy menyu
+  </button>
+
+  <h2>📋 Sotuvchilar</h2>
+
+  <p>
+    Sotuvchilar bo‘limi bazaga ulanish uchun
+    keyingi bosqichda tayyorlanadi.
+  </p>
+
+</div>
+
 
 </div>
 
 
 <script>
 
-  // ==============================
-  // SUPABASE SOZLAMALARI
-  // ==============================
+/* SUPABASE */
 
-  const SUPABASE_URL =
-    "https://rmelwwzaagyzdcrdpkva.supabase.co";
-
-  const SUPABASE_KEY =
-    "sb_publishable_itMmxW5YPm87O6tADGIEYw_xrs2xNe-";
+const SUPABASE_URL =
+"https://rmelwwzaagyzdcrdpkva.supabase.co";
+[16.08.2026 23:37] Alisher Xudayberganov: const SUPABASE_KEY =
+"sb_publishable_itMmxW5YPm87O6tADGIEYw_xrs2xNe-";
 
 
-  // ==============================
-  // FORM
-  // ==============================
+/* MENU */
 
-  const form = document.getElementById("homeForm");
+function openSection(id) {
 
-  const button = document.getElementById("submitBtn");
+  document
+    .getElementById("menu")
+    .style.display = "none";
 
-  const message = document.getElementById("message");
+  document
+    .querySelectorAll(".section")
+    .forEach(function(section) {
 
+      section.classList.remove("active");
 
-  form.addEventListener("submit", async function(event) {
+    });
 
-    event.preventDefault();
+  document
+    .getElementById(id)
+    .classList.add("active");
 
-    button.disabled = true;
-
-    button.textContent = "Yuborilmoqda...";
-
-    message.className = "";
-    message.style.display = "none";
-
-
-    // Ma'lumotlarni olish
-
-    const data = {
-
-      title: document.getElementById("title").value.trim(),
-
-      city: document.getElementById("city").value.trim(),
-
-      area: document.getElementById("area").value.trim(),
-
-      rooms: document.getElementById("rooms").value
-        ? Number(document.getElementById("rooms").value)
-        : null,
-
-      m2: document.getElementById("m2").value
-        ? Number(document.getElementById("m2").value)
-        : null,
-
-      price: document.getElementById("price").value
-        ? Number(document.getElementById("price").value)
-        : null,
-
-      type: document.getElementById("type").value || null,
-
-      finish: document.getElementById("finish").value || null,
-
-      seller: document.getElementById("seller").value.trim(),
-
-      phone: document.getElementById("phone").value.trim(),
-
-      status: document.getElementById("status").value,
-
-      note: document.getElementById("note").value.trim()
-
-    };
+}
 
 
-    try {
+function backMenu() {
 
-      const response = await fetch(
-        SUPABASE_URL + "/rest/v1/homes",
+  document
+    .querySelectorAll(".section")
+    .forEach(function(section) {
+
+      section.classList.remove("active");
+
+    });
+
+  document
+    .getElementById("menu")
+    .style.display = "grid";
+
+}
+
+
+/* UY SAQLASH */
+
+async function saveHome() {
+
+  const data = {
+
+    title:
+      document.getElementById("home_title").value,
+
+    city:
+      document.getElementById("home_city").value,
+
+    area:
+      document.getElementById("home_area").value,
+
+    rooms:
+      document.getElementById("home_rooms").value
+      ? Number(document.getElementById("home_rooms").value)
+      : null,
+
+    m2:
+      document.getElementById("home_m2").value
+      ? Number(document.getElementById("home_m2").value)
+      : null,
+
+    price:
+      document.getElementById("home_price").value
+      ? Number(document.getElementById("home_price").value)
+      : null,
+
+    type:
+      document.getElementById("home_type").value,
+
+    finish:
+      document.getElementById("home_finish").value,
+
+    seller:
+      document.getElementById("home_seller").value,
+
+    phone:
+      document.getElementById("home_phone").value,
+
+    status:
+      document.getElementById("home_status").value,
+
+    note:
+      document.getElementById("home_note").value
+
+  };
+
+
+  const status =
+    document.getElementById("homeStatus");
+
+  status.textContent =
+    "Saqlanmoqda...";
+
+
+  try {
+
+    const response =
+      await fetch(
+        SUPABASE_URL +
+        "/rest/v1/homes",
         {
 
           method: "POST",
 
           headers: {
 
-            "apikey": SUPABASE_KEY,
-
-            "Authorization":
-              "Bearer " + SUPABASE_KEY,
+            "apikey":
+              SUPABASE_KEY,
 
             "Content-Type":
               "application/json",
@@ -328,49 +647,188 @@
 
           },
 
-          body: JSON.stringify(data)
+          body:
+            JSON.stringify(data)
 
         }
       );
 
 
-      if (!response.ok) {
+    if (!response.ok) {
 
-        const errorText = await response.text();
-
-        throw new Error(errorText);
-
-      }
-
-
-      // Muvaffaqiyat
-
-      message.textContent =
-        "✅ E’lon muvaffaqiyatli yuborildi!";
-
-      message.className = "success";
-
-
-      form.reset();
-
-
-    } catch (error) {
-
-      console.error(error);
-
-      message.textContent =
-        "❌ Xatolik yuz berdi. Qaytadan urinib ko‘ring.";
-
-      message.className = "error";
+      throw new Error(
+        await response.text()
+      );
 
     }
 
 
-    button.disabled = false;
+    status.textContent =
+      "✅ Uy muvaffaqiyatli saqlandi!";
 
-    button.textContent = "E’LONNI YUBORISH";
 
-  });
+  } catch(error) {
+
+    console.error(error);
+
+    status.textContent =
+      "❌ Xatolik: " +
+      error.message;
+
+  }
+
+}
+
+
+/* UYLARNI KO‘RISH */
+
+async function openHomes() {
+
+  openSection("homes");
+
+  const list =
+    document.getElementById("homesList");
+
+  list.innerHTML =
+    "Yuklanmoqda...";
+
+
+  try {
+
+    const response =
+      await fetch(
+        SUPABASE_URL +
+        "/rest/v1/homes?select=*&order=created_at.desc",
+        {
+
+          headers: {
+
+            "apikey":
+              SUPABASE_KEY
+
+          }
+
+        }
+      );
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        await response.text()
+      );
+
+    }
+
+
+    const data =
+      await response.json();
+
+
+    if (!data.length) {
+
+      list.innerHTML =
+        "Hozircha uylar yo‘q.";
+
+      return;
+
+    }
+
+
+    list.innerHTML =
+      data.map(function(home) {
+
+        return `
+
+          <div class="home-card">
+
+            <b>🏠 ${escapeHtml(home.title || "Nomsiz")}</b>
+
+            <br><br>
+
+            📍 ${escapeHtml(home.city || "-")}
+
+            <br>
+
+            🚪 Xonalar:
+            ${home.rooms || "-"}
+
+            <br>
+
+            📐 ${home.m2 || "-"} m²
+
+            <br>
+
+            💰 ${home.price || "-"}
+
+            <br>
+
+            👤 ${escapeHtml(home.seller || "-")}
+
+            <br>
+
+            📞 ${escapeHtml(home.phone || "-")}
+
+            <br>
+
+            📌 ${escapeHtml(home.status || "-")}
+
+          </div>
+
+        `;
+
+      }).join("");
+
+
+  } catch(error) {
+
+    list.innerHTML =
+      "❌ Uylarni yuklashda xatolik.";
+
+    console.error(error);
+
+  }
+
+}
+
+
+/* XARIDOR */
+
+function saveBuyer() {
+
+  document
+    .getElementById("buyerStatus")
+    .textContent =
+      "⚠️ Xaridor bazasi hali ulanmagan.
+[16.08.2026 23:37] Alisher Xudayberganov: Keyingi bosqichda buyers jadvalini yaratamiz.";
+
+}
+
+
+/* SOTUVCHI */
+
+function saveSeller() {
+
+  document
+    .getElementById("sellerStatus")
+    .textContent =
+      "⚠️ Sotuvchi bazasi hali ulanmagan. Keyingi bosqichda sellers jadvalini yaratamiz.";
+
+}
+
+
+/* XAVFSIZ TEXT */
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
 
 </script>
 
