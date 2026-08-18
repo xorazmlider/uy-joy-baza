@@ -88,7 +88,12 @@ async function loginCRM(event){
 }
 
 async function logoutCRM(){
-  await client.auth.signOut();
+  const {error}=await client.auth.signOut();
+  if(error){
+    alert('Chiqishda xatolik: '+(error.message||error));
+    return;
+  }
+  showLogin();
 }
 
 function showLogin(){
@@ -567,7 +572,7 @@ async function copyInstagramLink(link){
 
 function modal(x){document.getElementById('modalBox').innerHTML=x;document.getElementById('modal').style.display='flex'}
 function closeModal(){document.getElementById('modal').style.display='none'}
-document.querySelectorAll('.nav').forEach(x=>x.onclick=()=>go(x.dataset.page));
+document.querySelectorAll('.nav[data-page]').forEach(x=>x.onclick=()=>go(x.dataset.page));
 
 const isPublicForm=new URLSearchParams(window.location.search).get('form')==='1';
 
