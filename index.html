@@ -491,6 +491,8 @@ async function trackSiteVisit(){
 
 function showPublicForm(type){
   document.getElementById('publicChoice').style.display='none';
+  const homesSection=document.querySelector('.public-homes');
+  if(homesSection) homesSection.style.display='none';
   const box=document.getElementById('publicForm');
   box.className='public-form show';
 
