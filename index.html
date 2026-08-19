@@ -168,7 +168,33 @@ async function refresh(){
   }
 }
 
-function money(n){if(!n)return '—';n=Number(n);if(n>=1e9)return (n/1e9).toFixed(2)+' mlrd so‘m';return Math.round(n/1e6)+' mln so‘m'}
+function parseMoneyInput(v){
+  const s=String(v??'').trim().replace(/\s/g,'').replace(/,/g,'');
+  if(!s)return 0;
+  const usd=/\$|usd|dollar|доллар/i.test(s);
+  const n=Number(s.replace(/[^0-9.\-]/g,''));
+  if(!Number.isFinite(n))return NaN;
+  return usd ? -Math.abs(n) : Math.abs(n);
+}
+function moneyCurrency(n){
+  const v=Number(n);
+  return v<0?'USD':'UZS';
+}
+function moneyAmount(n){
+  return Math.abs(Number(n)||0);
+}
+function money(n){
+  if(n===null||n===undefined||n===''||!Number.isFinite(Number(n))||Number(n)===0)return '—';
+  const v=Number(n), a=Math.abs(v);
+  if(v<0)return '$'+Math.round(a).toLocaleString('en-US');
+  if(a>=1e9)return (a/1e9).toFixed(2)+' mlrd so‘m';
+  return Math.round(a/1e6)+' mln so‘m';
+}
+function priceInputValue(n){
+  if(n===null||n===undefined||n==='')return '';
+  const v=Number(n);
+  return v<0 ? '$'+Math.round(Math.abs(v)) : String(v);
+}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function go(p){document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render(p)}
 function header(t,sub,btn,fn){return `<div class="top"><div><div class="title">${t}</div><div class="sub">${sub}</div></div>${btn?`<button class="btn" onclick="${fn}">${btn}</button>`:''}</div>`}
@@ -241,8 +267,8 @@ function sellers(){return header('Sotuvchilar','Uy egalari va realtorlar bazasi'
   `<div class="panel"><div class="tablewrap"><table class="table"><tr><th>Ism</th><th>Telefon</th><th>Izoh</th><th></th></tr>${db.sellers.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.phone)}</td><td>${esc(x.note)}</td><td><button class="small" onclick="del('sellers',${x.id})">O‘chirish</button></td></tr>`).join('')}</table></div></div>`}
 function matches(){return header('Moslashtirish','Xaridor ↔ uy parametrlarini avtomatik solishtirish','+ Xaridor','openBuyer()')+
   `<div class="panel"><h3>Kimga qanday uy?</h3>${db.buyers.map(b=>{let m=findHomes(b);return `<div class="match"><b>👤 ${esc(b.name)}</b> — ${m.length} ta mos uy<br><span class="muted">${esc(b.city)}, ${esc(b.area)}, ${b.rooms} xona, ${b.m2} m², ${money(b.budget)} gacha</span><div>${m.slice(0,3).map(x=>`<div style="margin-top:8px">🏠 <b>${esc(x.title)}</b> — ${money(x.price)} <button class="small primary" onclick="showHome(${x.id})">Ko‘rish</button></div>`).join('')||'<span class="muted">Mos uy topilmadi.</span>'}</div></div>`}).join('')||'<div class="empty">Xaridor bazasi bo‘sh.</div>'}</div>`}
-function findHomes(b){return db.homes.filter(h=>h.status!=='Sotildi'&&(h.city===b.city)&&(!b.area||h.area.toLowerCase().includes(b.area.toLowerCase())||b.area.toLowerCase().includes(h.area.toLowerCase()))&&(Number(h.rooms)===Number(b.rooms))&&(Number(h.m2)>=Number(b.m2)*.85&&Number(h.m2)<=Number(b.m2)*1.2)&&(Number(h.price)<=Number(b.budget))&&(!b.finish||h.finish===b.finish))}
-function findBuyers(h){return db.buyers.filter(b=>b.city===h.city&&Number(b.rooms)===Number(h.rooms)&&Number(b.m2)>=Number(h.m2)*.85&&Number(b.m2)<=Number(h.m2)*1.2&&Number(b.budget)>=Number(h.price)&&(!b.finish||b.finish===h.finish))}
+function findHomes(b){return db.homes.filter(h=>h.status!=='Sotildi'&&(h.city===b.city)&&(!b.area||h.area.toLowerCase().includes(b.area.toLowerCase())||b.area.toLowerCase().includes(h.area.toLowerCase()))&&(Number(h.rooms)===Number(b.rooms))&&(Number(h.m2)>=Number(b.m2)*.85&&Number(h.m2)<=Number(b.m2)*1.2)&&(moneyCurrency(h.price)===moneyCurrency(b.budget)&&moneyAmount(h.price)<=moneyAmount(b.budget))&&(!b.finish||h.finish===b.finish))}
+function findBuyers(h){return db.buyers.filter(b=>b.city===h.city&&Number(b.rooms)===Number(h.rooms)&&Number(b.m2)>=Number(h.m2)*.85&&Number(b.m2)<=Number(h.m2)*1.2&&moneyCurrency(b.budget)===moneyCurrency(h.price)&&moneyAmount(b.budget)>=moneyAmount(h.price)&&(!b.finish||b.finish===h.finish))}
 function showBuyerMatches(id){let b=db.buyers.find(x=>x.id===id),m=findHomes(b);if(!b)return;modal(`<h2>🎯 ${esc(b.name)} uchun mos uylar</h2><p>${esc(b.city)} • ${esc(b.area)} • ${b.rooms} xona • ${b.m2} m² • ${money(b.budget)} gacha</p>${m.map(x=>`<div class="match"><b>${esc(x.title)}</b><br>${esc(x.city)} • ${esc(x.area)} • ${x.rooms} xona • ${x.m2} m²<br><b>${money(x.price)}</b> • 📞 ${esc(x.phone)}<br><button class="small primary" onclick="showHome(${x.id})">Uy tafsiloti</button></div>`).join('')||'<div class="empty">Aniq mos uy topilmadi.</div>'}<button class="btn light" onclick="closeModal()">Yopish</button>`)}
 function showHomeMatches(id){let h=db.homes.find(x=>x.id===id),m=findBuyers(h);if(!h)return;modal(`<h2>🎯 ${esc(h.title)} uchun mos xaridorlar</h2><p>${esc(h.city)} • ${esc(h.area)} • ${h.rooms} xona • ${h.m2} m² • ${money(h.price)}</p>${m.map(x=>`<div class="match"><b>${esc(x.name)}</b><br>${esc(x.city)} • ${esc(x.area)} • ${x.rooms} xona • ${x.m2} m²<br>Budjet: ${money(x.budget)} gacha • 📞 ${esc(x.phone)}<br><span class="muted">${esc(x.note)}</span></div>`).join('')||'<div class="empty">Mos xaridor topilmadi.</div>'}<button class="btn light" onclick="closeModal()">Yopish</button>`)}
 function showHome(id){
@@ -252,8 +278,8 @@ function showHome(id){
   const cleanNote=String(x.note||'').replace(/\n?\n?\[PROPERTY_IMAGES\][\s\S]*?\[\/PROPERTY_IMAGES\]/g,'').trim();
   modal(`<h2>${esc(x.title)}</h2>${gallery}<div class="match"><b>${money(x.price)}</b><br>📍 ${esc(x.city)}, ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}<br>👤 ${esc(x.seller)} • 📞 ${esc(x.phone)}${cleanNote?`<br>${esc(cleanNote)}`:''}</div><button class="btn light" onclick="closeModal()">Yopish</button>`);
 }
-function openHome(){modal(`<h2>🏠 Uy qo‘shish</h2><div class="formgrid">${input('title','Uy nomi','Masalan: 2 xonali pod klyuch uy',1)}${input('city','Shahar/tuman','Urganch',1)}${input('area','Hudud/mavze','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Maydon m²','60',1)}${input('price','Narx so‘m','680000000',1)}${input('finish','Ta’mir holati','Pod klyuch',1)}${input('seller','Sotuvchi ismi','Sardor',1)}${input('phone','Telefon','+998...',1)}<div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>${input('note','Izoh','Stadion yonida',1,true)}</div><br><button class="btn" onclick="addHome()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
-function openBuyer(){modal(`<h2>👤 Xaridor qo‘shish</h2><div class="formgrid">${input('name','Mijoz ismi','Mijoz 1',1)}${input('phone','Telefon','+998...',1)}${input('city','Shahar/tuman','Urganch',1)}${input('area','Kerakli hudud','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Kerakli maydon m²','60',1)}${input('budget','Budjet so‘m','700000000',1)}${input('finish','Ta’mir talabi','Pod klyuch',1)}${input('type','Uy turi','Uy',1)}${input('note','Izoh','Stadion yaqinidan kerak',1,true)}</div><br><button class="btn" onclick="addBuyer()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
+function openHome(){modal(`<h2>🏠 Uy qo‘shish</h2><div class="formgrid">${input('title','Uy nomi','Masalan: 2 xonali pod klyuch uy',1)}${input('city','Shahar/tuman','Urganch',1)}${input('area','Hudud/mavze','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Maydon m²','60',1)}${input('price','Narx (so‘m yoki dollar)','680000000 yoki $170000',1)}${input('finish','Ta’mir holati','Pod klyuch',1)}${input('seller','Sotuvchi ismi','Sardor',1)}${input('phone','Telefon','+998...',1)}<div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>${input('note','Izoh','Stadion yonida',1,true)}</div><br><button class="btn" onclick="addHome()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
+function openBuyer(){modal(`<h2>👤 Xaridor qo‘shish</h2><div class="formgrid">${input('name','Mijoz ismi','Mijoz 1',1)}${input('phone','Telefon','+998...',1)}${input('city','Shahar/tuman','Urganch',1)}${input('area','Kerakli hudud','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Kerakli maydon m²','60',1)}${input('budget','Budjet (so‘m yoki dollar)','700000000 yoki $170000',1)}${input('finish','Ta’mir talabi','Pod klyuch',1)}${input('type','Uy turi','Uy',1)}${input('note','Izoh','Stadion yaqinidan kerak',1,true)}</div><br><button class="btn" onclick="addBuyer()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
 function openSeller(){modal(`<h2>🤝 Sotuvchi qo‘shish</h2>${input('name','Ism','Sardor',1)}${input('phone','Telefon','+998...',1)}${input('note','Izoh','Uy egasi',1,true)}<br><button class="btn" onclick="addSeller()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
 function input(id,label,ph,required,full){return `<div class="${full?'full':''}"><label class="muted">${label}</label><input id="f_${id}" class="field" placeholder="${ph}" ${required?'required':''}></div>`}
 function val(k){return document.getElementById('f_'+k)?.value.trim()||''}
@@ -289,7 +315,7 @@ async function addHome(){
     if(imageUrls.length){
       note=(note?'\\n\\n':'')+'[PROPERTY_IMAGES]\\n'+imageUrls.join('\\n')+'\\n[/PROPERTY_IMAGES]';
     }
-    const row={title:val('title'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),price:Number(val('price')),finish:val('finish'),seller:val('seller'),phone:val('phone'),status:'Faol',note};
+    const row={title:val('title'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),price:parseMoneyInput(val('price')),finish:val('finish'),seller:val('seller'),phone:val('phone'),status:'Faol',note};
     const {data,error}=await client.from('homes').insert(row).select().single();
     if(error)throw error;
     db.homes.unshift(data);closeModal();go('homes');
@@ -298,7 +324,7 @@ async function addHome(){
   }
 }
 async function addBuyer(){
-  const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),budget:Number(val('budget')),finish:val('finish'),type:val('type'),note:val('note')};
+  const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),budget:parseMoneyInput(val('budget')),finish:val('finish'),type:val('type'),note:val('note')};
   const {data,error}=await client.from('buyers').insert(row).select().single();
   if(error)return alert('Saqlashda xatolik: '+error.message);
   db.buyers.unshift(data);closeModal();go('buyers');
@@ -314,7 +340,8 @@ async function editHome(id){
   let x=db.homes.find(a=>a.id===id);if(!x)return;
   openHome();
   setTimeout(()=>{
-    ['title','city','area','rooms','m2','price','finish','seller','phone','note'].forEach(k=>document.getElementById('f_'+k).value=x[k]??'');
+    ['title','city','area','rooms','m2','finish','seller','phone','note'].forEach(k=>document.getElementById('f_'+k).value=x[k]??'');
+     document.getElementById('f_price').value=priceInputValue(x.price);
     const existing=getImageUrls(x.note);
     const preview=document.getElementById('f_image_preview');
     if(preview && existing.length) preview.innerHTML=existing.map(u=>`<img src="${esc(u)}" onerror="this.style.display='none'">`).join('');
@@ -333,7 +360,7 @@ async function editHome(id){
         if(files.length) imageUrls=await uploadPropertyImages(files,val('title'));
         let note=val('note').replace(/\n?\n?\[PROPERTY_IMAGES\][\s\S]*?\[\/PROPERTY_IMAGES\]/g,'').trim();
         if(imageUrls.length) note=(note?'\\n\\n':'')+'[PROPERTY_IMAGES]\\n'+imageUrls.join('\\n')+'\\n[/PROPERTY_IMAGES]';
-        const row={title:val('title'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),price:Number(val('price')),finish:val('finish'),seller:val('seller'),phone:val('phone'),note};
+        const row={title:val('title'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),price:parseMoneyInput(val('price')),finish:val('finish'),seller:val('seller'),phone:val('phone'),note};
         const {data,error}=await client.from('homes').update(row).eq('id',id).select().single();
         if(error)throw error;
         Object.assign(x,data);closeModal();go('homes');
@@ -344,10 +371,11 @@ async function editHome(id){
 async function editBuyer(id){
   let x=db.buyers.find(a=>a.id===id);if(!x)return;
   openBuyer();
-  setTimeout(()=>{['name','phone','city','area','rooms','m2','budget','finish','type','note'].forEach(k=>document.getElementById('f_'+k).value=x[k]??'');
+  setTimeout(()=>{['name','phone','city','area','rooms','m2','finish','type','note'].forEach(k=>document.getElementById('f_'+k).value=x[k]??'');
+     document.getElementById('f_budget').value=priceInputValue(x.budget);
     const btn=document.querySelector('#modalBox .btn');
     btn.onclick=async()=>{
-      const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),budget:Number(val('budget')),finish:val('finish'),type:val('type'),note:val('note')};
+      const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),budget:parseMoneyInput(val('budget')),finish:val('finish'),type:val('type'),note:val('note')};
       const {data,error}=await client.from('buyers').update(row).eq('id',id).select().single();
       if(error)return alert('Tahrirlashda xatolik: '+error.message);
       Object.assign(x,data);closeModal();go('buyers');
@@ -509,7 +537,7 @@ function showPublicForm(type){
         ${publicInput('area','Hudud/mavze','Stadion')}
         ${publicInput('rooms','Xona soni','5','number')}
         ${publicInput('m2','Maydon m²','200','number')}
-        ${publicInput('price','Narx so‘m','700000000','number')}
+        ${publicInput('price','Narx (so‘m yoki dollar)','700000000 yoki $170000')}
         ${publicInput('finish','Ta’mir holati','Remontli')}
         ${publicInput('type','Uy turi','Hovli')}
         <div class="public-field public-full"><label>📷 Uy rasmlari</label>
@@ -534,7 +562,7 @@ function showPublicForm(type){
         ${publicInput('area','Kerakli hudud','Stadion')}
         ${publicInput('rooms','Xona soni','3','number')}
         ${publicInput('m2','Kerakli maydon m²','80','number')}
-        ${publicInput('budget','Budjet so‘m','800000000','number')}
+        ${publicInput('budget','Budjet (so‘m yoki dollar)','800000000 yoki $170000')}
         ${publicInput('finish','Ta’mir talabi','Remontli')}
         ${publicInput('type','Uy turi','Hovli')}
         <div class="public-field public-full"><label>Qo‘shimcha talab</label><textarea id="pf_note" placeholder="Masalan: maktab yaqinidan kerak"></textarea></div>
@@ -619,7 +647,7 @@ async function submitPublicSell(){
       area:pf('area'),
       rooms:Number(pf('rooms'))||0,
       m2:Number(pf('m2'))||0,
-      price:Number(pf('price'))||0,
+      price:parseMoneyInput(pf('price'))||0,
       finish:pf('finish'),
       seller:name,
       phone,
@@ -650,7 +678,7 @@ async function submitPublicBuy(){
     area:pf('area'),
     rooms:Number(pf('rooms'))||0,
     m2:Number(pf('m2'))||0,
-    budget:Number(pf('budget'))||0,
+    budget:parseMoneyInput(pf('budget'))||0,
     finish:pf('finish'),
     type:pf('type'),
     note:pf('note')
