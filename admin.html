@@ -208,6 +208,14 @@ const SUPABASE_KEY =
 let accessToken = "";
 
 let homes = [];
+function formatAdminPrice(value){
+  const n=Number(value);
+  if(!Number.isFinite(n)||n===0)return "-";
+  if(n<0)return "$"+Math.round(Math.abs(n)).toLocaleString("en-US");
+  if(n>=1e9)return (n/1e9).toFixed(2)+" mlrd so‘m";
+  return Math.round(n/1e6)+" mln so‘m";
+}
+
 
 
 /* =========================
@@ -272,7 +280,8 @@ async function login() {
       throw new Error(
         data.error_description ||
         data.msg ||
-[16.08.2026 22:13] Alisher Xudayberganov: "Login xatosi"
+        data.error ||
+        "Login xatosi"
       );
 
     }
@@ -413,7 +422,7 @@ function showHomes(data) {
           <br>
 
           <b>💰 Narx:</b>
-          ${home.price ?? "-"}
+          ${formatAdminPrice(home.price)}
           <br>
 
           <b>🏠 Turi:</b>
@@ -533,7 +542,6 @@ function filterHomes() {
 
       ]
       .filter(Boolean)
-[16.08.2026 22:13] Alisher Xudayberganov: .join(" ")
       .toLowerCase();
 
 
