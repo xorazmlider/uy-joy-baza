@@ -803,14 +803,18 @@ function sellers(){
           ? linkedHomes.map(h=>`<div style="padding:6px 0;border-bottom:1px solid #eee">
               <b>🏠 ${esc(h.title)}</b> — ${money(h.price)}
               <br><span class="muted">📍 ${esc(h.city||'')} ${h.area?'• '+esc(h.area):''} • ${h.rooms||0} xona • ${h.m2||0} m²</span>
-              <br><button class="small primary" onclick="openContractForSellerHome(${h.id})">📄 Sotish shartnomasi</button>
             </div>`).join('')
           : '<span class="muted">Uy biriktirilmagan</span>';
         return `<tr>
           <td><b>${esc(x.name)}</b></td>
           <td>${esc(x.phone)}</td>
           <td style="min-width:310px">${homesHtml}</td>
-          <td>${esc(visibleNote(x.note))}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+              <span>${esc(visibleNote(x.note))}</span>
+              ${linkedHomes.map(h=>`<button class="small primary" onclick="openContractForSellerHome(${h.id})">📄 Sotish shartnomasi</button>`).join('')}
+            </div>
+          </td>
           <td style="white-space:nowrap">
             <button class="small" onclick="del('sellers',${x.id})">O‘chirish</button>
           </td>
