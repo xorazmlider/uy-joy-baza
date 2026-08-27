@@ -266,10 +266,6 @@ function homeCards(a){return `<div class="grid">${a.map(x=>{
 <button class="small" onclick="showHomeInquiries(${x.id})">📞 Murojaatlar (${db.inquiries.filter(q=>Number(q.home_id)===Number(x.id)).length})</button>
 <button class="small" onclick="editHome(${x.id})">Tahrir</button>
 </div>
-      <div class="inquiry-panel">
-        <div class="inquiry-head"><b>📞 Shu uyni so‘ragan mijozlar</b><button class="small primary" onclick="openHomeInquiry(${x.id})">+ Mijoz qo‘shish</button></div>
-        <div class="inquiry-list">${renderHomeInquiries(x.id)}</div>
-      </div>
       </div></div>`;
 }).join('')||'<div class="empty">Uylar topilmadi.</div>'}</div>`}
 function filterHomes(q){q=q.toLowerCase();document.getElementById('homeList').innerHTML=homeCards(db.homes.filter(x=>x.status!=='Sotildi'&&JSON.stringify(x).toLowerCase().includes(q)))}
