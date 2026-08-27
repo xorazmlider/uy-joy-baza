@@ -707,44 +707,7 @@ function contractHtml(){
     ? 'Агарда бажарувчини мижозини дўст ёки қариндошига сотилса, бажарувчига хизмат хақи тўлиқ тўланади.'
     : 'Агарда бажарувчини мижозини дўст ёки қариндошига сотиб олса, бажарувчига хизмат хақи тўлиқ тўланади.';
 
-  const appendix=sell?`
-  <section class="page">
-    <h2>${no}-сонли<br>шартномага 1-илова</h2>
-    <h2>Сотиладиган уй хакида</h2>
-    <p><b>1. Қисқача маьлумот</b></p>
-    <table class="data">
-      <tr><td>Нақд / Кредит / Шартнома</td><td>☐ Нақд &nbsp;&nbsp; ☐ Кредит &nbsp;&nbsp; ☐ Шартнома</td></tr>
-      <tr><td>Умумий ер майдони</td><td>${contractEsc(v('contract_land_total')||v('contract_land'))}</td></tr>
-      <tr><td>Қавати</td><td>${contractEsc(v('contract_floor')||homeFloor(h||{}))}</td></tr>
-      <tr><td>Лифт</td><td>☐</td></tr>
-      <tr><td>Хоналар сони</td><td>${contractEsc(v('contract_rooms')||h?.rooms)}</td></tr>
-      <tr><td>Нимадан қурилган</td><td>${contractEsc(v('contract_material'))}</td></tr>
-      <tr><td>Қурилган вақти</td><td>${contractEsc(v('contract_built'))}</td></tr>
-      <tr><td>Мебел</td><td>☐</td></tr>
-      <tr><td>Хона баландлиги</td><td>${contractEsc(v('contract_height'))}</td></tr>
-      <tr><td>Ремонт</td><td>${contractEsc(v('contract_repair')||h?.finish)}</td></tr>
-      <tr><td>Отопления (оддий)</td><td>☐</td></tr>
-      <tr><td>Отопления (2 контур)</td><td>☐</td></tr>
-      <tr><td>Мактaб</td><td>${contractEsc(v('contract_school'))}</td></tr>
-      <tr><td>Боғча</td><td>${contractEsc(v('contract_kindergarten'))}</td></tr>
-      <tr><td>Дўкон</td><td>☐</td></tr>
-      <tr><td>Сув / Электр энергия / Газ</td><td>☐ Сув &nbsp; ☐ Электр энергия &nbsp; ☐ Газ</td></tr>
-      <tr><td>Маршрут</td><td>${contractEsc(v('contract_route'))}</td></tr>
-      <tr><td>Болалар майдони</td><td>☐</td></tr>
-      <tr><td>Автотураргох (Парковка)</td><td>☐</td></tr>
-      <tr><td>Шифохона</td><td>${contractEsc(v('contract_hospital'))}</td></tr>
-    </table>
-    <h2>Кўрсатиладиган хизматлар</h2>
-    <table class="data">
-      <tr><th>№</th><th>Хизматлар номи</th><th>Асос</th><th>Миқдори</th><th>Тўлов миқдори (сўмда)</th></tr>
-      <tr><td>1.1</td><td>Олдиндан тўлов (тасвирга олиш ва монтаж учун)</td><td>шартнома</td><td></td><td>${contractEsc(v('contract_prepay'))}</td></tr>
-      <tr><td>2.1</td><td>Квартира ёки Ховли-жойни реклама асосида сотиш учун (Сотилгандан кейин)</td><td>шартнома</td><td></td><td>${contractEsc(v('contract_sale_fee'))}</td></tr>
-      <tr><td colspan="4"><b>Жами (олдиндан тўлов):</b></td><td>${contractEsc(v('contract_prepay'))}</td></tr>
-    </table>
-    <p>Ўлчов бирлиги - Миллий валюта (сўм)</p>
-    <p>“XORAZM LIDER” Youtube,instagram асосчиси<br>______________ А.С.Худайберганов<br>м.ў.</p>
-    <p>Мижоз номидан: ________ ______________________________<br>(имзо)</p>
-  </section>`:'';
+  const appendix='';
 
   return `<!doctype html><html lang="uz"><head><meta charset="utf-8">
   <title></title>
@@ -835,7 +798,11 @@ function crmMeta(note,key){
   return out;
 }
 function visibleNote(note){
-  return String(note||'').replace(/\[CRM_HOME\][\s\S]*?\[\/CRM_HOME\]/g,'').replace(/\[CRM_BUYER\][\s\S]*?\[\/CRM_BUYER\]/g,'').trim();
+  return String(note||'')
+    .replace(/\[CRM_HOME\][\s\S]*?\[\/CRM_HOME\]/g,'')
+    .replace(/\[CRM_BUYER\][\s\S]*?\[\/CRM_BUYER\]/g,'')
+    .replace(/\[PROPERTY_IMAGES\][\s\S]*?\[\/PROPERTY_IMAGES\]/g,'')
+    .trim();
 }
 function buyerReq(b){
   const m=crmMeta(b.note,'CRM_BUYER');
