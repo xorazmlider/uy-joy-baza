@@ -266,6 +266,10 @@ function homeCards(a){return `<div class="grid">${a.map(x=>{
 <button class="small" onclick="showHomeInquiries(${x.id})">📞 Murojaatlar (${db.inquiries.filter(q=>Number(q.home_id)===Number(x.id)).length})</button>
 <button class="small" onclick="editHome(${x.id})">Tahrir</button>
 </div>
+      <div class="inquiry-panel">
+        <div class="inquiry-head"><b>📞 Shu uyni so‘ragan mijozlar</b><button class="small primary" onclick="openHomeInquiry(${x.id})">+ Mijoz qo‘shish</button></div>
+        <div class="inquiry-list">${renderHomeInquiries(x.id)}</div>
+      </div>
       </div></div>`;
 }).join('')||'<div class="empty">Uylar topilmadi.</div>'}</div>`}
 function filterHomes(q){q=q.toLowerCase();document.getElementById('homeList').innerHTML=homeCards(db.homes.filter(x=>x.status!=='Sotildi'&&JSON.stringify(x).toLowerCase().includes(q)))}
@@ -327,18 +331,69 @@ function openHomeInquiry(homeId, buyerId=null){
 async function saveHomeInquiry(homeId){
   const name=val('inquiry_name'), phone=val('inquiry_phone');
   if(!name||!phone){alert('Mijoz ismi va telefonini kiriting.');return;}
-  const row={
+  const h=db.homes.find(x=>Number(x.id)===Number(homeId));
+  if(!h){alert('Uy topilmadi.');return;}
+  const inquiryRow={
     home_id:homeId,
     name,
     phone,
     status:val('inquiry_status')||'Yangi',
     note:val('inquiry_note')
   };
-  const {data,error}=await client.from('home_inquiries').insert(row).select().single();
-  if(error)return alert('Saqlashda xatolik: '+error.message);
-  db.inquiries.unshift(data);
-  closeModal();
-  render('homes');
+  try{
+    // 1) Uyning murojaatini saqlaymiz.
+    const {data,error}=await client.from('home_inquiries').insert(inquiryRow).select().single();
+    if(error)throw error;
+    db.inquiries.unshift(data);
+
+    // 2) Shu mijozni umumiy Xaridorlar bazasiga ham avtomatik qo‘shamiz.
+    // Mijoz faqat ism/telefon/izoh bilan kiritilgani uchun uning talabi
+    // murojaat qilgan uy parametrlaridan boshlanadi. Keyin Xaridorlar bo‘limida tahrirlash mumkin.
+    const {data:existing,error:findError}=await client.from('buyers').select('*').eq('phone',phone).limit(1);
+    if(findError)throw findError;
+
+    if(existing && existing.length){
+      const b=existing[0];
+      const buyerUpdate={
+        name,
+        phone,
+        city:h.city||b.city||'',
+        area:h.area||b.area||'',
+        rooms:Number(h.rooms)||Number(b.rooms)||0,
+        m2:Number(h.m2)||Number(b.m2)||0,
+        budget:Number(h.price)||Number(b.budget)||0,
+        finish:h.finish||b.finish||'',
+        type:b.type||'',
+        note:val('inquiry_note')||b.note||''
+      };
+      const {data:updated,error:updateError}=await client.from('buyers').update(buyerUpdate).eq('id',b.id).select().single();
+      if(updateError)throw updateError;
+      const idx=db.buyers.findIndex(x=>Number(x.id)===Number(b.id));
+      if(idx>=0)db.buyers[idx]=updated;
+    }else{
+      const buyerRow={
+        name,
+        phone,
+        city:h.city||'',
+        area:h.area||'',
+        rooms:Number(h.rooms)||0,
+        m2:Number(h.m2)||0,
+        budget:Number(h.price)||0,
+        finish:h.finish||'',
+        type:'',
+        note:val('inquiry_note')||('Shu uyga murojaat qilgan mijoz: '+(h.title||''))
+      };
+      const {data:buyerData,error:buyerError}=await client.from('buyers').insert(buyerRow).select().single();
+      if(buyerError)throw buyerError;
+      db.buyers.unshift(buyerData);
+    }
+
+    closeModal();
+    render('homes');
+    alert('Mijoz saqlandi. U umumiy “Xaridorlar” bazasiga ham qo‘shildi. 🎯 Mos uylar orqali boshqa mos uylarni ko‘rishingiz mumkin.');
+  }catch(err){
+    alert('Saqlashda xatolik: '+(err.message||err));
+  }
 }
 
 async function editHomeInquiry(id){
