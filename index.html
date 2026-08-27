@@ -813,14 +813,47 @@ function previewContract(){
       'Narx: '+price
     ].join('\\n');
 
+    const qr=makeQR(qrText);
     const q1=w.document.getElementById('qrExec');
     const q2=w.document.getElementById('qrCustomer');
-    const qr=makeQR(qrText);
-    if(q1)q1.innerHTML='<img src="'+qr+'" alt="QR">';
-    if(q2)q2.innerHTML='<img src="'+qr+'" alt="QR">';
 
-    setTimeout(()=>w.print(),700);
-  },300);
+    const i1=new Image();
+    const i2=new Image();
+    i1.alt='QR';
+    i2.alt='QR';
+    i1.width=88; i1.height=88;
+    i2.width=88; i2.height=88;
+
+    let loaded=0;
+    let printed=false;
+
+    function doPrint(){
+      if(printed)return;
+      printed=true;
+      setTimeout(()=>w.print(),300);
+    }
+
+    function oneLoaded(){
+      loaded++;
+      if(loaded>=2) doPrint();
+    }
+
+    i1.onload=oneLoaded;
+    i2.onload=oneLoaded;
+    i1.onerror=oneLoaded;
+    i2.onerror=oneLoaded;
+
+    i1.src=qr;
+    i2.src=qr;
+
+    if(q1)q1.innerHTML='';
+    if(q2)q2.innerHTML='';
+    if(q1)q1.appendChild(i1);
+    if(q2)q2.appendChild(i2);
+
+    // QR server javob bermasa ham chop etish avtomatik davom etadi.
+    setTimeout(doPrint,5000);
+  },250);
 }
 
 function crmMeta(note,key){
