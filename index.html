@@ -2,7 +2,7 @@
 <html lang="uz">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Xorazm Uylar CRM</title>
+<title>Xorazm Uylar CRM PRO v4</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f6f8;color:#17202a}
 button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:flex;min-height:100vh;position:relative;z-index:1}.side{width:245px;z-index:50;background:#111827;color:#fff;padding:20px;position:fixed;inset:0 auto 0 0}.brand{font-size:21px;font-weight:800;margin-bottom:25px}.nav{display:block;width:100%;text-align:left;background:transparent;color:#cbd5e1;border:0;border-radius:10px;padding:12px;margin:5px 0}.nav.active,.nav:hover{background:#253047;color:#fff}.main{margin-left:245px;width:calc(100% - 245px);padding:25px;max-width:1500px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.title{font-size:27px;font-weight:800}.sub{color:#6b7280}.btn{border:0;border-radius:10px;background:#111827;color:#fff;padding:11px 15px;font-weight:700}.btn.light{background:#fff;color:#111827;border:1px solid #ddd}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}.stat{background:#fff;border-radius:15px;padding:18px;border:1px solid #eee}.num{font-size:27px;font-weight:800}.label{color:#6b7280;font-size:13px}.panel{background:#fff;border:1px solid #eee;border-radius:16px;padding:18px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}.search{flex:1;min-width:220px;padding:12px;border:1px solid #ddd;border-radius:10px}.filters{display:flex;gap:8px;flex-wrap:wrap}.chip{padding:9px 12px;border:1px solid #ddd;border-radius:20px;background:#fff}.chip.on{background:#111827;color:#fff}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}.card{border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;background:#fff}.pic{height:155px;background:#d8dde4;display:flex;align-items:center;justify-content:center;font-size:48px}.cardbody{padding:13px}.price{font-size:18px;font-weight:800}.muted{font-size:13px;color:#6b7280}.actions{display:flex;gap:7px;margin-top:12px}.small{padding:8px 10px;border-radius:8px;border:1px solid #ddd;background:#fff}.primary{background:#111827;color:#fff;border-color:#111827}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:12px 8px;border-bottom:1px solid #eee;text-align:left;font-size:14px}.empty{text-align:center;color:#777;padding:35px}.modal{display:none;position:fixed;inset:0;background:#0008;z-index:20;align-items:center;justify-content:center;padding:15px}.box{background:#fff;border-radius:18px;width:min(720px,100%);max-height:92vh;overflow:auto;padding:20px}.box h2{margin-top:0}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{padding:11px;border:1px solid #ddd;border-radius:10px;width:100%}.full{grid-column:1/-1}.match{border-left:4px solid #111827;padding:12px;background:#f7f8fa;border-radius:8px;margin:8px 0}.danger{color:#b91c1c}.mobile-nav{display:none}
@@ -247,6 +247,7 @@ function render(p='dashboard'){
   if(p==='contracts')h=contracts();
   if(p==='sold')h=soldHomes();
   document.getElementById('page').innerHTML=h;
+  bindProButtons();
 }
 function dashboard(){
   const active=db.homes.filter(x=>x.status!=='Sotildi');
@@ -363,7 +364,7 @@ async function saveTask(){
 }
 function tasksPage(){
   const arr=[...(db.tasks||[])].sort((a,b)=>String(a.due_at||'').localeCompare(String(b.due_at||'')));
-  return header('Eslatmalar','Qayta qo‘ng‘iroq, uchrashuv va vazifalar','+ Eslatma','openTask()')+
+  return header('Eslatmalar','Qayta qo‘ng‘iroq, uchrashuv va vazifalar','+ Eslatma','openTask()').replace('<button class="btn" onclick="openTask()">+ Eslatma</button>','<button type="button" id="addTaskBtn" class="btn">+ Eslatma</button>')+
     `<div class="panel"><div class="tablewrap"><table class="table">
     <tr><th>Vazifa</th><th>Muddat</th><th>Holat</th><th>Izoh</th><th>Amal</th></tr>
     ${arr.map(x=>`<tr><td><b>${esc(x.title)}</b></td><td>${esc(formatDateTime(x.due_at))}</td><td><span class="badge">${esc(x.status||'Kutilmoqda')}</span></td><td>${esc(x.note||'—')}</td><td>
@@ -388,9 +389,10 @@ function openDeal(prefBuyer=null,prefHome=null){
 }
 async function saveDeal(){
   const price=parseMoneyInput(val('deal_price'));const commission=Number(val('deal_commission')||0);
-  if(!val('deal_buyer')||!val('deal_home'))return alert('Xaridor va uyni tanlang.');
+  const buyerId=val('deal_buyer'); const homeId=val('deal_home');
+  if(!buyerId||!homeId)return alert('Xaridor va uyni tanlang.');
   if(!Number.isFinite(price)||price===0)return alert('Bitim narxini kiriting.');
-  const row={buyer_id:Number(val('deal_buyer')),home_id:Number(val('deal_home')),price,commission,commission_type:val('deal_commission_type'),stage:val('deal_stage'),note:val('deal_note')||''};
+  const row={buyer_id:Number(buyerId),home_id:Number(homeId),price,commission,commission_type:val('deal_commission_type'),stage:val('deal_stage'),note:val('deal_note')||''};
   await proInsert('crm_deals','deals',row);closeModal();go('deals');
 }
 function dealCommission(d){
@@ -398,7 +400,7 @@ function dealCommission(d){
   return d.commission_type==='percent'?p*c/100:c;
 }
 function dealsPage(){
-  return header('Bitimlar','Sotuv jarayonini bosqichma-bosqich boshqaring','+ Bitim','openDeal()')+
+  return header('Bitimlar','Sotuv jarayonini bosqichma-bosqich boshqaring','+ Bitim','openDeal()').replace('<button class="btn" onclick="openDeal()">+ Bitim</button>','<button type="button" id="addDealBtn" class="btn">+ Bitim</button>')+
   `<div class="panel"><div class="tablewrap"><table class="table">
   <tr><th>Xaridor</th><th>Uy</th><th>Narx</th><th>Komissiya</th><th>Bosqich</th><th>Amal</th></tr>
   ${(db.deals||[]).map(d=>{const b=db.buyers.find(x=>Number(x.id)===Number(d.buyer_id));const h=db.homes.find(x=>Number(x.id)===Number(d.home_id));return `<tr>
@@ -1636,6 +1638,12 @@ async function copyInstagramLink(link){
   }
 }
 
+function bindProButtons(){
+  const deal=document.getElementById('addDealBtn');
+  if(deal && !deal.dataset.bound){deal.dataset.bound='1';deal.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openDeal();});}
+  const task=document.getElementById('addTaskBtn');
+  if(task && !task.dataset.bound){task.dataset.bound='1';task.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openTask();});}
+}
 function modal(x){document.getElementById('modalBox').innerHTML=x;document.getElementById('modal').style.display='flex'}
 document.addEventListener('change',e=>{if(e.target&&e.target.id==='f_contract_home')fillContractHome();});
 function closeModal(){document.getElementById('modal').style.display='none'}
