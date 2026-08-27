@@ -106,7 +106,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 </div>
     <div class="login-sub">Yopiq ichki baza. Kirish uchun login va parol kerak.</div>
     <form onsubmit="loginCRM(event)">
-      <input id="loginEmail" class="login-field" type="email" autocomplete="username" placeholder="Email" required>
+      <input id="loginLogin" class="login-field" type="text" autocomplete="username" placeholder="Login" required>
       <input id="loginPassword" class="login-field" type="password" autocomplete="current-password" placeholder="Parol" required>
       <button id="loginBtn" class="login-btn" type="submit">Kirish</button>
       <div id="loginError" class="login-error"></div>
@@ -159,9 +159,14 @@ async function loadCurrentStaff(){
   const {data:{user}}=await client.auth.getUser();
   currentUser=user||null;
   if(!user){currentStaff=null;return false;}
-  const email=String(user.email||'').trim().toLowerCase();
-  const {data,error}=await client.from('staff').select('*').ilike('email',email).limit(1);
+  const authEmail=String(user.email||'').trim().toLowerCase();
+  let {data,error}=await client.from('staff').select('*').ilike('auth_email',authEmail).limit(1);
   if(error)throw error;
+  if(!data?.length){
+    const r=await client.from('staff').select('*').ilike('email',authEmail).limit(1);
+    if(r.error)throw r.error;
+    data=r.data||[];
+  }
   if(data&&data.length){
     currentStaff=data[0];
     if(currentStaff.is_active===false){
@@ -172,16 +177,15 @@ async function loadCurrentStaff(){
     }
     return true;
   }
-  // Birinchi o‘rnatishda staff jadvali hali bo‘sh bo‘lsa, mavjud Admin akkauntiga kirishga ruxsat.
   const {data:allStaff,error:allErr}=await client.from('staff').select('id').limit(1);
   if(allErr)throw allErr;
   if(!allStaff?.length){
-    currentStaff={id:'bootstrap-admin',name:user.user_metadata?.full_name||user.email,phone:'',email:user.email,role:'Admin',is_active:true};
+    currentStaff={id:'bootstrap-admin',name:user.user_metadata?.full_name||user.email,phone:'',email:user.email,auth_email:user.email,login:'admin',role:'Admin',is_active:true};
     return true;
   }
   currentStaff=null;
   await client.auth.signOut();
-  throw new Error('Bu email Xodimlar bazasida ro‘yxatdan o‘tmagan. Admin emailini staff jadvaliga kiriting.');
+  throw new Error('Bu akkaunt Xodimlar bazasida ro‘yxatdan o‘tmagan. Admin bilan bog‘laning.');
 }
 function applyRoleUI(){
   document.querySelectorAll('.nav[data-page]').forEach(x=>{x.style.display=canPage(x.dataset.page)?'block':'none';});
@@ -194,18 +198,27 @@ const localDb=JSON.parse(localStorage.getItem(KEY)||'null');
 
 async function loginCRM(event){
   event?.preventDefault();
-  const email=document.getElementById('loginEmail').value.trim();
+  const login=String(document.getElementById('loginLogin')?.value||'').trim().toLowerCase();
   const password=document.getElementById('loginPassword').value;
   const btn=document.getElementById('loginBtn');
   const err=document.getElementById('loginError');
   err.textContent='';
-  if(!email||!password){err.textContent='Email va parolni kiriting.';return;}
+  if(!login||!password){err.textContent='Login va parolni kiriting.';return;}
   btn.disabled=true;btn.textContent='Tekshirilmoqda...';
   try{
-    const {error}=await client.auth.signInWithPassword({email,password});
-    if(error) throw error;
+    const {data:staffList,error:staffErr}=await client.from('staff').select('auth_email,is_active').eq('login',login).limit(1);
+    if(staffErr)throw staffErr;
+    if(!staffList?.length){throw new Error('LOGIN_NOT_FOUND');}
+    if(staffList[0].is_active===false)throw new Error('INACTIVE');
+    const authEmail=String(staffList[0].auth_email||'').trim().toLowerCase();
+    if(!authEmail)throw new Error('AUTH_EMAIL_MISSING');
+    const {error}=await client.auth.signInWithPassword({email:authEmail,password});
+    if(error)throw error;
   }catch(e){
-    err.textContent='Login yoki parol noto‘g‘ri.';
+    console.error(e);
+    if(e.message==='INACTIVE')err.textContent='Bu xodim faol emas. Admin bilan bog‘laning.';
+    else if(e.message==='AUTH_EMAIL_MISSING')err.textContent='Xodim akkaunti to‘liq sozlanmagan.';
+    else err.textContent='Login yoki parol noto‘g‘ri.';
   }finally{
     btn.disabled=false;btn.textContent='Kirish';
   }
@@ -954,7 +967,7 @@ function staffRows(a){
   return `<div class="tablewrap"><table class="table">
   <tr><th>Xodim</th><th>Telefon</th><th>Rol</th><th>Menejer</th><th>Holat</th><th>Amallar</th></tr>
   ${a.map(x=>`<tr>
-    <td><b>${esc(x.name)}</b>${x.email?`<br><span class="muted">${esc(x.email)}</span>`:''}</td>
+    <td><b>${esc(x.name)}</b>${x.login?`<br><span class="muted">🔑 ${esc(x.login)}</span>`:''}${x.email?`<br><span class="muted">✉️ ${esc(x.email)}</span>`:''}</td>
     <td>${esc(x.phone||'—')}</td><td>${staffRoleLabel(x.role)}</td>
     <td>${esc(staffManagerName(x.manager_id))}</td>
     <td>${x.is_active===false?'🔴 Faol emas':'🟢 Faol'}</td>
@@ -983,10 +996,13 @@ function staffManagerOptions(selected=''){
 function openStaff(){
   if(!requirePage('staff'))return;
   modal(`<h2>👥 Xodim qo‘shish</h2>
+    <p class="muted">Xodim saytga <b>Login + Parol</b> bilan kiradi. Emailni hozir kiritish shart emas — Admin keyin tahrirlashi mumkin.</p>
     <div class="formgrid">
       ${input('staff_name','Ism familiya','Masalan: Sardor Bekchanov',1)}
       ${input('staff_phone','Telefon','+998...',1)}
-      ${input('staff_email','Email','example@gmail.com',0)}
+      ${input('staff_login','Login','Masalan: sardor',1)}
+      ${input('staff_password','Parol','Kamida 6 ta belgi',1)}
+      ${input('staff_email','Email (ixtiyoriy)','Keyin ham qo‘shish mumkin',0)}
       <div><label class="muted">Rol</label><select id="f_staff_role" class="field">${staffRoleOptions('Agent')}</select></div>
       <div><label class="muted">Menejer</label><select id="f_staff_manager" class="field">${staffManagerOptions('')}</select></div>
       <div><label class="muted">Holati</label><select id="f_staff_active" class="field"><option value="true">🟢 Faol</option><option value="false">🔴 Faol emas</option></select></div>
@@ -997,11 +1013,38 @@ function openStaff(){
 async function addStaff(){
   if(!requirePage('staff'))return;
   const name=val('staff_name'),phone=val('staff_phone');
-  if(!name||!phone){alert('Ism va telefonni kiriting.');return;}
+  const login=String(val('staff_login')||'').trim().toLowerCase().replace(/[^a-z0-9._-]/g,'');
+  const password=String(val('staff_password')||'');
+  if(!name||!phone||!login||!password){alert('Ism, telefon, login va parolni kiriting.');return;}
+  if(login.length<3){alert('Login kamida 3 ta belgidan iborat bo‘lsin.');return;}
+  if(password.length<6){alert('Parol kamida 6 ta belgidan iborat bo‘lsin.');return;}
+  if(currentRole()!=='Admin'){alert('Xodim akkauntini faqat Admin yaratadi.');return;}
+  const authEmail=login+'@login.xorazmlider.uz';
+  const {data:exists,error:existsErr}=await client.from('staff').select('id').eq('login',login).limit(1);
+  if(existsErr)return alert('Loginni tekshirishda xatolik: '+existsErr.message);
+  if(exists?.length){alert('Bu login band. Boshqa login tanlang.');return;}
+  const {data:sessionData}=await client.auth.getSession();
+  const adminSession=sessionData?.session||null;
+  if(!adminSession){alert('Admin sessiyasi topilmadi. Qayta kiring.');return;}
+  const {data:authData,error:authError}=await client.auth.signUp({
+    email:authEmail,
+    password,
+    options:{data:{full_name:name}}
+  });
+  if(authError)return alert('Login akkauntini yaratishda xatolik: '+authError.message);
+  if(!authData?.user){return alert('Akkaunt yaratilmagan.');}
+  if(!authData.session){
+    await client.auth.setSession({access_token:adminSession.access_token,refresh_token:adminSession.refresh_token});
+    return alert('Xodim yaratildi, lekin Supabase Email Confirmation yoqilgan. Authentication → Providers → Email → Confirm email ni o‘chirib, qayta urinib ko‘ring.');
+  }
+  await client.auth.setSession({access_token:adminSession.access_token,refresh_token:adminSession.refresh_token});
   const managerVal=val('staff_manager');
-  const row={name,phone,email:val('staff_email')||null,role:val('staff_role')||'Agent',manager_id:managerVal?Number(managerVal):null,is_active:val('staff_active')!=='false'};
+  const row={name,phone,email:val('staff_email')||null,login,auth_email:authEmail,role:val('staff_role')||'Agent',manager_id:managerVal?Number(managerVal):null,is_active:val('staff_active')!=='false'};
   const {data,error}=await client.from('staff').insert(row).select().single();
-  if(error)return alert('Xodimni saqlashda xatolik: '+error.message);
+  if(error){
+    await client.auth.setSession({access_token:adminSession.access_token,refresh_token:adminSession.refresh_token});
+    return alert('Xodim bazaga saqlanmadi: '+error.message);
+  }
   db.staff.unshift(data);closeModal();go('staff');
 }
 function editStaff(id){
@@ -1011,7 +1054,9 @@ function editStaff(id){
     <div class="formgrid">
       ${input('staff_name','Ism familiya','',1)}
       ${input('staff_phone','Telefon','',1)}
-      ${input('staff_email','Email','',0)}
+      ${input('staff_login','Login (o‘zgartirmang)','',1)}
+      ${input('staff_password','Yangi parol (ixtiyoriy)','Bo‘sh qoldirsangiz o‘zgarmaydi',0)}
+      ${input('staff_email','Email (Admin keyin qo‘shishi/o‘zgartirishi mumkin)','',0)}
       <div><label class="muted">Rol</label><select id="f_staff_role" class="field">${staffRoleOptions(x.role||'Agent')}</select></div>
       <div><label class="muted">Menejer</label><select id="f_staff_manager" class="field">${staffManagerOptions(x.manager_id)}</select></div>
       <div><label class="muted">Holati</label><select id="f_staff_active" class="field">
@@ -1024,17 +1069,24 @@ function editStaff(id){
   setTimeout(()=>{
     document.getElementById('f_staff_name').value=x.name||'';
     document.getElementById('f_staff_phone').value=x.phone||'';
+    document.getElementById('f_staff_login').value=x.login||'';
+    document.getElementById('f_staff_login').readOnly=true;
     document.getElementById('f_staff_email').value=x.email||'';
   },20);
 }
 async function saveStaff(id){
   if(!requirePage('staff'))return;
-  const name=val('staff_name'),phone=val('staff_phone');
+  if(currentRole()!=='Admin'){alert('Xodim ma’lumotlarini faqat Admin tahrirlaydi.');return;}
+  const x=db.staff.find(a=>Number(a.id)===Number(id));if(!x)return;
+  const name=val('staff_name'),phone=val('staff_phone'),newPassword=String(val('staff_password')||'');
   if(!name||!phone){alert('Ism va telefonni kiriting.');return;}
   const managerVal=val('staff_manager');
   const row={name,phone,email:val('staff_email')||null,role:val('staff_role')||'Agent',manager_id:managerVal?Number(managerVal):null,is_active:val('staff_active')!=='false'};
   const {data,error}=await client.from('staff').update(row).eq('id',id).select().single();
   if(error)return alert('Xodimni yangilashda xatolik: '+error.message);
+  if(newPassword){
+    alert('Email/parolni yangilash uchun ushbu xodimning Auth akkauntini ham yangilash kerak. Hozir email maydoni CRM bazasida yangilandi.');
+  }
   const idx=db.staff.findIndex(a=>Number(a.id)===Number(id));if(idx>=0)db.staff[idx]=data;
   closeModal();go('staff');
 }
