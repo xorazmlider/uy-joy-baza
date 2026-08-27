@@ -83,7 +83,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 
 <div class="app">
 <aside class="side"><div class="brand">🏠 Xorazm Uylar CRM</div>
-<button class="nav active" data-page="dashboard">📊 Bosh sahifa</button><button class="nav" data-page="homes">🏠 Uylar</button><button class="nav" data-page="buyers">👤 Xaridorlar</button><button class="nav" data-page="sellers">🤝 Sotuvchilar</button><button class="nav" data-page="matches">🎯 Moslashtirish</button><button class="nav" data-page="sold">✅ Sotilgan</button><button class="nav" onclick="logoutCRM()">🚪 Chiqish</button>
+<button type="button" class="nav active" data-page="dashboard" onclick="go('dashboard')">📊 Bosh sahifa</button><button type="button" class="nav" data-page="homes" onclick="go('homes')">🏠 Uylar</button><button type="button" class="nav" data-page="buyers" onclick="go('buyers')">👤 Xaridorlar</button><button type="button" class="nav" data-page="sellers" onclick="go('sellers')">🤝 Sotuvchilar</button><button type="button" class="nav" data-page="matches" onclick="go('matches')">🎯 Moslashtirish</button><button type="button" class="nav" data-page="sold" onclick="go('sold')">✅ Sotilgan</button><button type="button" class="nav" onclick="logoutCRM()">🚪 Chiqish</button>
 <div style="margin-top:30px;color:#94a3b8;font-size:12px">Online versiya • ma'lumotlar Supabase bazasida saqlanadi</div></aside>
 <main class="main"><div id="page"></div></main>
 </div>
