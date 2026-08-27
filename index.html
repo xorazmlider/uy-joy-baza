@@ -49,6 +49,14 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 .public-contact a{font-weight:900;color:#111827;text-decoration:none}
 .public-view{font-size:12px;color:#6b7280;margin-top:7px}
 @media(max-width:600px){.public-site{padding:12px}.public-site-head{align-items:flex-start}.public-site-logo{font-size:22px}.public-home-grid{grid-template-columns:1fr}}
+
+.inquiry-panel{margin-top:10px;padding:10px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa}
+.inquiry-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.inquiry-list{margin-top:8px;display:grid;gap:7px}
+.inquiry-item{padding:9px;border:1px solid #e5e7eb;border-radius:9px;background:#fff}
+.inquiry-meta{font-size:12px;color:#6b7280;margin-top:3px}
+.inquiry-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+
 </style>
   <link rel="apple-touch-icon" href="logo-tel.PNG">
 <link rel="icon" type="image/png" href="logo-tel.PNG">
@@ -87,7 +95,7 @@ const SUPABASE_URL='https://rmelwwzaagyzdcrdpkva.supabase.co';
 const SUPABASE_KEY='sb_publishable_itMmxW5YPm87O6tADGIEYw_xrs2xNe-';
 const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const KEY='xucrm_v2';
-let db={homes:[],buyers:[],sellers:[]};
+let db={homes:[],buyers:[],sellers:[],inquiries:[]};
 
 const localDb=JSON.parse(localStorage.getItem(KEY)||'null');
 
@@ -133,14 +141,16 @@ async function showCRM(){
 }
 
 async function loadDb(){
-  const [h,b,s]=await Promise.all([
+  const [h,b,s,i]=await Promise.all([
     client.from('homes').select('*').order('created_at',{ascending:false}),
     client.from('buyers').select('*').order('created_at',{ascending:false}),
-    client.from('sellers').select('*').order('created_at',{ascending:false})
+    client.from('sellers').select('*').order('created_at',{ascending:false}),
+    client.from('home_inquiries').select('*').order('created_at',{ascending:false})
   ]);
   if(h.error) throw h.error;
   if(b.error) throw b.error;
   if(s.error) throw s.error;
+  if(i.error) throw i.error;
 
   const cloudEmpty=!h.data.length&&!b.data.length&&!s.data.length;
   const hasLocal=localDb && (localDb.homes?.length||localDb.buyers?.length||localDb.sellers?.length);
@@ -154,7 +164,7 @@ async function loadDb(){
     return loadDb();
   }
 
-  db={homes:h.data||[],buyers:b.data||[],sellers:s.data||[]};
+  db={homes:h.data||[],buyers:b.data||[],sellers:s.data||[],inquiries:i.data||[]};
 }
 
 async function refresh(){
@@ -251,7 +261,12 @@ function getImageUrls(note){
 function homeCards(a){return `<div class="grid">${a.map(x=>{
   const imgs=getImageUrls(x.note);
   const cover=imgs[0] ? `<img src="${esc(imgs[0])}" style="width:100%;height:155px;object-fit:cover" onerror="this.style.display='none';this.parentElement.innerHTML='🏠'">` : '🏠';
-  return `<div class="card"><div class="pic">${cover}</div><div class="cardbody"><div class="price">${money(x.price)}</div><b>${esc(x.title)}</b><div class="muted">📍 ${esc(x.city)} • ${esc(x.area)}</div><div class="muted">🏠 ${x.rooms} xona • 📐 ${x.m2} m² • ${esc(x.finish)}</div><div class="muted">👤 ${esc(x.seller)} • ${esc(x.phone)}</div>${imgs.length?`<div class="muted">📷 ${imgs.length} ta rasm</div>`:''}<div class="actions"><button class="small primary" onclick="showHomeMatches(${x.id})">🎯 Xaridorlar</button><button class="small" onclick="editHome(${x.id})">Tahrir</button></div></div></div>`;
+  return `<div class="card"><div class="pic">${cover}</div><div class="cardbody"><div class="price">${money(x.price)}</div><b>${esc(x.title)}</b><div class="muted">📍 ${esc(x.city)} • ${esc(x.area)}</div><div class="muted">🏠 ${x.rooms} xona • 📐 ${x.m2} m² • ${esc(x.finish)}</div><div class="muted">👤 ${esc(x.seller)} • ${esc(x.phone)}</div>${imgs.length?`<div class="muted">📷 ${imgs.length} ta rasm</div>`:''}<div class="actions"><button class="small primary" onclick="showHomeMatches(${x.id})">🎯 Mos xaridorlar</button><button class="small" onclick="showHomeInquiries(${x.id})">📞 Murojaatlar (${db.inquiries.filter(q=>Number(q.home_id)===Number(x.id)).length})</button><button class="small" onclick="editHome(${x.id})">Tahrir</button></div>
+      <div class="inquiry-panel">
+        <div class="inquiry-head"><b>📞 Shu uyni so‘ragan mijozlar</b><button class="small primary" onclick="openHomeInquiry(${x.id})">+ Mijoz qo‘shish</button></div>
+        <div class="inquiry-list">${renderHomeInquiries(x.id)}</div>
+      </div>
+      </div></div>`;
 }).join('')||'<div class="empty">Uylar topilmadi.</div>'}</div>`}
 function filterHomes(q){q=q.toLowerCase();document.getElementById('homeList').innerHTML=homeCards(db.homes.filter(x=>x.status!=='Sotildi'&&JSON.stringify(x).toLowerCase().includes(q)))}
 function soldHomes(){
@@ -259,6 +274,118 @@ function soldHomes(){
   return header('Sotilgan uylar','Sotilgan uylar arxivi')+
     `<div class="panel"><div id="soldHomeList">${homeCards(sold)}</div></div>`;
 }
+function renderHomeInquiries(homeId){
+  const rows=db.inquiries.filter(q=>Number(q.home_id)===Number(homeId));
+  if(!rows.length) return '<div class="inquiry-meta">Hali bu uyni so‘ragan mijoz yo‘q.</div>';
+  return rows.map(q=>`<div class="inquiry-item">
+    <b>👤 ${esc(q.name||'-')}</b> — ${esc(q.status||'Yangi')}<br>
+    📞 ${esc(q.phone||'-')}
+    ${q.note?`<div class="inquiry-meta">📝 ${esc(q.note)}</div>`:''}
+    ${q.created_at?`<div class="inquiry-meta">📅 ${new Date(q.created_at).toLocaleString('uz-UZ')}</div>`:''}
+    <div class="inquiry-actions">
+      <a class="small" href="tel:${esc(q.phone||'')}">📞 Qo‘ng‘iroq</a>
+      <button class="small" onclick="editHomeInquiry(${q.id})">Tahrir</button>
+      <button class="small" onclick="deleteHomeInquiry(${q.id})">O‘chirish</button>
+    </div>
+  </div>`).join('');
+}
+
+function showHomeInquiries(homeId){
+  const h=db.homes.find(x=>Number(x.id)===Number(homeId));
+  if(!h)return;
+  modal(`<h2>📞 ${esc(h.title)} — murojaatlar</h2>
+    <p>${esc(h.city)} • ${esc(h.area)} • ${money(h.price)}</p>
+    ${renderHomeInquiries(homeId)}
+    <br><button class="btn" onclick="openHomeInquiry(${homeId})">+ Mijoz qo‘shish</button>
+    <button class="btn light" onclick="closeModal()">Yopish</button>`);
+}
+
+function openHomeInquiry(homeId, buyerId=null){
+  const h=db.homes.find(x=>Number(x.id)===Number(homeId));
+  if(!h)return;
+  const b=buyerId?db.buyers.find(x=>Number(x.id)===Number(buyerId)):null;
+  modal(`<h2>📞 Shu uyga murojaat qilgan mijoz</h2>
+    <p><b>🏠 ${esc(h.title)}</b> — ${money(h.price)}</p>
+    <div class="formgrid">
+      ${input('inquiry_name','Mijoz ismi','Sardor',1)}
+      ${input('inquiry_phone','Telefon','+998...',1)}
+      ${input('inquiry_status','Holati','Yangi',1)}
+      ${input('inquiry_note','Izoh','Narxini so‘radi, ko‘rishga keladi',0,true)}
+    </div><br>
+    <button class="btn" onclick="saveHomeInquiry(${homeId})">Saqlash</button>
+    <button class="btn light" onclick="showHomeInquiries(${homeId})">Bekor</button>`);
+  if(b){
+    setTimeout(()=>{
+      const n=document.getElementById('f_inquiry_name');
+      const p=document.getElementById('f_inquiry_phone');
+      if(n)n.value=b.name||'';
+      if(p)p.value=b.phone||'';
+    },20);
+  }
+}
+
+async function saveHomeInquiry(homeId){
+  const name=val('inquiry_name'), phone=val('inquiry_phone');
+  if(!name||!phone){alert('Mijoz ismi va telefonini kiriting.');return;}
+  const row={
+    home_id:homeId,
+    name,
+    phone,
+    status:val('inquiry_status')||'Yangi',
+    note:val('inquiry_note')
+  };
+  const {data,error}=await client.from('home_inquiries').insert(row).select().single();
+  if(error)return alert('Saqlashda xatolik: '+error.message);
+  db.inquiries.unshift(data);
+  closeModal();
+  render('homes');
+}
+
+async function editHomeInquiry(id){
+  const q=db.inquiries.find(x=>Number(x.id)===Number(id));
+  if(!q)return;
+  const h=db.homes.find(x=>Number(x.id)===Number(q.home_id));
+  if(!h)return;
+  modal(`<h2>✏️ Mijozni tahrirlash</h2>
+    ${input('inquiry_name','Mijoz ismi','',1)}
+    ${input('inquiry_phone','Telefon','',1)}
+    ${input('inquiry_status','Holati','Yangi',1)}
+    ${input('inquiry_note','Izoh','',0,true)}<br>
+    <button class="btn" onclick="updateHomeInquiry(${id},${h.id})">Saqlash</button>
+    <button class="btn light" onclick="showHomeInquiries(${h.id})">Bekor</button>`);
+  setTimeout(()=>{
+    document.getElementById('f_inquiry_name').value=q.name||'';
+    document.getElementById('f_inquiry_phone').value=q.phone||'';
+    document.getElementById('f_inquiry_status').value=q.status||'Yangi';
+    document.getElementById('f_inquiry_note').value=q.note||'';
+  },20);
+}
+
+async function updateHomeInquiry(id,homeId){
+  const row={
+    name:val('inquiry_name'),
+    phone:val('inquiry_phone'),
+    status:val('inquiry_status')||'Yangi',
+    note:val('inquiry_note')
+  };
+  if(!row.name||!row.phone){alert('Mijoz ismi va telefonini kiriting.');return;}
+  const {data,error}=await client.from('home_inquiries').update(row).eq('id',id).select().single();
+  if(error)return alert('Tahrirlashda xatolik: '+error.message);
+  const idx=db.inquiries.findIndex(x=>Number(x.id)===Number(id));
+  if(idx>=0)db.inquiries[idx]=data;
+  closeModal();
+  render('homes');
+}
+
+async function deleteHomeInquiry(id){
+  if(!confirm('Bu murojaatni o‘chirishni tasdiqlaysizmi?'))return;
+  const {error}=await client.from('home_inquiries').delete().eq('id',id);
+  if(error)return alert('O‘chirishda xatolik: '+error.message);
+  db.inquiries=db.inquiries.filter(x=>Number(x.id)!==Number(id));
+  closeModal();
+  render('homes');
+}
+
 function buyers(){return header('Xaridorlar','Sizga uy qidirayotgan mijozlar','+ Xaridor qo‘shish','openBuyer()')+
   `<div class="panel"><div class="toolbar"><input class="search" placeholder="Ism, telefon, hudud..." oninput="filterBuyers(this.value)"></div><div id="buyerList">${buyerRows(db.buyers)}</div></div>`}
 function buyerRows(a){return `<div class="tablewrap"><table class="table"><tr><th>Mijoz</th><th>Talab</th><th>Budjet</th><th>Aloqa</th><th></th></tr>${a.map(x=>`<tr><td><b>${esc(x.name)}</b><br><span class="muted">${esc(x.note)}</span></td><td>${esc(x.city)} • ${esc(x.area)}<br>${x.rooms} xona • ${x.m2} m² • ${esc(x.finish)}</td><td>${money(x.budget)} gacha</td><td>${esc(x.phone)}</td><td><button class="small primary" onclick="showBuyerMatches(${x.id})">🎯 Mos uylar</button> <button class="small" onclick="editBuyer(${x.id})">Tahrir</button> <button class="small" onclick="del('buyers',${x.id})">×</button></td></tr>`).join('')}</table></div>`}
