@@ -83,7 +83,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 
 <div class="app">
 <aside class="side"><div class="brand">🏠 Xorazm Uylar CRM</div>
-<button type="button" class="nav active" data-page="dashboard" onclick="go('dashboard')">📊 Bosh sahifa</button><button type="button" class="nav" data-page="homes" onclick="go('homes')">🏠 Uylar</button><button type="button" class="nav" data-page="buyers" onclick="go('buyers')">👤 Xaridorlar</button><button type="button" class="nav" data-page="sellers" onclick="go('sellers')">🤝 Sotuvchilar</button><button type="button" class="nav" data-page="matches" onclick="go('matches')">🎯 Moslashtirish</button><button type="button" class="nav" data-page="sold" onclick="go('sold')">✅ Sotilgan</button><button type="button" class="nav" onclick="logoutCRM()">🚪 Chiqish</button>
+<button class="nav active" data-page="dashboard">📊 Bosh sahifa</button><button class="nav" data-page="homes">🏠 Uylar</button><button class="nav" data-page="buyers">👤 Xaridorlar</button><button class="nav" data-page="sellers">🤝 Sotuvchilar</button><button class="nav" data-page="matches">🎯 Moslashtirish</button><button class="nav" data-page="sold">✅ Sotilgan</button><button class="nav" onclick="logoutCRM()">🚪 Chiqish</button>
 <div style="margin-top:30px;color:#94a3b8;font-size:12px">Online versiya • ma'lumotlar Supabase bazasida saqlanadi</div></aside>
 <main class="main"><div id="page"></div></main>
 </div>
@@ -227,7 +227,16 @@ function priceInputValue(n){
   return v<0 ? '$'+Math.round(Math.abs(v)) : String(v);
 }
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-function go(p){document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render(p)}
+function go(p){
+  try{
+    document.querySelectorAll('.nav[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===p));
+    render(p);
+  }catch(e){
+    console.error('CRM page error:',e);
+    const page=document.getElementById('page');
+    if(page) page.innerHTML=`<div class="panel"><h2>⚠️ Bo‘limni ochishda xatolik</h2><p>${esc(e?.message||e)}</p><button class="btn" onclick="refresh()">Qayta yuklash</button></div>`;
+  }
+}
 function header(t,sub,btn,fn){return `<div class="top"><div><div class="title">${t}</div><div class="sub">${sub}</div></div>${btn?`<button class="btn" onclick="${fn}">${btn}</button>`:''}</div>`}
 function render(p='dashboard'){
   let h='';
@@ -536,8 +545,8 @@ function sellers(){return header('Sotuvchilar','Uy egalari va realtorlar bazasi'
   `<div class="panel"><div class="tablewrap"><table class="table"><tr><th>Ism</th><th>Telefon</th><th>Izoh</th><th></th></tr>${db.sellers.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.phone)}</td><td>${esc(x.note)}</td><td><button class="small" onclick="del('sellers',${x.id})">O‘chirish</button></td></tr>`).join('')}</table></div></div>`}
 function matches(){return header('Moslashtirish','Xaridor ↔ uy parametrlarini avtomatik solishtirish','+ Xaridor','openBuyer()')+
   `<div class="panel"><h3>Kimga qanday uy?</h3>${db.buyers.map(b=>{let m=findHomes(b);return `<div class="match"><b>👤 ${esc(b.name)}</b> — ${m.length} ta mos uy<br><span class="muted">${esc(b.city)}, ${esc(b.area)}, ${b.rooms} xona, ${b.m2} m², ${money(b.budget)} gacha</span><div>${m.slice(0,3).map(x=>`<div style="margin-top:8px">🏠 <b>${esc(x.title)}</b> — ${money(x.price)} <button class="small primary" onclick="showHome(${x.id})">Ko‘rish</button></div>`).join('')||'<span class="muted">Mos uy topilmadi.</span>'}</div></div>`}).join('')||'<div class="empty">Xaridor bazasi bo‘sh.</div>'}</div>`}
-function findHomes(b){return db.homes.filter(h=>h.status!=='Sotildi'&&(h.city===b.city)&&(!b.area||h.area.toLowerCase().includes(b.area.toLowerCase())||b.area.toLowerCase().includes(h.area.toLowerCase()))&&(Number(h.rooms)===Number(b.rooms))&&(Number(h.m2)>=Number(b.m2)*.85&&Number(h.m2)<=Number(b.m2)*1.2)&&(moneyCurrency(h.price)===moneyCurrency(b.budget)&&moneyAmount(h.price)<=moneyAmount(b.budget))&&(!b.finish||h.finish===b.finish))}
-function findBuyers(h){return db.buyers.filter(b=>b.city===h.city&&Number(b.rooms)===Number(h.rooms)&&Number(b.m2)>=Number(h.m2)*.85&&Number(b.m2)<=Number(h.m2)*1.2&&moneyCurrency(b.budget)===moneyCurrency(h.price)&&moneyAmount(b.budget)>=moneyAmount(h.price)&&(!b.finish||b.finish===h.finish))}
+function findHomes(b){return db.homes.filter(h=>h.status!=='Sotildi'&&String(h.city||'').trim()===String(b.city||'').trim()&&(!b.area||String(h.area||'').toLowerCase().includes(String(b.area||'').toLowerCase())||String(b.area||'').toLowerCase().includes(String(h.area||'').toLowerCase()))&&(Number(h.rooms)===Number(b.rooms))&&(Number(h.m2)>=Number(b.m2)*.85&&Number(h.m2)<=Number(b.m2)*1.2)&&(moneyCurrency(h.price)===moneyCurrency(b.budget)&&moneyAmount(h.price)<=moneyAmount(b.budget))&&(!b.finish||h.finish===b.finish))}
+function findBuyers(h){return db.buyers.filter(b=>b && String(b.city||'').trim()===String(h.city||'').trim()&&Number(b.rooms)===Number(h.rooms)&&Number(b.m2)>=Number(h.m2)*.85&&Number(b.m2)<=Number(h.m2)*1.2&&moneyCurrency(b.budget)===moneyCurrency(h.price)&&moneyAmount(b.budget)>=moneyAmount(h.price)&&(!b.finish||b.finish===h.finish))}
 function showBuyerMatches(id){let b=db.buyers.find(x=>x.id===id),m=findHomes(b);if(!b)return;modal(`<h2>🎯 ${esc(b.name)} uchun mos uylar</h2><p>${esc(b.city)} • ${esc(b.area)} • ${b.rooms} xona • ${b.m2} m² • ${money(b.budget)} gacha</p>${m.map(x=>`<div class="match"><b>${esc(x.title)}</b><br>${esc(x.city)} • ${esc(x.area)} • ${x.rooms} xona • ${x.m2} m²<br><b>${money(x.price)}</b> • 📞 ${esc(x.phone)}<br><button class="small primary" onclick="showHome(${x.id})">Uy tafsiloti</button></div>`).join('')||'<div class="empty">Aniq mos uy topilmadi.</div>'}<button class="btn light" onclick="closeModal()">Yopish</button>`)}
 function showHomeMatches(id){let h=db.homes.find(x=>x.id===id),m=findBuyers(h);if(!h)return;modal(`<h2>🎯 ${esc(h.title)} uchun mos xaridorlar</h2><p>${esc(h.city)} • ${esc(h.area)} • ${h.rooms} xona • ${h.m2} m² • ${money(h.price)}</p>${m.map(x=>`<div class="match"><b>${esc(x.name)}</b><br>${esc(x.city)} • ${esc(x.area)} • ${x.rooms} xona • ${x.m2} m²<br>Budjet: ${money(x.budget)} gacha • 📞 ${esc(x.phone)}<br><span class="muted">${esc(x.note)}</span></div>`).join('')||'<div class="empty">Mos xaridor topilmadi.</div>'}<button class="btn light" onclick="closeModal()">Yopish</button>`)}
 
