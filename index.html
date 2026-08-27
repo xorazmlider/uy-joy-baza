@@ -271,12 +271,9 @@ function withMeta(note,meta){
 function homeFloors(h){const n=Number(getMeta(h.note).floors);return n>0?n:0;}
 function buyerReq(b){
   const m=getMeta(b.note);
-  return {
-    minRooms:Number(m.minRooms)||Number(b.rooms)||0,
-    maxRooms:Number(m.maxRooms)||Number(b.rooms)||0,
-    minFloors:Number(m.minFloors)||0,
-    maxFloors:Number(m.maxFloors)||0
-  };
+  return {minRooms:Number(m.minRooms)||Number(b.rooms)||0,maxRooms:Number(m.maxRooms)||Number(b.rooms)||0,
+    minM2:Number(m.minM2)||Number(b.m2)||0,maxM2:Number(m.maxM2)||Number(b.m2)||0,
+    minFloors:Number(m.minFloors)||0,maxFloors:Number(m.maxFloors)||0};
 }
 function rangeText(min,max,unit){if(!min&&!max)return '—';if(min&&max&&min===max)return min+' '+unit;return (min||'—')+'–'+(max||'—')+' '+unit;}
 function homeCards(a){return `<div class="grid">${a.map(x=>{
@@ -471,46 +468,29 @@ async function deleteHomeInquiry(id){
 
 function buyers(){return header('Xaridorlar','Sizga uy qidirayotgan mijozlar','+ Xaridor qo‘shish','openBuyer()')+
   `<div class="panel"><div class="toolbar"><input class="search" placeholder="Ism, telefon, hudud..." oninput="filterBuyers(this.value)"></div><div id="buyerList">${buyerRows(db.buyers)}</div></div>`}
-function buyerRows(a){return `<div class="tablewrap"><table class="table"><tr><th>Mijoz</th><th>Talab</th><th>Budjet</th><th>Aloqa</th><th></th></tr>${a.map(x=>{const r=buyerReq(x);return `<tr><td><b>${esc(x.name)}</b><br><span class="muted">${esc(stripMeta(x.note))}</span></td><td>${esc(x.city)} • ${esc(x.area)}<br>${rangeText(r.minRooms,r.maxRooms,'xona')}${r.minFloors||r.maxFloors?` • ${rangeText(r.minFloors,r.maxFloors,'qavat')}`:''}</td><td>${money(x.budget)} gacha</td><td>${esc(x.phone)}</td><td><button class="small primary" onclick="showBuyerMatches(${x.id})">🎯 Mos uylar</button> <button class="small" onclick="editBuyer(${x.id})">Tahrir</button> <button class="small" onclick="del('buyers',${x.id})">×</button></td></tr>`}).join('')}</table></div>`}
+function buyerRows(a){return `<div class="tablewrap"><table class="table"><tr><th>Mijoz</th><th>Talab</th><th>Budjet</th><th>Aloqa</th><th></th></tr>${a.map(x=>{const r=buyerReq(x);return `<tr><td><b>${esc(x.name)}</b><br><span class="muted">${esc(stripMeta(x.note))}</span></td><td>${esc(x.city)} • ${esc(x.area)}<br>${rangeText(r.minRooms,r.maxRooms,'xona')} • ${rangeText(r.minM2,r.maxM2,'m²')}${r.minFloors||r.maxFloors?` • ${rangeText(r.minFloors,r.maxFloors,'qavat')}`:''}</td><td>${money(x.budget)} gacha</td><td>${esc(x.phone)}</td><td><button class="small primary" onclick="showBuyerMatches(${x.id})">🎯 Mos uylar</button> <button class="small" onclick="editBuyer(${x.id})">Tahrir</button> <button class="small" onclick="del('buyers',${x.id})">×</button></td></tr>`}).join('')}</table></div>`}
 function filterBuyers(q){q=q.toLowerCase();document.getElementById('buyerList').innerHTML=buyerRows(db.buyers.filter(x=>JSON.stringify(x).toLowerCase().includes(q)))}
 function sellers(){return header('Sotuvchilar','Uy egalari va realtorlar bazasi','+ Sotuvchi qo‘shish','openSeller()')+
   `<div class="panel"><div class="tablewrap"><table class="table"><tr><th>Ism</th><th>Telefon</th><th>Izoh</th><th></th></tr>${db.sellers.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.phone)}</td><td>${esc(x.note)}</td><td><button class="small" onclick="del('sellers',${x.id})">O‘chirish</button></td></tr>`).join('')}</table></div></div>`}
-function matches(){return header('Moslashtirish','Moslashtirish faqat narx + qavat + xona bo‘yicha ishlaydi. Xona va qavatda minimum–maksimum talablar qo‘llanadi; hudud, maydon, ta’mir va boshqa kategoriyalar hisobga olinmaydi.','+ Xaridor','openBuyer()')+
-  `<div class="panel"><h3>Kimga qanday uy?</h3>${db.buyers.map(b=>{let m=findHomes(b),r=buyerReq(b);return `<div class="match"><b>👤 ${esc(b.name)}</b> — ${m.length} ta mos uy<br><span class="muted">${esc(b.city)}, ${esc(b.area)}, ${rangeText(r.minRooms,r.maxRooms,'xona')}${r.minFloors||r.maxFloors?`, ${rangeText(r.minFloors,r.maxFloors,'qavat')}`:''}, ${money(b.budget)} gacha</span><div>${m.slice(0,3).map(x=>`<div style="margin-top:8px">🏠 <b>${esc(x.title)}</b> — ${money(x.price)} <button class="small primary" onclick="showHome(${x.id})">Ko‘rish</button></div>`).join('')||'<span class="muted">Mos uy topilmadi.</span>'}</div></div>`}).join('')||'<div class="empty">Xaridor bazasi bo‘sh.</div>'}</div>`}
-function findHomes(b){
+function matches(){return header('Moslashtirish','Moslashtirish faqat narx + qavat + xona bo‘yicha ishlaydi. Minimum/maksimum talablar shu mezonlarga qo‘llanadi; hudud, ta’mir va maydon mosligi talab qilinmaydi.','+ Xaridor','openBuyer()')+
+  `<div class="panel"><h3>Kimga qanday uy?</h3>${db.buyers.map(b=>{let m=findHomes(b),r=buyerReq(b);return `<div class="match"><b>👤 ${esc(b.name)}</b> — ${m.length} ta mos uy<br><span class="muted">${esc(b.city)}, ${esc(b.area)}, ${rangeText(r.minRooms,r.maxRooms,'xona')}, ${rangeText(r.minM2,r.maxM2,'m²')}${r.minFloors||r.maxFloors?`, ${rangeText(r.minFloors,r.maxFloors,'qavat')}`:''}, ${money(b.budget)} gacha</span><div>${m.slice(0,3).map(x=>`<div style="margin-top:8px">🏠 <b>${esc(x.title)}</b> — ${money(x.price)} <button class="small primary" onclick="showHome(${x.id})">Ko‘rish</button></div>`).join('')||'<span class="muted">Mos uy topilmadi.</span>'}</div></div>`}).join('')||'<div class="empty">Xaridor bazasi bo‘sh.</div>'}</div>`}
+function findHomes(b){const r=buyerReq(b);return db.homes.filter(h=>{
+  if(h.status==='Sotildi')return false;
+  if(moneyCurrency(h.price)!==moneyCurrency(b.budget)||moneyAmount(h.price)>moneyAmount(b.budget))return false;
+  if(r.minRooms&&Number(h.rooms)<r.minRooms)return false;
+  if(r.maxRooms&&Number(h.rooms)>r.maxRooms)return false;
+  if(r.minFloors||r.maxFloors){const f=homeFloors(h);if(!f)return false;if(r.minFloors&&f<r.minFloors)return false;if(r.maxFloors&&f>r.maxFloors)return false;}
+  return true;
+})}
+function findBuyers(h){return db.buyers.filter(b=>{
   const r=buyerReq(b);
-  return db.homes.filter(h=>{
-    if(h.status==='Sotildi')return false;
-    // Moslashtirish: faqat NARX + XONA + QAVAT.
-    if(moneyCurrency(h.price)!==moneyCurrency(b.budget)||moneyAmount(h.price)>moneyAmount(b.budget))return false;
-    if(r.minRooms&&Number(h.rooms)<r.minRooms)return false;
-    if(r.maxRooms&&Number(h.rooms)>r.maxRooms)return false;
-    if(r.minFloors||r.maxFloors){
-      const f=homeFloors(h);
-      if(!f)return false;
-      if(r.minFloors&&f<r.minFloors)return false;
-      if(r.maxFloors&&f>r.maxFloors)return false;
-    }
-    return true;
-  });
-}
-function findBuyers(h){
-  return db.buyers.filter(b=>{
-    const r=buyerReq(b);
-    // Moslashtirish: faqat NARX + XONA + QAVAT.
-    if(moneyCurrency(b.budget)!==moneyCurrency(h.price)||moneyAmount(b.budget)<moneyAmount(h.price))return false;
-    if(r.minRooms&&Number(h.rooms)<r.minRooms)return false;
-    if(r.maxRooms&&Number(h.rooms)>r.maxRooms)return false;
-    if(r.minFloors||r.maxFloors){
-      const f=homeFloors(h);
-      if(!f)return false;
-      if(r.minFloors&&f<r.minFloors)return false;
-      if(r.maxFloors&&f>r.maxFloors)return false;
-    }
-    return true;
-  });
-}
-function showBuyerMatches(id){let b=db.buyers.find(x=>x.id===id),m=findHomes(b);if(!b)return;modal(`<h2>🎯 ${esc(b.name)} uchun mos uylar</h2><p>${esc(b.city)} • ${esc(b.area)} • ${rangeText(buyerReq(b).minRooms,buyerReq(b).maxRooms,'xona')}${buyerReq(b).minFloors||buyerReq(b).maxFloors?` • ${rangeText(buyerReq(b).minFloors,buyerReq(b).maxFloors,'qavat')}`:''} • ${money(b.budget)} gacha</p>${m.map(x=>`<div class="match"><b>${esc(x.title)}</b><br>${esc(x.city)} • ${esc(x.area)} • ${x.rooms} xona • ${x.m2} m²<br><b>${money(x.price)}</b> • 📞 ${esc(x.phone)}<br><button class="small primary" onclick="showHome(${x.id})">Uy tafsiloti</button></div>`).join('')||'<div class="empty">Aniq mos uy topilmadi.</div>'}<button class="btn light" onclick="closeModal()">Yopish</button>`)}
+  if(moneyCurrency(b.budget)!==moneyCurrency(h.price)||moneyAmount(b.budget)<moneyAmount(h.price))return false;
+  if(r.minRooms&&Number(h.rooms)<r.minRooms)return false;
+  if(r.maxRooms&&Number(h.rooms)>r.maxRooms)return false;
+  if(r.minFloors||r.maxFloors){const f=homeFloors(h);if(!f)return false;if(r.minFloors&&f<r.minFloors)return false;if(r.maxFloors&&f>r.maxFloors)return false;}
+  return true;
+})}
+function showBuyerMatches(id){let b=db.buyers.find(x=>x.id===id),m=findHomes(b);if(!b)return;modal(`<h2>🎯 ${esc(b.name)} uchun mos uylar</h2><p>${esc(b.city)} • ${esc(b.area)} • ${rangeText(buyerReq(b).minRooms,buyerReq(b).maxRooms,'xona')} • ${rangeText(buyerReq(b).minM2,buyerReq(b).maxM2,'m²')}${buyerReq(b).minFloors||buyerReq(b).maxFloors?` • ${rangeText(buyerReq(b).minFloors,buyerReq(b).maxFloors,'qavat')}`:''} • ${money(b.budget)} gacha</p>${m.map(x=>`<div class="match"><b>${esc(x.title)}</b><br>${esc(x.city)} • ${esc(x.area)} • ${x.rooms} xona • ${x.m2} m²<br><b>${money(x.price)}</b> • 📞 ${esc(x.phone)}<br><button class="small primary" onclick="showHome(${x.id})">Uy tafsiloti</button></div>`).join('')||'<div class="empty">Aniq mos uy topilmadi.</div>'}<button class="btn light" onclick="closeModal()">Yopish</button>`)}
 function showHomeMatches(id){
   let h=db.homes.find(x=>x.id===id),m=findBuyers(h);
   if(!h)return;
@@ -535,7 +515,7 @@ function showHome(id){
   modal(`<h2>${esc(x.title)}</h2>${gallery}<div class="match"><b>${money(x.price)}</b><br>📍 ${esc(x.city)}, ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²${homeFloors(x)?` • 🏢 ${homeFloors(x)} qavat`:''}<br>🔑 ${esc(x.finish)}<br>👤 ${esc(x.seller)} • 📞 ${esc(x.phone)}${cleanNote?`<br>${esc(cleanNote)}`:''}</div><button class="btn light" onclick="closeModal()">Yopish</button>`);
 }
 function openHome(){modal(`<h2>🏠 Uy qo‘shish</h2><div class="formgrid">${input('title','Uy nomi','Masalan: 2 xonali pod klyuch uy',1)}${input('city','Shahar/tuman','Urganch',1)}${input('area','Hudud/mavze','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Maydon m²','60',1)}${input('floors','Qavat soni','2',1)}${input('price','Narx (so‘m yoki dollar)','680000000 yoki $170000',1)}${input('finish','Ta’mir holati','Pod klyuch',1)}${input('seller','Sotuvchi ismi','Sardor',1)}${input('phone','Telefon','+998...',1)}<div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>${input('note','Izoh','Stadion yonida',1,true)}</div><br><button class="btn" onclick="addHome()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
-function openBuyer(){modal(`<h2>👤 Xaridor qo‘shish</h2><div class="formgrid">${input('name','Mijoz ismi','Mijoz 1',1)}${input('phone','Telefon','+998...',1)}${input('city','Shahar/tuman','Urganch',1)}${input('area','Kerakli hudud','Stadion',0)}${input('minRooms','Xona — minimum','2',0)}${input('maxRooms','Xona — maksimum','5',0)}${input('minFloors','Qavat — minimum','1',0)}${input('maxFloors','Qavat — maksimum','2',0)}${input('budget','Maksimal budjet (so‘m yoki dollar)','700000000 yoki $170000',1)}<div><label class="muted">Ta’mir talabi (ixtiyoriy)</label><input id="f_finish" class="field" placeholder="Farqi yo‘q / Pod klyuch"></div>${input('type','Uy turi (ixtiyoriy)','Uy',0)}${input('note','Izoh','Stadion yaqinidan kerak',0,true)}</div><br><div class="muted" style="margin-bottom:8px">ℹ️ Moslashtirish faqat <b>narx + xona + qavat</b> bo‘yicha ishlaydi. Xona va qavat uchun minimum–maksimum talablar kiritiladi. Hudud, maydon, ta’mir va uy turi mosligi hisobga olinmaydi.</div><button class="btn" onclick="addBuyer()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
+function openBuyer(){modal(`<h2>👤 Xaridor qo‘shish</h2><div class="formgrid">${input('name','Mijoz ismi','Mijoz 1',1)}${input('phone','Telefon','+998...',1)}${input('city','Shahar/tuman','Urganch',1)}${input('area','Kerakli hudud','Stadion',0)}${input('minRooms','Xona — minimum','2',0)}${input('maxRooms','Xona — maksimum','5',0)}${input('minM2','Maydon — minimum m²','60',0)}${input('maxM2','Maydon — maksimum m²','150',0)}${input('minFloors','Qavat — minimum','1',0)}${input('maxFloors','Qavat — maksimum','2',0)}${input('budget','Maksimal budjet (so‘m yoki dollar)','700000000 yoki $170000',1)}<div><label class="muted">Ta’mir talabi (ixtiyoriy)</label><input id="f_finish" class="field" placeholder="Farqi yo‘q / Pod klyuch"></div>${input('type','Uy turi (ixtiyoriy)','Uy',0)}${input('note','Izoh','Stadion yaqinidan kerak',0,true)}</div><br><div class="muted" style="margin-bottom:8px">ℹ️ Moslashtirishda faqat narx, xona va qavat hisoblanadi. Minimum/maksimum chegaralar shu uch mezon bo‘yicha ishlaydi. Hudud, ta’mir va maydon mos kelmasa ham xaridor chiqaveradi.</div><button class="btn" onclick="addBuyer()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
 function openSeller(){modal(`<h2>🤝 Sotuvchi qo‘shish</h2>${input('name','Ism','Sardor',1)}${input('phone','Telefon','+998...',1)}${input('note','Izoh','Uy egasi',1,true)}<br><button class="btn" onclick="addSeller()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
 function input(id,label,ph,required,full){return `<div class="${full?'full':''}"><label class="muted">${label}</label><input id="f_${id}" class="field" placeholder="${ph}" ${required?'required':''}></div>`}
 function val(k){return document.getElementById('f_'+k)?.value.trim()||''}
@@ -581,10 +561,11 @@ async function addHome(){
   }
 }
 async function addBuyer(){
-  const meta={minRooms:Number(val('minRooms'))||0,maxRooms:Number(val('maxRooms'))||0,minFloors:Number(val('minFloors'))||0,maxFloors:Number(val('maxFloors'))||0};
+  const meta={minRooms:Number(val('minRooms'))||0,maxRooms:Number(val('maxRooms'))||0,minM2:Number(val('minM2'))||0,maxM2:Number(val('maxM2'))||0,minFloors:Number(val('minFloors'))||0,maxFloors:Number(val('maxFloors'))||0};
   if(meta.minRooms&&meta.maxRooms&&meta.minRooms>meta.maxRooms)return alert('Xona minimum maksimumdan katta bo‘lishi mumkin emas.');
+  if(meta.minM2&&meta.maxM2&&meta.minM2>meta.maxM2)return alert('Maydon minimum maksimumdan katta bo‘lishi mumkin emas.');
   if(meta.minFloors&&meta.maxFloors&&meta.minFloors>meta.maxFloors)return alert('Qavat minimum maksimumdan katta bo‘lishi mumkin emas.');
-  const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:meta.minRooms||meta.maxRooms||0,m2:0,budget:parseMoneyInput(val('budget')),finish:val('finish'),type:val('type'),note:withMeta(val('note'),meta)};
+  const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:meta.minRooms||meta.maxRooms||0,m2:meta.minM2||meta.maxM2||0,budget:parseMoneyInput(val('budget')),finish:val('finish'),type:val('type'),note:withMeta(val('note'),meta)};
   const {data,error}=await client.from('buyers').insert(row).select().single();
   if(error)return alert('Saqlashda xatolik: '+error.message);
   db.buyers.unshift(data);closeModal();go('buyers');
@@ -636,15 +617,17 @@ async function editBuyer(id){
   setTimeout(()=>{['name','phone','city','area','finish','type'].forEach(k=>document.getElementById('f_'+k).value=x[k]??'');
      const r=buyerReq(x);
      document.getElementById('f_minRooms').value=r.minRooms||'';document.getElementById('f_maxRooms').value=r.maxRooms||'';
+     document.getElementById('f_minM2').value=r.minM2||'';document.getElementById('f_maxM2').value=r.maxM2||'';
      document.getElementById('f_minFloors').value=r.minFloors||'';document.getElementById('f_maxFloors').value=r.maxFloors||'';
      document.getElementById('f_note').value=stripMeta(x.note||'');
      document.getElementById('f_budget').value=priceInputValue(x.budget);
     const btn=document.querySelector('#modalBox .btn');
     btn.onclick=async()=>{
-      const meta={minRooms:Number(val('minRooms'))||0,maxRooms:Number(val('maxRooms'))||0,minFloors:Number(val('minFloors'))||0,maxFloors:Number(val('maxFloors'))||0};
+      const meta={minRooms:Number(val('minRooms'))||0,maxRooms:Number(val('maxRooms'))||0,minM2:Number(val('minM2'))||0,maxM2:Number(val('maxM2'))||0,minFloors:Number(val('minFloors'))||0,maxFloors:Number(val('maxFloors'))||0};
       if(meta.minRooms&&meta.maxRooms&&meta.minRooms>meta.maxRooms)return alert('Xona minimum maksimumdan katta bo‘lishi mumkin emas.');
-          if(meta.minFloors&&meta.maxFloors&&meta.minFloors>meta.maxFloors)return alert('Qavat minimum maksimumdan katta bo‘lishi mumkin emas.');
-      const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:meta.minRooms||meta.maxRooms||0,m2:0,budget:parseMoneyInput(val('budget')),finish:val('finish'),type:val('type'),note:withMeta(val('note'),meta)};
+      if(meta.minM2&&meta.maxM2&&meta.minM2>meta.maxM2)return alert('Maydon minimum maksimumdan katta bo‘lishi mumkin emas.');
+      if(meta.minFloors&&meta.maxFloors&&meta.minFloors>meta.maxFloors)return alert('Qavat minimum maksimumdan katta bo‘lishi mumkin emas.');
+      const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:meta.minRooms||meta.maxRooms||0,m2:meta.minM2||meta.maxM2||0,budget:parseMoneyInput(val('budget')),finish:val('finish'),type:val('type'),note:withMeta(val('note'),meta)};
       const {data,error}=await client.from('buyers').update(row).eq('id',id).select().single();
       if(error)return alert('Tahrirlashda xatolik: '+error.message);
       Object.assign(x,data);closeModal();go('buyers');
