@@ -362,13 +362,15 @@ async function saveHomeInquiry(homeId){
         budget:Number(h.price)||Number(b.budget)||0,
         finish:h.finish||b.finish||'',
         type:b.type||'',
-        note:val('inquiry_note')||b.note||''
+        note:(val('inquiry_note')||b.note||'')+'\\n\\n[CRM_BUYER]\\nhome_id='+homeId+'\\n[/CRM_BUYER]'
       };
       const {data:updated,error:updateError}=await client.from('buyers').update(buyerUpdate).eq('id',b.id).select().single();
       if(updateError)throw updateError;
       const idx=db.buyers.findIndex(x=>Number(x.id)===Number(b.id));
       if(idx>=0)db.buyers[idx]=updated;
     }else{
+      const buyerNote=val('inquiry_note')||('Shu uyga murojaat qilgan mijoz: '+(h.title||''));
+      const buyerMeta='[CRM_BUYER]\\nhome_id='+homeId+'\\nrooms_min='+Number(h.rooms||0)+'\\nrooms_max='+Number(h.rooms||0)+'\\nfloor_min=0\\nfloor_max=0\\n[/CRM_BUYER]';
       const buyerRow={
         name,
         phone,
@@ -379,7 +381,7 @@ async function saveHomeInquiry(homeId){
         budget:Number(h.price)||0,
         finish:h.finish||'',
         type:'',
-        note:val('inquiry_note')||('Shu uyga murojaat qilgan mijoz: '+(h.title||''))
+        note:(buyerNote?buyerNote+'\\n\\n':'')+buyerMeta
       };
       const {data:buyerData,error:buyerError}=await client.from('buyers').insert(buyerRow).select().single();
       if(buyerError)throw buyerError;
@@ -472,7 +474,9 @@ function openContractForBuyer(buyerId){
   const b=db.buyers.find(x=>Number(x.id)===Number(buyerId));
   if(!b)return;
 
-  openContract(null,'buy',buyerId);
+  const meta=crmMeta(b.note,'CRM_BUYER');
+  const homeId=Number(meta.home_id||0);
+  openContract(homeId||null,'buy',buyerId);
 
   setTimeout(()=>{
     const set=(k,v)=>{
@@ -594,7 +598,7 @@ function openContract(homeId=null, contractType='sell', buyerId=null){
   <input type="hidden" id="f_contract_type" value="${isBuy?'buy':'sell'}">
   <input type="hidden" id="f_contract_buyer" value="${b?b.id:''}">
   <div class="formgrid">
-    ${selectField('contract_home','Uy',[{value:'',label:'Uy tanlang'}].concat(db.homes.map(x=>({value:String(x.id),label:`${x.title} — ${money(x.price)}`}))),false,true)}
+    <input type="hidden" id="f_contract_home" value="${h?.id||''}">
     ${input('contract_no','Shartnoma №','001',1)}
     ${input('contract_date','Sana',new Date().toISOString().slice(0,10),1)}
     ${input('contract_city','Shahar','Urganch sh.',1)}
