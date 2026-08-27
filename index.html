@@ -510,9 +510,63 @@ function shareHome(homeId){
   const h=db.homes.find(x=>Number(x.id)===Number(homeId));if(!h)return;
   const text=`${h.title||'Uy'} — ${money(h.price)}\n📍 ${h.city||''}, ${h.area||''}\n🏠 ${h.rooms||0} xona • 📐 ${h.m2||0} m²`;
   const url=location.origin+location.pathname+'?home='+encodeURIComponent(h.id);
-  if(navigator.share){navigator.share({title:h.title||'Xorazm Uylar',text,url}).catch(()=>{});return;}
-  const wa='https://wa.me/?text='+encodeURIComponent(text+'\n'+url);
-  window.open(wa,'_blank');
+  const encoded=encodeURIComponent(text+'\n'+url);
+  modal(`<h2>📤 Uyni ulashish</h2>
+    <p class="muted">Uy havolasini WhatsApp, Telegram orqali yuboring yoki linkni nusxalang.</p>
+    <div class="match">
+      <b>🏠 ${esc(h.title||'Uy')}</b><br>
+      ${money(h.price)}<br>
+      📍 ${esc(h.city||'')} ${h.area?'• '+esc(h.area):''}<br>
+      🏠 ${Number(h.rooms)||0} xona • 📐 ${Number(h.m2)||0} m²
+    </div>
+    <label>🔗 Uy havolasi</label>
+    <input id="shareHomeLink" class="field" value="${esc(url)}" readonly onclick="this.select()">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+      <button class="btn" onclick="shareHomeWhatsApp(${h.id})">🟢 WhatsApp</button>
+      <button class="btn" onclick="shareHomeTelegram(${h.id})">🔵 Telegram</button>
+      <button class="btn light" onclick="copyHomeShareLink(${h.id})">📋 Linkni nusxalash</button>
+      <button class="btn light" onclick="shareHomeNative(${h.id})">📤 Boshqa</button>
+    </div>
+    <br><button class="btn light" onclick="closeModal()">Yopish</button>`);
+}
+
+function getHomeShareData(homeId){
+  const h=db.homes.find(x=>Number(x.id)===Number(homeId));
+  if(!h)return null;
+  const text=`${h.title||'Uy'} — ${money(h.price)}\n📍 ${h.city||''}, ${h.area||''}\n🏠 ${h.rooms||0} xona • 📐 ${h.m2||0} m²`;
+  const url=location.origin+location.pathname+'?home='+encodeURIComponent(h.id);
+  return {h,text,url,encoded:encodeURIComponent(text+'\n'+url)};
+}
+
+function shareHomeWhatsApp(homeId){
+  const d=getHomeShareData(homeId);if(!d)return;
+  window.open('https://wa.me/?text='+d.encoded,'_blank','noopener');
+}
+
+function shareHomeTelegram(homeId){
+  const d=getHomeShareData(homeId);if(!d)return;
+  window.open('https://t.me/share/url?url='+encodeURIComponent(d.url)+'&text='+encodeURIComponent(d.text),'_blank','noopener');
+}
+
+async function copyHomeShareLink(homeId){
+  const d=getHomeShareData(homeId);if(!d)return;
+  try{
+    await navigator.clipboard.writeText(d.url);
+    alert('Uy havolasi nusxalandi. 📋');
+  }catch(e){
+    const el=document.getElementById('shareHomeLink');
+    if(el){el.focus();el.select();document.execCommand('copy');alert('Uy havolasi nusxalandi. 📋');}
+  }
+}
+
+async function shareHomeNative(homeId){
+  const d=getHomeShareData(homeId);if(!d)return;
+  if(navigator.share){
+    try{await navigator.share({title:d.h.title||'Xorazm Uylar',text:d.text,url:d.url});}
+    catch(e){}
+  }else{
+    copyHomeShareLink(homeId);
+  }
 }
 
 function homes(){
@@ -1441,6 +1495,11 @@ async function loadPublicHomes(){
   }
   publicHomesDb=data||[];
   document.getElementById('publicHomeList').innerHTML=publicHomeCards(publicHomesDb);
+  const sharedId=new URLSearchParams(window.location.search).get('home');
+  if(sharedId){
+    const sharedHome=publicHomesDb.find(x=>String(x.id)===String(sharedId));
+    if(sharedHome) setTimeout(()=>showPublicHome(sharedHome.id),50);
+  }
 }
 function filterPublicHomes(q){
   q=String(q||'').toLowerCase().trim();
