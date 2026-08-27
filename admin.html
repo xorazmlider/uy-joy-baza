@@ -204,6 +204,24 @@
   .contract-preview{border:0;padding:10mm}
 }
 
+
+/* XODIMLAR */
+.staff-panel{margin-top:20px;padding:18px;background:#fff;border:1px solid #ddd;border-radius:15px}
+.staff-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.staff-list{display:grid;gap:10px;margin-top:15px}
+.staff-card{border:1px solid #e5e7eb;border-radius:12px;padding:14px;background:#fafafa}
+.staff-meta{color:#555;line-height:1.7;margin-top:5px}
+.staff-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.staff-primary{background:#111;color:#fff}
+.staff-blue{background:#2563eb;color:#fff}
+.staff-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;overflow:auto;padding:20px}
+.staff-box{max-width:650px;margin:40px auto;background:#fff;border-radius:16px;padding:20px}
+.staff-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.staff-form label{font-weight:bold;font-size:13px}
+.staff-form input,.staff-form select{width:100%;padding:11px;margin-top:5px;border:1px solid #ddd;border-radius:8px}
+.staff-note{font-size:13px;color:#777;margin:0 0 12px}
+@media(max-width:600px){.staff-form{grid-template-columns:1fr}.staff-modal{padding:8px}.staff-box{margin:10px auto;padding:14px}}
+
 </style>
 </head>
 
@@ -268,6 +286,18 @@
 
     <div id="homesList"></div>
 
+
+    <div class="staff-panel">
+      <div class="staff-head">
+        <div>
+          <h2 style="margin:0">👥 Xodimlar</h2>
+          <div style="color:#777;margin-top:4px">Agent, rieltor va menejerlar bazasi</div>
+        </div>
+        <button class="staff-primary" onclick="openStaffAdd()">＋ Xodim qo‘shish</button>
+      </div>
+      <div id="staffList" class="staff-list"><p>Yuklanmoqda...</p></div>
+    </div>
+
   </div>
 
 </div>
@@ -301,98 +331,82 @@ function formatAdminPrice(value){
 
 async function login() {
 
-  const email =
-    document.getElementById("email").value.trim();
+  let loginValue = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const message = document.getElementById("loginMessage");
 
-  const password =
-    document.getElementById("password").value;
-
-  const message =
-    document.getElementById("loginMessage");
-
-  if (!email || !password) {
-
-    message.textContent =
-      "Email va parolni kiriting.";
-
+  if (!loginValue || !password) {
+    message.textContent = "Login (yoki email) va parolni kiriting.";
     return;
   }
 
   try {
+    /* Xodim login bilan kirsa, uning ichki auth_email manzilini topamiz. */
+    if (!loginValue.includes("@")) {
+      const staffLookup = await fetch(
+        SUPABASE_URL +
+        "/rest/v1/staff?select=login,auth_email,is_active&login=eq." +
+        encodeURIComponent(loginValue) + "&limit=1",
+        {
+          headers: {
+            "apikey": SUPABASE_KEY,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+
+      if (staffLookup.ok) {
+        const rows = await staffLookup.json();
+        if (rows.length && rows[0].is_active !== false && rows[0].auth_email) {
+          loginValue = rows[0].auth_email;
+        }
+      }
+    }
 
     const response = await fetch(
-      SUPABASE_URL +
-      "/auth/v1/token?grant_type=password",
+      SUPABASE_URL + "/auth/v1/token?grant_type=password",
       {
-
         method: "POST",
-
         headers: {
-
           "apikey": SUPABASE_KEY,
-
-          "Content-Type":
-            "application/json"
-
+          "Content-Type": "application/json"
         },
-
         body: JSON.stringify({
-
-          email: email,
-
+          email: loginValue,
           password: password
-
         })
-
       }
     );
 
-
-    const data =
-      await response.json();
-
+    const data = await response.json();
 
     if (!response.ok) {
-
       throw new Error(
         data.error_description ||
         data.msg ||
         data.error ||
         "Login xatosi"
       );
-
     }
 
+    accessToken = data.access_token;
 
-    accessToken =
-      data.access_token;
-
-
-    document
-      .getElementById("loginBox")
-      .classList.add("hidden");
-
-    document
-      .getElementById("adminPanel")
-      .classList.remove("hidden");
-
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("adminPanel").classList.remove("hidden");
 
     loadHomes();
-
+    loadStaff();
 
   } catch (error) {
-
-    message.textContent =
-      "❌ " + error.message;
-
+    message.textContent = "❌ " + error.message;
   }
-
 }
 
 
 /* =========================
    HOMESNI OLISH
 ========================= */
+
 
 async function loadHomes() {
 
@@ -1000,6 +1014,212 @@ async function deleteHome(id) {
 }
 
 
+
+/* =========================
+   XODIMLAR
+========================= */
+
+let staff = [];
+const STAFF_FUNCTION_URL = SUPABASE_URL + "/functions/v1/swift-staff";
+
+async function loadStaff() {
+  const list = document.getElementById("staffList");
+  if (!list) return;
+  list.innerHTML = "<p>Yuklanmoqda...</p>";
+
+  try {
+    const response = await fetch(
+      SUPABASE_URL + "/rest/v1/staff?select=*&order=id.desc",
+      {
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": "Bearer " + accessToken
+        }
+      }
+    );
+    if (!response.ok) throw new Error(await response.text());
+    staff = await response.json();
+    showStaff(staff);
+  } catch (error) {
+    list.innerHTML = "<p>❌ Xodimlarni olishda xato.</p>";
+    console.error(error);
+  }
+}
+
+function showStaff(data) {
+  const list = document.getElementById("staffList");
+  if (!list) return;
+
+  if (!data.length) {
+    list.innerHTML = "<p>Hozircha xodimlar yo‘q.</p>";
+    return;
+  }
+
+  list.innerHTML = data.map(s => `
+    <div class="staff-card">
+      <b>👤 ${escapeHtml(s.name || "-")}</b>
+      <div class="staff-meta">
+        🔑 Login: <b>${escapeHtml(s.login || "-")}</b><br>
+        📞 Telefon: ${escapeHtml(s.phone || "-")}<br>
+        📧 Email: ${escapeHtml(s.email || "Kiritilmagan")}<br>
+        🛡 Rol: ${escapeHtml(s.role || "-")}<br>
+        ${s.is_active === false ? "🔴 Faol emas" : "🟢 Faol"}
+      </div>
+      <div class="staff-actions">
+        <button class="staff-blue" onclick="editStaff(${Number(s.id)})">✏️ Tahrir</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function openStaffAdd() {
+  document.getElementById("staffMode").value = "add";
+  document.getElementById("staffId").value = "";
+  document.getElementById("staffName").value = "";
+  document.getElementById("staffPhone").value = "";
+  document.getElementById("staffLogin").value = "";
+  document.getElementById("staffPassword").value = "";
+  document.getElementById("staffEmail").value = "";
+  document.getElementById("staffRole").value = "Agent";
+  document.getElementById("staffManager").value = "";
+  document.getElementById("staffActive").value = "true";
+  document.getElementById("staffPasswordLabel").style.display = "block";
+  document.getElementById("staffLogin").readOnly = false;
+  document.getElementById("staffModalTitle").textContent = "👤 Xodim qo‘shish";
+  document.getElementById("staffModal").classList.remove("hidden");
+}
+
+function closeStaffModal() {
+  document.getElementById("staffModal")?.classList.add("hidden");
+}
+
+function editStaff(id) {
+  const s = staff.find(x => Number(x.id) === Number(id));
+  if (!s) return;
+
+  document.getElementById("staffMode").value = "edit";
+  document.getElementById("staffId").value = s.id;
+  document.getElementById("staffName").value = s.name || "";
+  document.getElementById("staffPhone").value = s.phone || "";
+  document.getElementById("staffLogin").value = s.login || "";
+  document.getElementById("staffPassword").value = "";
+  document.getElementById("staffEmail").value = s.email || "";
+  document.getElementById("staffRole").value = s.role || "Agent";
+  document.getElementById("staffManager").value = s.manager_id || "";
+  document.getElementById("staffActive").value = s.is_active === false ? "false" : "true";
+
+  document.getElementById("staffPasswordLabel").style.display = "none";
+  document.getElementById("staffLogin").readOnly = true;
+  document.getElementById("staffModalTitle").textContent = "✏️ Xodimni tahrirlash";
+  document.getElementById("staffModal").classList.remove("hidden");
+}
+
+async function saveStaff() {
+  const mode = document.getElementById("staffMode").value;
+  const id = document.getElementById("staffId").value;
+
+  const name = document.getElementById("staffName").value.trim();
+  const phone = document.getElementById("staffPhone").value.trim();
+  const login = document.getElementById("staffLogin").value.trim();
+  const password = document.getElementById("staffPassword").value;
+  const email = document.getElementById("staffEmail").value.trim();
+  const role = document.getElementById("staffRole").value;
+  const manager_id = document.getElementById("staffManager").value.trim() || null;
+  const is_active = document.getElementById("staffActive").value === "true";
+
+  if (!name || !login) {
+    alert("Ism familiya va loginni kiriting.");
+    return;
+  }
+  if (mode === "add" && !password) {
+    alert("Yangi xodim uchun parol kiriting.");
+    return;
+  }
+
+  try {
+    if (mode === "add") {
+      /* Auth uchun texnik email. Haqiqiy email shart emas. */
+      const internalEmail =
+        login.toLowerCase().replace(/[^a-z0-9._-]/g, "_") +
+        "@login.xorazmuylar.uz";
+
+      const response = await fetch(STAFF_FUNCTION_URL, {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": "Bearer " + accessToken,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name,
+          phone,
+          login,
+          password,
+          email: internalEmail,
+          auth_email: internalEmail,
+          role,
+          manager_id,
+          is_active
+        })
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Xodimni qo‘shib bo‘lmadi.");
+      }
+
+      /* Haqiqiy emailni bo‘sh qoldiramiz; admin keyin Tahrir orqali qo‘shadi. */
+      await fetch(
+        SUPABASE_URL + "/rest/v1/staff?login=eq." + encodeURIComponent(login),
+        {
+          method: "PATCH",
+          headers: {
+            "apikey": SUPABASE_KEY,
+            "Authorization": "Bearer " + accessToken,
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+          },
+          body: JSON.stringify({ email: email || null })
+        }
+      );
+
+      alert("✅ Xodim qo‘shildi.");
+    } else {
+      const response = await fetch(
+        SUPABASE_URL + "/rest/v1/staff?id=eq." + encodeURIComponent(id),
+        {
+          method: "PATCH",
+          headers: {
+            "apikey": SUPABASE_KEY,
+            "Authorization": "Bearer " + accessToken,
+            "Content-Type": "application/json",
+            "Prefer": "return=representation"
+          },
+          body: JSON.stringify({
+            name,
+            phone,
+            email: email || null,
+            role,
+            manager_id,
+            is_active
+          })
+        }
+      );
+
+      if (!response.ok) throw new Error(await response.text());
+      alert("✅ Xodim ma’lumotlari yangilandi.");
+    }
+
+    closeStaffModal();
+    await loadStaff();
+
+  } catch (error) {
+    alert("❌ " + error.message);
+    console.error(error);
+  }
+}
+
+
 /* =========================
    LOGOUT
 ========================= */
@@ -1010,6 +1230,7 @@ function logout() {
 
   homes = [];
   inquiries = [];
+  staff = [];
 
 
   document
@@ -1218,6 +1439,50 @@ function saveContractDraft(){
 
 </script>
 
+
+
+<!-- XODIM MODALI -->
+<div id="staffModal" class="staff-modal hidden">
+  <div class="staff-box">
+    <button style="float:right;background:#e53935;color:#fff" onclick="closeStaffModal()">✕ Yopish</button>
+    <h2 id="staffModalTitle">👤 Xodim qo‘shish</h2>
+    <p class="staff-note">
+      Yangi xodim qo‘shishda haqiqiy email kiritish shart emas.
+      Login va parol bilan kiradi. Haqiqiy emailni keyin <b>Tahrir</b> orqali qo‘shasiz.
+    </p>
+
+    <input type="hidden" id="staffMode" value="add">
+    <input type="hidden" id="staffId" value="">
+
+    <div class="staff-form">
+      <label>Ism familiya<input id="staffName" placeholder="Masalan: Anvar Karimov"></label>
+      <label>Telefon<input id="staffPhone" placeholder="+998..."></label>
+      <label>Login<input id="staffLogin" placeholder="anvar22"></label>
+      <label id="staffPasswordLabel">Parol<input id="staffPassword" type="password" placeholder="Parol"></label>
+      <label>Email (ixtiyoriy)<input id="staffEmail" type="email" placeholder="Keyin ham qo‘shish mumkin"></label>
+      <label>Rol
+        <select id="staffRole">
+          <option value="Agent">Agent</option>
+          <option value="Rieltor">Rieltor</option>
+          <option value="Menejer">Menejer</option>
+          <option value="Admin">Admin</option>
+        </select>
+      </label>
+      <label>Menejer ID (ixtiyoriy)<input id="staffManager" placeholder="Masalan: 3"></label>
+      <label>Holati
+        <select id="staffActive">
+          <option value="true">🟢 Faol</option>
+          <option value="false">🔴 Faol emas</option>
+        </select>
+      </label>
+    </div>
+
+    <div style="margin-top:15px">
+      <button class="staff-primary" onclick="saveStaff()">💾 Saqlash</button>
+      <button onclick="closeStaffModal()">Bekor</button>
+    </div>
+  </div>
+</div>
 
 <!-- SHARTNOMA MODALI -->
 <div id="contractModal" class="contract-modal hidden">
