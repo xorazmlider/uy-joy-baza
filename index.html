@@ -868,7 +868,20 @@ function showHome(id){
 }
 function openHome(){modal(`<h2>🏠 Uy qo‘shish</h2><div class="formgrid">${input('title','Uy nomi','Masalan: 2 xonali pod klyuch uy',1)}${selectField('type','🏠 Uy turi',[{value:'Kvartira',label:'Kvartira'},{value:'Hovli uy',label:'Hovli uy'}],true)}${input('city','Shahar/tuman','Urganch',1)}${input('area','Hudud/mavze','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Maydon m²','60',1)}${input('floor','Qavat','1',0)}${input('price','Narx (so‘m yoki dollar)','680000000 yoki $170000',1)}${input('finish','Ta’mir holati','Pod klyuch',1)}${input('seller','Sotuvchi ismi','Sardor',1)}${input('phone','Telefon','+998...',1)}<div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>${input('note','Izoh','Stadion yonida',1,true)}</div><br><button class="btn" onclick="addHome()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
 function openBuyer(){modal(`<h2>👤 Xaridor qo‘shish</h2><div class="formgrid">${input('name','Mijoz ismi','Mijoz 1',1)}${input('phone','Telefon','+998...',1)}${input('city','Shahar/tuman','Urganch',0)}${input('area','Kerakli hudud','Stadion',0)}${input('rooms_min','Xona — minimum','2',1)}${input('rooms_max','Xona — maksimum','5',1)}${input('floor_min','Qavat — minimum','1',0)}${input('floor_max','Qavat — maksimum','2',0)}${input('m2','Kerakli maydon m²','60',0)}${input('budget','Maksimal budjet (so‘m yoki dollar)','700000000 yoki $170000',1)}${input('finish','Ta’mir talabi (ixtiyoriy)','Pod klyuch',0)}${selectField('type','🏠 Uy turi',[{value:'',label:'Farqi yo‘q'},{value:'Kvartira',label:'Kvartira'},{value:'Hovli uy',label:'Hovli uy'}])}${input('note','Izoh','Stadion yaqinidan kerak',0,true)}</div><br><div class="muted">🎯 Moslashtirish: narx + xona + qavat + uy turi. Xona va qavat min/max oralig‘ida tekshiriladi. “Farqi yo‘q” tanlansa, ikkala tur ham mos keladi.</div><br><button class="btn" onclick="addBuyer()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
-function openSeller(){modal(`<h2>🤝 Sotuvchi qo‘shish</h2>${input('name','Ism','Sardor',1)}${input('phone','Telefon','+998...',1)}${input('note','Izoh','Uy egasi',1,true)}<br><button class="btn" onclick="addSeller()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
+function openSeller(){modal(`<h2>🤝 Sotuvchi qo‘shish</h2><div class="formgrid">
+${input('name','Ism','Sardor',1)}
+${input('phone','Telefon','+998...',1)}
+${input('title','Uy nomi','Masalan: 5 xonali hovli',1)}
+${input('city','Shahar/tuman','Urganch',1)}
+${input('area','Hudud/mavze','Stadion',1)}
+${input('rooms','Xona soni','5',1)}
+${input('m2','Maydon m²','200',1)}
+${input('price','Narx (so‘m yoki dollar)','700000000 yoki $170000',1)}
+${input('finish','Ta’mir holati','Remontli',1)}
+${selectField('type','🏠 Uy turi',[{value:'Kvartira',label:'Kvartira'},{value:'Hovli uy',label:'Hovli uy'}],true)}
+<div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>
+${input('note','Izoh','Uy haqida qo‘shimcha ma’lumot',0,true)}
+</div><br><div class="muted">💡 Sotuvchi va uning uyi bir vaqtda bazaga saqlanadi. Uy avtomatik ravishda shu sotuvchiga bog‘lanadi.</div><br><button class="btn" onclick="addSeller()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`) }
 function input(id,label,ph,required,full){return `<div class="${full?'full':''}"><label class="muted">${label}</label><input id="f_${id}" class="field" placeholder="${ph}" ${required?'required':''}></div>`}
 function selectField(id,label,options,required=false,full=false){return `<div class="${full?'full':''}"><label class="muted">${label}</label><select id="f_${id}" class="field" ${required?'required':''}>${options.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('')}</select></div>`}
 function val(k){return document.getElementById('f_'+k)?.value.trim()||''}
@@ -921,10 +934,51 @@ async function addBuyer(){
   db.buyers.unshift(data);closeModal();go('buyers');
 }
 async function addSeller(){
-  const row={name:val('name'),phone:val('phone'),note:val('note')};
-  const {data,error}=await client.from('sellers').insert(row).select().single();
-  if(error)return alert('Saqlashda xatolik: '+error.message);
-  db.sellers.unshift(data);closeModal();go('sellers');
+  const name=val('name'), phone=val('phone'), title=val('title');
+  if(!name||!phone||!title){alert('Iltimos, ism, telefon va uy nomini kiriting.');return;}
+
+  const imageInput=document.getElementById('f_images');
+  const files=[...(imageInput?.files||[])];
+  if(files.length>10){alert('Ko‘pi bilan 10 ta rasm yuborish mumkin.');return;}
+
+  try{
+    const sellerRow={name,phone,note:val('note')||'Uy egasi'};
+    const sellerRes=await client.from('sellers').insert(sellerRow).select().single();
+    if(sellerRes.error)throw sellerRes.error;
+
+    let imageUrls=[];
+    if(files.length) imageUrls=await uploadPropertyImages(files,title);
+
+    let note=val('note');
+    if(imageUrls.length){
+      note=(note?note+'\n\n':'')+'[PROPERTY_IMAGES]\n'+imageUrls.join('\n')+'\n[/PROPERTY_IMAGES]';
+    }
+
+    const homeRow={
+      title,
+      city:val('city'),
+      area:val('area'),
+      rooms:Number(val('rooms'))||0,
+      m2:Number(val('m2'))||0,
+      price:parseMoneyInput(val('price'))||0,
+      finish:val('finish'),
+      type:val('type'),
+      seller:name,
+      phone,
+      status:'Faol',
+      note
+    };
+
+    const homeRes=await client.from('homes').insert(homeRow).select().single();
+    if(homeRes.error)throw homeRes.error;
+
+    db.sellers.unshift(sellerRes.data);
+    db.homes.unshift(homeRes.data);
+    closeModal();
+    go('sellers');
+  }catch(err){
+    alert('Saqlashda xatolik: '+(err.message||err));
+  }
 }
 
 async function editHome(id){
