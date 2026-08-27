@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="uz">
 <head>
@@ -447,83 +448,281 @@ function sellers(){return header('Sotuvchilar','Uy egalari va realtorlar bazasi'
   `<div class="panel"><div class="tablewrap"><table class="table"><tr><th>Ism</th><th>Telefon</th><th>Izoh</th><th></th></tr>${db.sellers.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.phone)}</td><td>${esc(visibleNote(x.note))}</td><td><button class="small" onclick="del('sellers',${x.id})">O‘chirish</button></td></tr>`).join('')}</table></div></div>`}
 function matches(){return header('Moslashtirish','Xaridor ↔ uy parametrlarini avtomatik solishtirish','+ Xaridor','openBuyer()')+
   `<div class="panel"><h3>Kimga qanday uy?</h3>${db.buyers.map(b=>{let m=findHomes(b);return `<div class="match"><b>👤 ${esc(b.name)}</b> — ${m.length} ta mos uy<br><span class="muted">${esc(b.city)}, ${esc(b.area)}, ${b.rooms} xona, ${b.m2} m², ${money(b.budget)} gacha</span><div>${m.slice(0,3).map(x=>`<div style="margin-top:8px">🏠 <b>${esc(x.title)}</b> — ${money(x.price)} <button class="small primary" onclick="showHome(${x.id})">Ko‘rish</button></div>`).join('')||'<span class="muted">Mos uy topilmadi.</span>'}</div></div>`}).join('')||'<div class="empty">Xaridor bazasi bo‘sh.</div>'}</div>`}
+
 function contracts(){
-  return header('Shartnomalar','Siz bergan Word namunasi asosida ko‘chmas mulk reklama shartnomasi','+ Shartnoma yaratish','openContract()')+
-  `<div class="panel"><h3>📄 Ko‘chmas mulk reklama xizmat shartnomalari</h3><p class="muted">Uy va buyurtmachi ma’lumotlarini tanlang. Shartnoma Word namunangizdagi mazmun asosida tayyorlanadi.</p>
-  ${db.homes.map(h=>`<div class="match"><b>${esc(h.title)}</b> — ${money(h.price)}<br>👤 ${esc(h.seller||'-')} • 📞 ${esc(h.phone||'-')}<br><button class="small primary" onclick="openContract(${h.id})">📄 Shartnoma yaratish</button></div>`).join('')||'<div class="empty">Avval uy qo‘shing.</div>'}</div>`;
-}
-function openContract(homeId=null){
-  const h=homeId?db.homes.find(x=>Number(x.id)===Number(homeId)):null;
-  const owner=h?.seller||'';
-  const phone=h?.phone||'';
-  const floor=h?homeFloor(h):'';
-  modal(`<h2>📄 Shartnoma yaratish</h2><div class="formgrid">
-    ${selectField('contract_home','Uy',[{value:'',label:'Uy tanlang'}].concat(db.homes.map(x=>({value:String(x.id),label:`${x.title} — ${money(x.price)}`}))),false,true)}
-    ${input('contract_no','Shartnoma №','001',1)}
-    ${input('contract_date','Sana','2026-08-27',1)}
-    ${input('contract_city','Shahar','Urganch sh.',1)}
-    ${input('contract_customer','Buyurtmachi F.I.Sh.','F.I.Sh.',1)}
-    ${input('contract_customer_phone','Buyurtmachi telefoni','+998...',0)}
-    ${input('contract_address','Manzil','To‘liq manzil',1)}
-    ${input('contract_house','Uy №','',0)}
-    ${input('contract_rooms','Xona soni','2',0)}
-    ${input('contract_floor','Qavati','1',0)}
-    ${input('contract_land','Yer hajmi','',0)}
-    ${input('contract_balcony','Balkon','',0)}
-    ${input('contract_price','Narxi','510000000',0)}
-    ${input('contract_info','Ma’lumot','',0,true)}
-    ${input('contract_buy','Olish / xaridor haqida','',0,true)}
-    ${input('contract_mob1','Mobi 1','+998...',0)}
-    ${input('contract_mob2','Mobi 2','+998...',0)}
-    ${input('contract_offer','Taklif','',0,true)}
-    ${input('contract_land_total','Umumiy yer maydoni','',0)}
-    ${input('contract_material','Nimadan qurilgan','',0)}
-    ${input('contract_built','Qurilgan vaqti','',0)}
-    ${input('contract_height','Xona balandligi','',0)}
-    ${input('contract_repair','Remont','',0)}
-    ${input('contract_school','Maktab','',0)}
-    ${input('contract_kindergarten','Bog‘cha','',0)}
-    ${input('contract_route','Marshrut','',0)}
-    ${input('contract_hospital','Shifoxona','',0)}
-    ${input('contract_prepay','Oldindan to‘lov','',0)}
-    ${input('contract_sale_fee','Sotilgandan keyingi xizmat to‘lovi','',0)}
-  </div><br><div class="muted">💡 Uy tanlasangiz, uning mavjud ma’lumotlari avtomatik to‘ldiriladi. Keyin “Ko‘rish / Chop etish” orqali tayyor shartnomani chiqarasiz.</div><br>
-  <button class="btn" onclick="previewContract()">📄 Ko‘rish / Chop etish</button> <button class="btn light" onclick="closeModal()">Bekor</button></div>`);
-  if(h) setTimeout(()=>fillContractHome(),30);
-}
-function fillContractHome(){
-  const id=val('contract_home'); const h=db.homes.find(x=>Number(x.id)===Number(id)); if(!h)return;
-  const set=(k,v)=>{const e=document.getElementById('f_'+k);if(e)e.value=v??''};
-  set('contract_customer',h.seller||''); set('contract_customer_phone',h.phone||''); set('contract_address',[h.city,h.area].filter(Boolean).join(', '));
-  set('contract_rooms',h.rooms||''); set('contract_floor',homeFloor(h)||''); set('contract_price',priceInputValue(h.price)); set('contract_info',visibleNote(h.note));
-  set('contract_city',h.city||'Urganch sh.');
-}
-function contractEsc(v){return esc(v||'—')}
-function contractHtml(){
-  const v=k=>val(k); const h=db.homes.find(x=>Number(x.id)===Number(v('contract_home')));
-  const title=h?.title||'Sotiladigan ko‘chmas mulk';
-  const type=h?.type||'';
-  const date=v('contract_date')||new Date().toISOString().slice(0,10);
-  const customer=v('contract_customer')||h?.seller||'';
-  const price=v('contract_price')|| (h?priceInputValue(h.price):'');
-  return `<!doctype html><html lang="uz"><head><meta charset="utf-8"><title>Shartnoma №${contractEsc(v('contract_no'))}</title><style>
-  body{font-family:Arial,sans-serif;color:#111;margin:0}.page{width:190mm;min-height:270mm;margin:0 auto;padding:12mm 10mm;box-sizing:border-box;page-break-after:always}.page:last-child{page-break-after:auto}h1,h2{text-align:center;font-size:16px;margin:0 0 8px}p{font-size:12px;line-height:1.45;margin:5px 0}.line{display:inline-block;border-bottom:1px solid #111;min-width:120px}.data{border:1px solid #111;border-collapse:collapse;width:100%;font-size:11px;margin:8px 0}.data td,.data th{border:1px solid #111;padding:6px;vertical-align:top}.sign{display:flex;justify-content:space-between;margin-top:30px;font-size:12px}.small{font-size:10px}.check{margin:3px 0}</style></head><body>
-  <section class="page"><h1>КЎЧМАС МУЛК РЕКЛАМА ХИЗМАТИНИ КЎРСАТИЛИШИ ТЎҒРИСИДА</h1><h2>_____ -СОНЛИ ШАРТНОМАСИ</h2>
-  <p>${contractEsc(v('contract_city'))} __________ ${contractEsc(date)} йил</p>
-  <p>ЯТТ Худайберганов Алишер Сапарбаевич номидан 11.03.2025 йилдаги №6792378-сон маълумотнома асосида фаолият юритувчи (кейинги ўринларда – БАЖАРУВЧИ) бир томондан ва фуқаро <b>${contractEsc(customer)}</b> (кейинги ўринларда – БУЮРТМАЧИ) иккинчи томондан, реклама хизматлар кўрсатилиши бўйича қуйидагилар ҳақида туздилар:</p>
-  <p><b>1. ШАРТНОМА МАЗМУНИ</b></p><p>1.1 «БУЮРТМАЧИ» ўзига тегишли бўлган мулкнинг тўлиқ маълумотларини «БАЖАРУВЧИ»га бериш, шу жумладан мулкини бозорида харидорлар топиш ва сотиш хизматларини кўрсатиш ҳуқуқини «БАЖАРУВЧИ»га беради.</p><p>1.2. «БАЖАРУВЧИ» «БУЮРТМАЧИ»га кўчмас мулкни кўрсатиш ва маълумотларини бериш, ҳужжатларни тайёрлашга ёрдам бериш билан шуғулланади.</p><p>1.3. «БАЖАРУВЧИ» хизмат кўрсатиш мажбуриятини олади, «БУЮРТМАЧИ» эса белгиланган муддатда тўловларни амалга оширади.</p>
-  <table class="data"><tr><td>МАНЗИЛ</td><td>${contractEsc(v('contract_address'))}</td></tr><tr><td>УЙ №</td><td>${contractEsc(v('contract_house'))}</td></tr><tr><td>Хона сони</td><td>${contractEsc(v('contract_rooms')||h?.rooms)}</td></tr><tr><td>Қавати</td><td>${contractEsc(v('contract_floor')|| (h?homeFloor(h):''))}</td></tr><tr><td>Ер ҳажми</td><td>${contractEsc(v('contract_land'))}</td></tr><tr><td>Балкон</td><td>${contractEsc(v('contract_balcony'))}</td></tr><tr><td>Нархи</td><td>${contractEsc(price)}</td></tr><tr><td>Малумот</td><td>${contractEsc(v('contract_info'))}</td></tr><tr><td>Олиш</td><td>${contractEsc(v('contract_buy'))}</td></tr><tr><td>Моб</td><td>${contractEsc(v('contract_mob1'))} / ${contractEsc(v('contract_mob2')||v('contract_customer_phone'))}</td></tr><tr><td>Таклиф</td><td>${contractEsc(v('contract_offer'))}</td></tr></table>
-  <p><b>2. МАЖБУРИЯТ</b></p><p>2.1. «БУЮРТМАЧИ»нинг ҳуқуқий ва қонуний манфаатларини бузмаслик. Хизматлар кўрсатиш жараёнида олинган махфий маълумотларни ошкор қилмаслик.</p><p>2.2. «БУЮРТМАЧИ» томонидан тақдим этилган ҳужжатларнинг қонун ҳужжатлари талабларига мувофиқ эканлигини текшириб кўриш, хатолар аниқланса дарҳол хабар бериш.</p><p>2.3. «БУЮРТМАЧИ» турмуш ўртоғи ва рўйхатда турган ва олди-сотдига алоқаси бор шахсларни мулкни расмийлаштиришга келишларини таъминлайди.</p><p>2.4. «БУЮРТМАЧИ» бажарувчи томонидан буюртма бажарилгандан кейин хизмат шартномаси ва далолатномани хизмат нархи ўзгармаган ҳолда қайта расмийлаштиради.</p>
-  </section>
-  <section class="page"><p><b>3. ТОМОНЛАР ҲУҚУҚИ ВА ЖАВОБГАРЛИК</b></p><p>3.1. Томонлар тарафдан келишуви бажарилмаган ҳолларда келиб чиққан келишмовчиликлар РУз Хоразм вилояти Урганч шаҳар суди томонидан кўриб чиқилади.</p><p>3.2. ПФ.РУз №«1910 24.01.2013 йил» бўйича «БУЮРТМАЧИ» қоидани бузса, ҳамма жавобгарликни ўз зиммасига олади. «БАЖАРУВЧИ»га ҳеч қандай даъво қилинмайди.</p><p><b>4. ҲИСОБ ҚОИДАСИ, БУЮРТМА МУДДАТИ, БЕКОР ҚИЛИШ</b></p><p>4.1. Буюртма имзолангандан кейин кучга киради ва бажарилгунча муддати тугамайди.</p><p>4.2. Буюртма томонларнинг розилиги асосида ёзма равишда ўзгартирилади ёки бекор қилинади.</p><p>4.3. Буюртма 2.3-банд бажарилмаган ҳолда буюртмачи хизматни тўлиқ тўлаши мумкин.</p><p>Тўлов: <b>${contractEsc(v('contract_sale_fee'))}</b> сўм</p><p>4.4. Агарда «БАЖАРУВЧИ» хизматидан «БУЮРТМАЧИ» фойдаланмаса, хизмат ҳақи тўланмайди.</p><p>4.5. Агарда бажарувчининг мижози дўст ёки қариндошига сотилса, бажарувчига хизмат ҳақи тўлиқ тўланади.</p><p><b>5. ҚЎШИМЧА ШАРТЛАР</b></p><p>5.1. Кўчмас мулкка сув тошқини, ёнғин, томдан ёки иситиш ускуналаридан сув ўтиши, қарзлар, сертификатлар, ҳисоблагич муҳрлари, уй чизмалари ўзгариши, ёроқсизлик ёки ўғирлик билан боғлиқ ҳолатлар бўйича бажарувчига даъво қилинмайди.</p><p>5.2. Буюртма 1 та нусхада имзоланади ва бажарилгунча кучга эга.</p><div class="sign"><div>«БАЖАРУВЧИ»<br>ЯТТ Худайберганов Алишер Сапарбаевич<br>Имзо: ______________</div><div>«БУЮРТМАЧИ»<br>Ф.И.Ш: ${contractEsc(customer)}<br>Имзо: ______________</div></div></section>
-  <section class="page"><h2>${contractEsc(v('contract_no'))}-сонли шартномага 1-илова</h2><h2>Сотиладиган уй ҳақида</h2><p><b>1. Қисқача маълумот</b></p><table class="data"><tr><td>Уй тури</td><td>${contractEsc(type)}</td></tr><tr><td>Нақд / Кредит / Шартнома</td><td>☐ Нақд &nbsp;&nbsp; ☐ Кредит &nbsp;&nbsp; ☐ Шартнома</td></tr><tr><td>Умумий ер майдони</td><td>${contractEsc(v('contract_land_total')||v('contract_land'))}</td></tr><tr><td>Қавати</td><td>${contractEsc(v('contract_floor')|| (h?homeFloor(h):''))}</td></tr><tr><td>Лифт</td><td>☐</td></tr><tr><td>Хоналар сони</td><td>${contractEsc(v('contract_rooms')||h?.rooms)}</td></tr><tr><td>Нимадан қурилган</td><td>${contractEsc(v('contract_material'))}</td></tr><tr><td>Қурилган вақти</td><td>${contractEsc(v('contract_built'))}</td></tr><tr><td>Мебел</td><td>☐</td></tr><tr><td>Хона баландлиги</td><td>${contractEsc(v('contract_height'))}</td></tr><tr><td>Ремонт</td><td>${contractEsc(v('contract_repair')||h?.finish)}</td></tr><tr><td>Отопления</td><td>☐ Оддий &nbsp;&nbsp; ☐ 2 контур</td></tr><tr><td>Мактaб</td><td>${contractEsc(v('contract_school'))}</td></tr><tr><td>Боғча</td><td>${contractEsc(v('contract_kindergarten'))}</td></tr><tr><td>Дўкон</td><td>☐</td></tr><tr><td>Сув / Электр / Газ</td><td>☐ Сув &nbsp; ☐ Электр энергия &nbsp; ☐ Газ</td></tr><tr><td>Маршрут</td><td>${contractEsc(v('contract_route'))}</td></tr><tr><td>Болалар майдони</td><td>☐</td></tr><tr><td>Автотураргоҳ (Парковка)</td><td>☐</td></tr><tr><td>Шифохона</td><td>${contractEsc(v('contract_hospital'))}</td></tr></table></section>
-  <section class="page"><h2>Кўрсатиладиган хизматлар</h2><table class="data"><tr><th>№</th><th>Хизматлар номи</th><th>Асос</th><th>Миқдори</th><th>Тўлов миқдори</th></tr><tr><td>1.1</td><td>Олдиндан тўлов (тасвирга олиш ва монтаж учун)</td><td>шартнома</td><td></td><td>${contractEsc(v('contract_prepay'))}</td></tr><tr><td>2.1</td><td>Квартира ёки Ховли-жойни реклама асосида сотиш учун (сотилгандан кейин)</td><td>шартнома</td><td></td><td>${contractEsc(v('contract_sale_fee'))}</td></tr><tr><td colspan="4"><b>Жами (олдиндан тўлов):</b></td><td>${contractEsc(v('contract_prepay'))}</td></tr></table><p>Ўлчов бирлиги — Миллий валюта (сўм)</p><div class="sign"><div>“XORAZM LIDER” Ю.К.А<br>______________ А.С.Худайберганов<br>м.ў.</div><div>Мижоз номидан:<br>________ ${contractEsc(customer)}<br>(имзо)</div></div></section></body></html>`;
-}
-function previewContract(){
-  const html=contractHtml();
-  const w=window.open('','_blank'); if(!w){alert('Brauzer yangi oynani blokladi.');return;} w.document.open();w.document.write(html);w.document.close(); setTimeout(()=>w.print(),500);
+  return header(
+    'Shartnomalar',
+    '2 xil shartnoma: uy sotish va uy olib berish',
+    '+ Shartnoma yaratish',
+    'openContract()'
+  )+
+  `<div class="panel">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px">
+      <button class="btn" onclick="openContract(null,'sell')">📄 Uy sotish shartnomasi</button>
+      <button class="btn light" onclick="openContract(null,'buy')">🏠 Uy olib berish shartnomasi</button>
+    </div>
+    <h3>📄 Shartnomalar</h3>
+    <p class="muted">Kerakli shartnoma turini tanlang. Uy va mijoz ma'lumotlari CRM bazasidan avtomatik olinadi.</p>
+    ${db.homes.map(h=>`<div class="match">
+      <b>🏠 ${esc(h.title)}</b> — ${money(h.price)}
+      <br>👤 ${esc(h.seller||'-')} • 📞 ${esc(h.phone||'-')}
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px">
+        <button class="small primary" onclick="openContract(${h.id},'sell')">📄 Sotish shartnomasi</button>
+        <button class="small" onclick="openContract(${h.id},'buy')">🏠 Olib berish</button>
+      </div>
+    </div>`).join('')||'<div class="empty">Avval uy qo‘shing.</div>'}
+  </div>`;
 }
 
+function openContract(homeId=null,type='sell'){
+  const h=homeId?db.homes.find(x=>Number(x.id)===Number(homeId)):null;
+  const today=new Date().toISOString().slice(0,10);
+  modal(`<h2>📄 Shartnoma yaratish</h2>
+    <div class="formgrid">
+      ${selectField('contract_type','Shartnoma turi',[
+        {value:'sell',label:'📄 Uy sotish shartnomasi'},
+        {value:'buy',label:'🏠 Uy olib berish shartnomasi'}
+      ],true)}
+      ${selectField('contract_home','Uy',[{value:'',label:'Uy tanlang'}].concat(db.homes.map(x=>({value:String(x.id),label:`${x.title} — ${money(x.price)}`}))),false)}
+      ${selectField('contract_buyer','Xaridor / Buyurtmachi',[{value:'',label:'Mijoz tanlang'}].concat(db.buyers.map(x=>({value:String(x.id),label:`${x.name} — ${x.phone}`}))),false)}
+      ${input('contract_no','Shartnoma №','001',1)}
+      ${input('contract_date','Sana',today,1)}
+      ${input('contract_city','Shahar','Urganch sh.',1)}
+      ${input('contract_customer','Buyurtmachi F.I.Sh.','F.I.Sh.',1)}
+      ${input('contract_customer_phone','Buyurtmachi telefoni','+998...',0)}
+      ${input('contract_address','Manzil','To‘liq manzil',0)}
+      ${input('contract_house','Uy №','',0)}
+      ${input('contract_rooms','Xona soni','',0)}
+      ${input('contract_floor','Qavati','',0)}
+      ${input('contract_land','Yer hajmi','',0)}
+      ${input('contract_balcony','Balkon','',0)}
+      ${input('contract_price','Narxi / budjet','',0)}
+      ${input('contract_info','Ma’lumot','',0,true)}
+      ${input('contract_buy','Olish / talab','',0,true)}
+      ${input('contract_mob1','Mobi 1','+998...',0)}
+      ${input('contract_mob2','Mobi 2','+998...',0)}
+      ${input('contract_offer','Taklif','',0,true)}
+      ${input('contract_land_total','Umumiy yer maydoni','',0)}
+      ${input('contract_material','Nimadan qurilgan','',0)}
+      ${input('contract_built','Qurilgan vaqti','',0)}
+      ${input('contract_height','Xona balandligi','',0)}
+      ${input('contract_repair','Remont','',0)}
+      ${input('contract_school','Maktab','',0)}
+      ${input('contract_kindergarten','Bog‘cha','',0)}
+      ${input('contract_route','Marshrut','',0)}
+      ${input('contract_hospital','Shifoxona','',0)}
+      ${input('contract_prepay','Oldindan to‘lov','',0)}
+      ${input('contract_sale_fee','Xizmat haqi','',0)}
+    </div>
+    <br>
+    <div class="muted">💡 Uy yoki xaridor tanlansa, mavjud ma'lumotlari avtomatik to‘ldiriladi.</div>
+    <br>
+    <button class="btn" onclick="previewContract()">📄 Ko‘rish / Chop etish</button>
+    <button class="btn light" onclick="closeModal()">Bekor</button>
+  </div>`);
+
+  setTimeout(()=>{
+    const t=document.getElementById('f_contract_type');
+    if(t)t.value=type||'sell';
+    const hs=document.getElementById('f_contract_home');
+    if(hs && h)hs.value=String(h.id);
+    if(h)fillContractHome();
+    renderContractFields();
+  },30);
+}
+
+function renderContractFields(){
+  const type=val('contract_type')||'sell';
+  const buy=type==='buy';
+  const fee=document.getElementById('f_contract_sale_fee');
+  if(fee){
+    fee.placeholder=buy?'Uy olib berish xizmat haqi':'Sotilgandan keyingi xizmat haqi';
+  }
+}
+
+function fillContractBuyer(){
+  const id=val('contract_buyer');
+  const b=db.buyers.find(x=>Number(x.id)===Number(id));
+  if(!b)return;
+  const set=(k,v)=>{const e=document.getElementById('f_'+k);if(e)e.value=v??''};
+  set('contract_customer',b.name||'');
+  set('contract_customer_phone',b.phone||'');
+  set('contract_city',b.city||'Urganch sh.');
+  set('contract_address',[b.city,b.area].filter(Boolean).join(', '));
+  set('contract_rooms',b.rooms||'');
+  set('contract_price',priceInputValue(b.budget));
+  set('contract_buy',[b.type,b.finish,visibleNote(b.note)].filter(Boolean).join(' | '));
+  set('contract_info',visibleNote(b.note));
+}
+
+function fillContractHome(){
+  const id=val('contract_home');
+  const h=db.homes.find(x=>Number(x.id)===Number(id));
+  if(!h)return;
+  const set=(k,v)=>{const e=document.getElementById('f_'+k);if(e)e.value=v??''};
+  set('contract_address',[h.city,h.area].filter(Boolean).join(', '));
+  set('contract_house',h.title||'');
+  set('contract_rooms',h.rooms||'');
+  set('contract_floor',homeFloor(h)||'');
+  set('contract_price',priceInputValue(h.price));
+  set('contract_info',visibleNote(h.note));
+  set('contract_city',h.city||'Urganch sh.');
+  set('contract_repair',h.finish||'');
+  set('contract_customer',h.seller||'');
+  set('contract_customer_phone',h.phone||'');
+}
+
+function contractEsc(v){return esc(v||'—')}
+
+function contractHtml(){
+  const v=k=>val(k);
+  const type=v('contract_type')||'sell';
+  const sell=type==='sell';
+  const h=db.homes.find(x=>Number(x.id)===Number(v('contract_home')));
+  const b=db.buyers.find(x=>Number(x.id)===Number(v('contract_buyer')));
+  const date=v('contract_date')||new Date().toISOString().slice(0,10);
+  const customer=v('contract_customer')||b?.name||h?.seller||'';
+  const price=v('contract_price')||(h?priceInputValue(h.price):priceInputValue(b?.budget));
+  const title=sell?'КЎЧМАС МУЛКНИ СОТИШ ХИЗМАТИ ТЎҒРИСИДА':'КЎЧМАС МУЛК ОЛИШ ХИЗМАТИ ТЎҒРИСИДА';
+
+  const firstClause=sell
+    ? `<p>1.1 «БУЮРТМАЧИ» ўзига тегишли бўлган мулкнинг тўлиқ маълумотларини «БАЖАРУВЧИ»га бериш, жумладан мулки бозорида харидорлар топиш ва сотиш хизматларини кўрсатиш ҳуқуқини «БАЖАРУВЧИ»га беради.</p>
+       <p>1.2. «БУЮРТМАЧИ» рўйхатда турувчи маълумотларини бериш ва сотишга розилик олишни таъминлайди. «БАЖАРУВЧИ» кўчмас мулкни кўрсатиш, маълумотларни бериш ва ҳужжатларни тайёрлашга ёрдам беради.</p>`
+    : `<p>1.1 «БУЮРТМАЧИ» талаб-таклифига асосан, уй-жойлар бозоридан хонадонлар излашга, топиб бериш хизматини кўрсатиш ҳуқуқини «БАЖАРУВЧИ»га беради.</p>
+       <p>1.2. «БАЖАРУВЧИ» талаб-таклифга мос келадиган уй-жойларни «БУЮРТМАЧИ»га таклиф қилади, кўчмас мулкни кўрсатиш ва маълумотларини бериш, ҳужжатларни тайёрлашга ёрдам бериш билан шуғулланади.</p>`;
+
+  const clause23=sell
+    ? `«БУЮРТМАЧИ» турмуш ўртоғи ва рўйхатда турган ҳамда олди-сотдига алоқаси бор шахсларни мулкни расмийлаштиришга келишларини таъминлайди.`
+    : `«БУЮРТМАЧИ» турмуш ўртоғи ва рўйхатда турган ҳамда олди-сотдига алоқаси бор бўлган шахсларни мулкни расмийлаштиришга келишларини таъминлайди.`;
+
+  const feeText=sell
+    ? `Агарда бажарувчининг мижози дўст ёки қариндошига сотилса, бажарувчига хизмат ҳақи тўлиқ тўланади.`
+    : `Агарда бажарувчининг мижози дўст ёки қариндошига сотиб олса, бажарувчига хизмат ҳақи тўлиқ тўланади.`;
+
+  const appendix=sell?`
+    <section class="page">
+      <h2>${contractEsc(v('contract_no'))}-сонли шартномага 1-илова</h2>
+      <h2>Сотиладиган уй ҳақида</h2>
+      <p><b>1. Қисқача маълумот</b></p>
+      <table class="data">
+        <tr><td>Уй тури</td><td>${contractEsc(h?.type)}</td></tr>
+        <tr><td>Нақд / Кредит / Шартнома</td><td>☐ Нақд &nbsp;&nbsp; ☐ Кредит &nbsp;&nbsp; ☐ Шартнома</td></tr>
+        <tr><td>Умумий ер майдони</td><td>${contractEsc(v('contract_land_total')||v('contract_land'))}</td></tr>
+        <tr><td>Қавати</td><td>${contractEsc(v('contract_floor')||homeFloor(h||{}))}</td></tr>
+        <tr><td>Лифт</td><td>☐</td></tr>
+        <tr><td>Хоналар сони</td><td>${contractEsc(v('contract_rooms')||h?.rooms)}</td></tr>
+        <tr><td>Нимадан қурилган</td><td>${contractEsc(v('contract_material'))}</td></tr>
+        <tr><td>Қурилган вақти</td><td>${contractEsc(v('contract_built'))}</td></tr>
+        <tr><td>Мебел</td><td>☐</td></tr>
+        <tr><td>Хона баландлиги</td><td>${contractEsc(v('contract_height'))}</td></tr>
+        <tr><td>Ремонт</td><td>${contractEsc(v('contract_repair')||h?.finish)}</td></tr>
+        <tr><td>Отопления</td><td>☐ Оддий &nbsp;&nbsp; ☐ 2 контур</td></tr>
+        <tr><td>Мактaб</td><td>${contractEsc(v('contract_school'))}</td></tr>
+        <tr><td>Боғча</td><td>${contractEsc(v('contract_kindergarten'))}</td></tr>
+        <tr><td>Дўкон</td><td>☐</td></tr>
+        <tr><td>Сув / Электр / Газ</td><td>☐ Сув &nbsp; ☐ Электр энергия &nbsp; ☐ Газ</td></tr>
+        <tr><td>Маршрут</td><td>${contractEsc(v('contract_route'))}</td></tr>
+        <tr><td>Болалар майдони</td><td>☐</td></tr>
+        <tr><td>Автотураргоҳ</td><td>☐</td></tr>
+        <tr><td>Шифохона</td><td>${contractEsc(v('contract_hospital'))}</td></tr>
+      </table>
+    </section>
+    <section class="page">
+      <h2>Кўрсатиладиган хизматлар</h2>
+      <table class="data">
+        <tr><th>№</th><th>Хизматлар номи</th><th>Асос</th><th>Миқдори</th><th>Тўлов</th></tr>
+        <tr><td>1.1</td><td>Олдиндан тўлов (тасвирга олиш ва монтаж учун)</td><td>шартнома</td><td></td><td>${contractEsc(v('contract_prepay'))}</td></tr>
+        <tr><td>2.1</td><td>Квартира ёки Ховли-жойни реклама асосида сотиш учун (сотилгандан кейин)</td><td>шартнома</td><td></td><td>${contractEsc(v('contract_sale_fee'))}</td></tr>
+        <tr><td colspan="4"><b>Жами (олдиндан тўлов):</b></td><td>${contractEsc(v('contract_prepay'))}</td></tr>
+      </table>
+      <p>Ўлчов бирлиги — Миллий валюта (сўм)</p>
+    </section>`:'';
+
+  return `<!doctype html><html lang="uz"><head><meta charset="utf-8">
+  <title>${title} №${contractEsc(v('contract_no'))}</title>
+  <style>
+    body{font-family:"Times New Roman",serif;color:#111;margin:0}
+    .page{width:190mm;min-height:270mm;margin:0 auto;padding:12mm 10mm;box-sizing:border-box;page-break-after:always}
+    .page:last-child{page-break-after:auto}
+    h1,h2{text-align:center;font-size:16px;margin:0 0 8px}
+    p{font-size:12px;line-height:1.5;margin:6px 0;text-align:justify}
+    .data{border:1px solid #111;border-collapse:collapse;width:100%;font-size:11px;margin:10px 0}
+    .data td,.data th{border:1px solid #111;padding:6px;vertical-align:top}
+    .sign{display:flex;justify-content:space-between;gap:30px;margin-top:35px;font-size:12px}
+    @media print{.page{margin:0}}
+  </style></head><body>
+
+  <section class="page">
+    <h1>${title}</h1>
+    <h2>_____ -СОНЛИ ШАРТНОМАСИ</h2>
+    <p>Урганч ш. ${contractEsc(date)} йил</p>
+    <p><b>Худайберганов Алишер Сапарбаевич</b> номидан 25.04.2026 йилдаги № 0013281680-сон маълумотнома асосида фаолият юритувчи (кейинги ўринларда – БАЖАРУВЧИ) бир томондан ва фуқаро <b>${contractEsc(customer)}</b> (кейинги ўринларда – БУЮРТМАЧИ) иккинчи томондан, ${sell?'реклама хизматлари кўрсатилиши':'уй топишга ёрдам бериш хизмати кўрсатилиши'} ҳақида туздилар:</p>
+
+    <p><b>1. ШАРТНОМА МАЗМУНИ</b></p>
+    ${firstClause}
+    <p>1.3. «БАЖАРУВЧИ» хизматларни кўрсатиш мажбуриятини олади, «БУЮРТМАЧИ» эса кўрсатилган хизматлари учун белгиланган муддатда тўловларни амалга ошириш мажбуриятини олади.</p>
+
+    <table class="data">
+      <tr><td>МАНЗИЛ</td><td>${contractEsc(v('contract_address'))}</td></tr>
+      <tr><td>УЙ №</td><td>${contractEsc(v('contract_house')||h?.title)}</td></tr>
+      <tr><td>Хона сони</td><td>${contractEsc(v('contract_rooms')||h?.rooms||b?.rooms)}</td></tr>
+      <tr><td>Қавати</td><td>${contractEsc(v('contract_floor')||(h?homeFloor(h):''))}</td></tr>
+      <tr><td>Ер ҳажми</td><td>${contractEsc(v('contract_land'))}</td></tr>
+      <tr><td>Балкон</td><td>${contractEsc(v('contract_balcony'))}</td></tr>
+      <tr><td>Нархи</td><td>${contractEsc(price)}</td></tr>
+      <tr><td>Маълумот</td><td>${contractEsc(v('contract_info'))}</td></tr>
+      <tr><td>Олиш</td><td>${contractEsc(v('contract_buy'))}</td></tr>
+      <tr><td>Моб</td><td>${contractEsc(v('contract_mob1')||v('contract_customer_phone'))}</td></tr>
+      <tr><td>Моб / Таклиф</td><td>${contractEsc(v('contract_mob2'))} / ${contractEsc(v('contract_offer'))}</td></tr>
+    </table>
+
+    <p><b>2. МАЖБУРИЯТ</b></p>
+    <p>2.1. «БУЮРТМАЧИ»нинг ҳуқуқий ва қонуний манфаатларини бузмаслик. Хизматлар кўрсатиш жараёнида олинган махфий маълумотларни ошкор қилмаслик.</p>
+    <p>2.2. «БУЮРТМАЧИ» томонидан тақдим этилган ҳужжатларнинг қонун ҳужжатлари талабларига мувофиқлигини текшириб кўриш, агар хатолар аниқланса, дарҳол хабар бериш.</p>
+    <p>2.3. ${clause23}</p>
+    <p>2.4. «БАЖАРУВЧИ» томонидан буюртма бажарилгандан кейин хизмат шартномаси ва далолатнома хизмат нархи ўзгармаган ҳолда қайта расмийлаштирилади.</p>
+  </section>
+
+  <section class="page">
+    <p><b>3. ТОМОНЛАР ҲУҚУҚИ ВА ЖАВОБГАРЛИК</b></p>
+    <p>3.1. Томонлар келишуви бажарилмаган ҳолларда келиб чиққан келишмовчиликлар Ўзбекистон Республикаси Хоразм вилояти Урганч шаҳар суди томонидан кўриб чиқилади.</p>
+    <p>3.2. «БУЮРТМАЧИ» қоидаларни бузса, жавобгарликни ўз зиммасига олади. «БАЖАРУВЧИ»га қонун ва шартнома доирасида асоссиз даъво қилинмайди.</p>
+
+    <p><b>4. ҲИСОБ ҚОИДАСИ, БУЮРТМА МУДДАТИ, БЕКОР ҚИЛИШ</b></p>
+    <p>4.1. Буюртма имзолангандан кейин кучга киради ва бажарилгунча муддати тугамайди.</p>
+    <p>4.2. Буюртма томонларнинг розилиги асосида ёзма равишда ўзгартирилади ёки бекор қилинади.</p>
+    <p>4.3. Хизмат ҳақи: <b>${contractEsc(v('contract_sale_fee'))}</b> сўм.</p>
+    <p>4.4. Агарда «БАЖАРУВЧИ» хизматидан «БУЮРТМАЧИ» фойдаланмаса, хизмат ҳақи тўланмайди.</p>
+    <p>4.5. ${feeText}</p>
+
+    <p><b>5. ҚЎШИМЧА ШАРТЛАР</b></p>
+    <p>5.1. Кўчмас мулк билан боғлиқ турли ҳолатлар бўйича Бажарувчига даъво қилинмайди, чунки мижоз далолатнома асосида қабул қилиши керак.</p>
+    <p>5.2. Буюртма 1 та нусха асосида имзоланади ва бажарилмагунча кучга эга.</p>
+
+    <div class="sign">
+      <div><b>«БАЖАРУВЧИ»</b><br>ЯТТ Худайберганов Алишер Сапарбаевич<br><br>Имзо: __________________</div>
+      <div><b>«БУЮРТМАЧИ»</b><br>Ф.И.Ш.: ${contractEsc(customer)}<br><br>Имзо: __________________</div>
+    </div>
+  </section>
+
+  ${appendix}
+  </body></html>`;
+}
+
+function previewContract(){
+  const html=contractHtml();
+  const w=window.open('','_blank');
+  if(!w){alert('Brauzer yangi oynani blokladi.');return;}
+  w.document.open();w.document.write(html);w.document.close();
+  setTimeout(()=>w.print(),500);
+}
+
+
+document.addEventListener('change',function(e){
+  if(e.target?.id==='f_contract_home') fillContractHome();
+  if(e.target?.id==='f_contract_buyer') fillContractBuyer();
+  if(e.target?.id==='f_contract_type') renderContractFields();
+});
 function crmMeta(note,key){
   const m=String(note||'').match(new RegExp('\\['+key+'\\]([\\s\\S]*?)\\[\\/'+key+'\\]'));
   if(!m)return {};
