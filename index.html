@@ -542,7 +542,6 @@ function sellers(){
           <td style="min-width:310px">${homesHtml}</td>
           <td>${esc(visibleNote(x.note))}</td>
           <td style="white-space:nowrap">
-            <button class="small" onclick="assignHomeToSeller(${x.id})">🏠 Uy biriktirish</button>
             <button class="small" onclick="del('sellers',${x.id})">O‘chirish</button>
           </td>
         </tr>`;
@@ -579,7 +578,7 @@ async function saveHomeSeller(sellerId){
 function matches(){return header('Moslashtirish','Xaridor ↔ uy parametrlarini avtomatik solishtirish','+ Xaridor','openBuyer()')+
   `<div class="panel"><h3>Kimga qanday uy?</h3>${db.buyers.map(b=>{let m=findHomes(b);return `<div class="match"><b>👤 ${esc(b.name)}</b> — ${m.length} ta mos uy<br><span class="muted">${esc(b.city)}, ${esc(b.area)}, ${b.rooms} xona, ${b.m2} m², ${money(b.budget)} gacha</span><div>${m.slice(0,3).map(x=>`<div style="margin-top:8px">🏠 <b>${esc(x.title)}</b> — ${money(x.price)} <button class="small primary" onclick="showHome(${x.id})">Ko‘rish</button></div>`).join('')||'<span class="muted">Mos uy topilmadi.</span>'}</div></div>`}).join('')||'<div class="empty">Xaridor bazasi bo‘sh.</div>'}</div>`}
 function contracts(){
-  return header('Shartnomalar','Siz bergan Word namunasi asosida ko‘chmas mulk reklama shartnomasi','+ Shartnoma yaratish','openContract()')+
+  return header('Shartnomalar','Sotish va Olib berish shartnomalari','+ Shartnoma yaratish','openContract()')+
   `<div class="panel"><h3>📄 Ko‘chmas mulk reklama xizmat shartnomalari</h3><p class="muted">Uy va buyurtmachi ma’lumotlarini tanlang. Shartnoma Word namunangizdagi mazmun asosida tayyorlanadi.</p>
   ${db.homes.map(h=>`<div class="match"><b>${esc(h.title)}</b> — ${money(h.price)}<br>👤 ${esc(h.seller||'-')} • 📞 ${esc(h.phone||'-')}<br><button class="small primary" onclick="openContractForSellerHome(${h.id})">📄 Sotish shartnomasi</button></div>`).join('')||'<div class="empty">Avval uy qo‘shing.</div>'}</div>`;
 }
@@ -744,7 +743,7 @@ function contractHtml(){
   </section>`:'';
 
   return `<!doctype html><html lang="uz"><head><meta charset="utf-8">
-  <title>${title} №${no}</title>
+  <title></title>
   <style>
     body{font-family:"Times New Roman",serif;color:#111;margin:0}
     .page{width:190mm;min-height:270mm;margin:0 auto;padding:12mm 10mm;box-sizing:border-box;page-break-after:always}
