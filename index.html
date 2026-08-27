@@ -66,6 +66,35 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 </style>
   <link rel="apple-touch-icon" href="logo-tel.PNG">
 <link rel="icon" type="image/png" href="logo-tel.PNG">
+
+<style>
+/* Uy kartasi tugmalari — ixcham va toliq ko'rinishi uchun */
+.card .actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px;
+  margin-top:10px;
+  width:100%;
+}
+.card .actions .small{
+  width:100%;
+  min-width:0;
+  padding:6px 5px;
+  font-size:11px;
+  line-height:1.2;
+  white-space:normal;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-align:center;
+}
+.card .actions .small.primary{
+  font-weight:700;
+}
+@media(max-width:600px){
+  .card .actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+  .card .actions .small{font-size:10px;padding:6px 4px}
+}
+</style>
 </head>
 <body>
 
