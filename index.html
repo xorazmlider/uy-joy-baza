@@ -119,7 +119,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 <div class="app">
 <aside class="side"><div class="brand">🏠 Xorazm Uylar CRM</div>
 <button type="button" class="nav active" data-page="dashboard" onclick="go('dashboard');return false;">📊 Bosh sahifa</button><button type="button" class="nav" data-page="homes" onclick="go('homes');return false;">🏠 Uylar</button><button type="button" class="nav" data-page="buyers" onclick="go('buyers');return false;">👤 Xaridorlar</button><button type="button" class="nav" data-page="sellers" onclick="go('sellers');return false;">🤝 Sotuvchilar</button><button type="button" class="nav" data-page="staff" onclick="go('staff');return false;">👥 Xodimlar</button><button type="button" class="nav" data-page="matches" onclick="go('matches');return false;">🎯 Moslashtirish</button><button type="button" class="nav" data-page="deals" onclick="go('deals');return false;">💰 Bitimlar</button><button type="button" class="nav" data-page="tasks" onclick="go('tasks');return false;">⏰ Eslatmalar</button><button type="button" class="nav" data-page="reports" onclick="go('reports');return false;">📈 Hisobot</button><button type="button" class="nav" data-page="documents" onclick="go('documents');return false;">📁 Hujjatlar</button><button type="button" class="nav" data-page="sold" onclick="go('sold');return false;">✅ Sotilgan</button><button type="button" class="nav" onclick="logoutCRM();return false;">🚪 Chiqish</button>
-<div style="margin-top:30px;color:#94a3b8;font-size:12px">Online versiya • ma'lumotlar Supabase bazasida saqlanadi</div></aside>
+<div id="currentUserBadge" style="margin-top:20px;padding:10px;border:1px solid #334155;border-radius:10px;color:#e2e8f0;font-size:12px"></div><div style="margin-top:12px;color:#94a3b8;font-size:12px">Online versiya • ma'lumotlar Supabase bazasida saqlanadi</div></aside>
 <main class="main"><div id="page"></div></main>
 </div>
 <div class="mobile-nav"><button onclick="go('dashboard')">📊<br>Bosh</button><button onclick="go('homes')">🏠<br>Uylar</button><button onclick="go('buyers')">👤<br>Xaridor</button><button onclick="go('sellers')">🤝<br>Sotuvchi</button><button onclick="go('matches')">🎯<br>Mos</button><button onclick="go('deals')">💰<br>Bitim</button><button onclick="go('tasks')">⏰<br>Eslatma</button><button onclick="go('reports')">📈<br>Hisobot</button><button onclick="go('documents')">📁<br>Hujjat</button><button onclick="go('sold')">✅<br>Sotilgan</button><button class="nav" onclick="logoutCRM()" style="color:#1683d8;">🚪 Chiqish</button></div>
@@ -131,6 +131,64 @@ const SUPABASE_KEY='sb_publishable_itMmxW5YPm87O6tADGIEYw_xrs2xNe-';
 const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const KEY='xucrm_v2';
 let db={homes:[],buyers:[],sellers:[],inquiries:[],tasks:[],deals:[],activities:[],documents:[],staff:[]};
+let currentUser=null;
+let currentStaff=null;
+
+const ROLE_PAGES={
+  Admin:['dashboard','homes','buyers','sellers','staff','matches','deals','tasks','reports','documents','contracts','sold'],
+  Menejer:['dashboard','homes','buyers','sellers','staff','matches','deals','tasks','reports','documents','contracts','sold'],
+  Rieltor:['dashboard','homes','buyers','sellers','matches','deals','tasks','documents','contracts','sold'],
+  Agent:['dashboard','homes','buyers','sellers','matches','tasks']
+};
+
+function normalizeRole(role){
+  const r=String(role||'').trim().toLowerCase();
+  if(r==='admin')return 'Admin';
+  if(r==='menejer'||r==='manager')return 'Menejer';
+  if(r==='rieltor'||r==='realtor')return 'Rieltor';
+  return 'Agent';
+}
+function currentRole(){return normalizeRole(currentStaff?.role||'');}
+function canPage(page){return !!currentStaff && (ROLE_PAGES[currentRole()]||[]).includes(page);}
+function requirePage(page){
+  if(canPage(page))return true;
+  alert('Bu bo‘lim sizning rolingiz uchun yopiq.');
+  return false;
+}
+async function loadCurrentStaff(){
+  const {data:{user}}=await client.auth.getUser();
+  currentUser=user||null;
+  if(!user){currentStaff=null;return false;}
+  const email=String(user.email||'').trim().toLowerCase();
+  const {data,error}=await client.from('staff').select('*').ilike('email',email).limit(1);
+  if(error)throw error;
+  if(data&&data.length){
+    currentStaff=data[0];
+    if(currentStaff.is_active===false){
+      await client.auth.signOut();
+      currentStaff=null;
+      alert('Xodim akkaunti faol emas. Admin bilan bog‘laning.');
+      return false;
+    }
+    return true;
+  }
+  // Birinchi o‘rnatishda staff jadvali hali bo‘sh bo‘lsa, mavjud Admin akkauntiga kirishga ruxsat.
+  const {data:allStaff,error:allErr}=await client.from('staff').select('id').limit(1);
+  if(allErr)throw allErr;
+  if(!allStaff?.length){
+    currentStaff={id:'bootstrap-admin',name:user.user_metadata?.full_name||user.email,phone:'',email:user.email,role:'Admin',is_active:true};
+    return true;
+  }
+  currentStaff=null;
+  await client.auth.signOut();
+  throw new Error('Bu email Xodimlar bazasida ro‘yxatdan o‘tmagan. Admin emailini staff jadvaliga kiriting.');
+}
+function applyRoleUI(){
+  document.querySelectorAll('.nav[data-page]').forEach(x=>{x.style.display=canPage(x.dataset.page)?'block':'none';});
+  document.querySelectorAll('.mobile-nav [data-page]').forEach(x=>{x.style.display=canPage(x.dataset.page)?'block':'none';});
+  const badge=document.getElementById('currentUserBadge');
+  if(badge)badge.innerHTML=currentStaff?`👤 ${esc(currentStaff.name||currentUser?.email||'Xodim')}<br><span style="font-size:11px">${esc(currentRole())}</span>`:'';
+}
 
 const localDb=JSON.parse(localStorage.getItem(KEY)||'null');
 
@@ -154,6 +212,7 @@ async function loginCRM(event){
 }
 
 async function logoutCRM(){
+  currentUser=null;currentStaff=null;
   const {error}=await client.auth.signOut();
   if(error){
     alert('Chiqishda xatolik: '+(error.message||error));
@@ -169,25 +228,41 @@ function showLogin(){
 }
 
 async function showCRM(){
+  try{
+    const ok=await loadCurrentStaff();
+    if(!ok){showLogin();return;}
+  }catch(e){
+    console.error(e);
+    showLogin();
+    const err=document.getElementById('loginError');
+    if(err)err.textContent=e.message||'Xodim akkaunti topilmadi.';
+    return;
+  }
   document.getElementById('loginScreen').style.display='none';
   document.querySelector('.app').style.display='flex';
   document.querySelector('.mobile-nav').style.display='';
+  applyRoleUI();
   await refresh();
 }
 
 async function loadDb(){
-  const [h,b,s,i,st]=await Promise.all([
+  const base=await Promise.all([
     client.from('homes').select('*').order('created_at',{ascending:false}),
     client.from('buyers').select('*').order('created_at',{ascending:false}),
     client.from('sellers').select('*').order('created_at',{ascending:false}),
-    client.from('home_inquiries').select('*').order('created_at',{ascending:false}),
-    client.from('staff').select('*').order('created_at',{ascending:false})
+    client.from('home_inquiries').select('*').order('created_at',{ascending:false})
   ]);
+  const [h,b,s,i]=base;
   if(h.error) throw h.error;
   if(b.error) throw b.error;
   if(s.error) throw s.error;
   if(i.error) throw i.error;
-  if(st.error) throw st.error;
+  let staffData=[];
+  if(currentRole()==='Admin'||currentRole()==='Menejer'){
+    const st=await client.from('staff').select('*').order('created_at',{ascending:false});
+    if(st.error) throw st.error;
+    staffData=st.data||[];
+  }
 
   const cloudEmpty=!h.data.length&&!b.data.length&&!s.data.length;
   const hasLocal=localDb && (localDb.homes?.length||localDb.buyers?.length||localDb.sellers?.length);
@@ -201,7 +276,7 @@ async function loadDb(){
     return loadDb();
   }
 
-  db={homes:h.data||[],buyers:b.data||[],sellers:s.data||[],inquiries:i.data||[],tasks:[],deals:[],activities:[],documents:[],staff:st.data||[]};
+  db={homes:h.data||[],buyers:b.data||[],sellers:s.data||[],inquiries:i.data||[],tasks:[],deals:[],activities:[],documents:[],staff:staffData};
 
   // Professional modules are optional: if their tables are not created yet,
   // the main CRM still works normally.
@@ -262,9 +337,10 @@ function priceInputValue(n){
   return v<0 ? '$'+Math.round(Math.abs(v)) : String(v);
 }
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-function go(p){document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render(p)}
+function go(p){if(!requirePage(p))return;document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.page===p));document.querySelectorAll('.mobile-nav [data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render(p)}
 function header(t,sub,btn,fn){return `<div class="top"><div><div class="title">${t}</div><div class="sub">${sub}</div></div>${btn?`<button class="btn" onclick="${fn}">${btn}</button>`:''}</div>`}
 function render(p='dashboard'){
+  if(!canPage(p))p='dashboard';
   let h='';
   if(p==='dashboard')h=dashboard();
   if(p==='homes')h=homes();
@@ -290,25 +366,25 @@ function dashboard(){
   const stageCounts={};
   (db.deals||[]).forEach(d=>stageCounts[d.stage||'Yangi']=(stageCounts[d.stage||'Yangi']||0)+1);
 
-  return header('Xorazm Uylar CRM','Professional ko‘chmas mulk boshqaruvi','📲 Instagram ariza linki','openInstagramLink()')+
+  return header('Xorazm Uylar CRM','Professional ko‘chmas mulk boshqaruvi',canPage('dashboard')?'📲 Instagram ariza linki':null,'openInstagramLink()')+
   `<div style="margin-bottom:15px;display:flex;gap:8px;flex-wrap:wrap">
-    <button class="btn" onclick="openBuyer()">+ Yangi mijoz</button>
-    <button class="btn light" onclick="openHome()">+ Yangi uy</button>
-    <button class="btn light" onclick="openTask()">⏰ Eslatma</button>
-    <button class="btn light" onclick="openDeal()">💰 Bitim</button>
+    ${canPage('buyers')?'<button class="btn" onclick="openBuyer()">+ Yangi mijoz</button>':''}
+    ${canPage('homes')?'<button class="btn light" onclick="openHome()">+ Yangi uy</button>':''}
+    ${canPage('tasks')?'<button class="btn light" onclick="openTask()">⏰ Eslatma</button>':''}
+    ${canPage('deals')?'<button class="btn light" onclick="openDeal()">💰 Bitim</button>':''}
   </div>
   <div class="stats">
     <div class="stat" onclick="go('homes')" style="cursor:pointer"><div class="num">${active.length}</div><div class="label">Faol uylar</div></div>
     <div class="stat" onclick="go('buyers')" style="cursor:pointer"><div class="num">${db.buyers.length}</div><div class="label">Xaridorlar</div></div>
     <div class="stat" onclick="go('sellers')" style="cursor:pointer"><div class="num">${db.sellers.length}</div><div class="label">Sotuvchilar</div></div>
-    <div class="stat" onclick="go('staff')" style="cursor:pointer"><div class="num">${db.staff.length}</div><div class="label">Xodimlar</div></div>
+    ${canPage('staff')?`<div class="stat" onclick="go('staff')" style="cursor:pointer"><div class="num">${db.staff.length}</div><div class="label">Xodimlar</div></div>`:''}
     <div class="stat" onclick="go('sold')" style="cursor:pointer"><div class="num">${sold.length}</div><div class="label">Sotilgan uylar</div></div>
   </div>
   <div class="stats">
-    <div class="stat" onclick="go('deals')" style="cursor:pointer"><div class="num">${(db.deals||[]).length}</div><div class="label">Bitimlar</div></div>
+    ${canPage('deals')?`<div class="stat" onclick="go('deals')" style="cursor:pointer"><div class="num">${(db.deals||[]).length}</div><div class="label">Bitimlar</div></div>`:''}
     <div class="stat" onclick="go('tasks')" style="cursor:pointer"><div class="num">${due}</div><div class="label">Bugun / muddati o‘tgan</div></div>
     <div class="stat"><div class="num">${pending}</div><div class="label">Yangi murojaatlar</div></div>
-    <div class="stat" onclick="go('reports')" style="cursor:pointer"><div class="num">${(db.activities||[]).length}</div><div class="label">Faoliyat yozuvlari</div></div>
+    ${canPage('reports')?`<div class="stat" onclick="go('reports')" style="cursor:pointer"><div class="num">${(db.activities||[]).length}</div><div class="label">Faoliyat yozuvlari</div></div>`:''}
   </div>
   <div class="panel" style="margin-bottom:14px">
     <h3 style="margin-top:0">⚡ Tezkor nazorat</h3>
@@ -317,7 +393,7 @@ function dashboard(){
       <div><b>⏰ Yaqin vazifalar</b>${(db.tasks||[]).filter(x=>x.status!=='Bajarildi').slice(0,5).map(x=>`<div class="match"><b>${esc(x.title)}</b><br><span class="muted">${esc(formatDateTime(x.due_at))}</span></div>`).join('')||'<div class="muted">Vazifa yo‘q.</div>'}</div>
     </div>
   </div>
-  <div class="panel" id="adminStats"><h3>📊 Sayt statistikasi</h3><div class="muted">Yuklanmoqda...</div></div>
+  ${canPage('reports')?'<div class="panel" id="adminStats"><h3>📊 Sayt statistikasi</h3><div class="muted">Yuklanmoqda...</div></div>':''}
   <div class="panel" style="margin-top:14px"><h3>🎯 Tezkor moslashtirish</h3><p class="sub">Xaridor va uy parametrlarini solishtiring.</p>${db.buyers.slice(0,5).map(b=>`<div class="match"><b>${esc(b.name)}</b> — ${esc(b.city)}, ${esc(b.area)}, ${b.rooms} xona, ${b.m2} m², ${money(b.budget)} gacha<br><b>🏠 ${findHomes(b).length} ta mos uy</b><br><button class="small primary" onclick="showBuyerMatches(${b.id})">Mos uylarni ko‘rsatish</button></div>`).join('')||'<div class="empty">Hali xaridor yo‘q.</div>'}</div>`;
   setTimeout(loadAdminStats,0);
   return html;
@@ -382,6 +458,7 @@ async function proDelete(table,key,id){
   db[key]=db[key].filter(x=>String(x.id)!==String(id));render(key==='tasks'?'tasks':key==='deals'?'deals':key==='documents'?'homes':'buyers');
 }
 function openTask(){
+  if(!requirePage('tasks'))return;
   modal(`<h2>⏰ Eslatma qo‘shish</h2>
     ${input('task_title','Vazifa','Masalan: mijozga qo‘ng‘iroq qilish',1)}
     ${input('task_due','Muddat','',1)}
@@ -396,6 +473,7 @@ async function saveTask(){
   await proInsert('crm_tasks','tasks',row);closeModal();go('tasks');
 }
 function tasksPage(){
+  if(!canPage('tasks'))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2><p>Sizning rolingizda bu bo‘lim yopiq.</p></div>';
   const arr=[...(db.tasks||[])].sort((a,b)=>String(a.due_at||'').localeCompare(String(b.due_at||'')));
   return header('Eslatmalar','Qayta qo‘ng‘iroq, uchrashuv va vazifalar','+ Eslatma','openTask()').replace('<button class="btn" onclick="openTask()">+ Eslatma</button>','<button type="button" id="addTaskBtn" class="btn">+ Eslatma</button>')+
     `<div class="panel"><div class="tablewrap"><table class="table">
@@ -407,6 +485,7 @@ function tasksPage(){
 }
 async function completeTask(id){await proUpdate('crm_tasks','tasks',id,{status:'Bajarildi'});go('tasks')}
 function openDeal(prefBuyer=null,prefHome=null){
+  if(!requirePage('deals'))return;
   const buyerOpts=`<option value="">Xaridor tanlang</option>`+db.buyers.map(x=>`<option value="${x.id}">${esc(x.name)} — ${esc(x.phone)}</option>`).join('');
   const homeOpts=`<option value="">Uy tanlang</option>`+db.homes.filter(x=>x.status!=='Sotildi').map(x=>`<option value="${x.id}">${esc(x.title)} — ${money(x.price)}</option>`).join('');
   modal(`<h2>💰 Bitim qo‘shish</h2>
@@ -433,6 +512,7 @@ function dealCommission(d){
   return d.commission_type==='percent'?p*c/100:c;
 }
 function dealsPage(){
+  if(!canPage('deals'))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2><p>Sizning rolingizda bu bo‘lim yopiq.</p></div>';
   return header('Bitimlar','Sotuv jarayonini bosqichma-bosqich boshqaring','+ Bitim','openDeal()').replace('<button class="btn" onclick="openDeal()">+ Bitim</button>','<button type="button" id="addDealBtn" class="btn">+ Bitim</button>')+
   `<div class="panel"><div class="tablewrap"><table class="table">
   <tr><th>Xaridor</th><th>Uy</th><th>Narx</th><th>Komissiya</th><th>Bosqich</th><th>Amal</th></tr>
@@ -444,6 +524,7 @@ function dealsPage(){
   </table></div></div>`;
 }
 function reportsPage(){
+  if(!canPage('reports'))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2><p>Sizning rolingizda bu bo‘lim yopiq.</p></div>';
   const active=db.homes.filter(x=>x.status!=='Sotildi').length,sold=db.homes.filter(x=>x.status==='Sotildi').length;
   const revenue=(db.deals||[]).filter(d=>d.stage==='Sotildi').reduce((s,d)=>s+dealCommission(d),0);
   const totalValue=(db.deals||[]).filter(d=>d.stage==='Sotildi').reduce((s,d)=>s+Math.abs(Number(d.price)||0),0);
@@ -485,6 +566,7 @@ async function saveClientActivity(buyerId){
 
 
 function openDocuments(homeId){
+  if(!requirePage('documents'))return;
   const h=db.homes.find(x=>Number(x.id)===Number(homeId));if(!h)return;
   const docs=(db.documents||[]).filter(d=>Number(d.home_id)===Number(homeId));
   modal(`<h2>📁 ${esc(h.title)} — hujjatlar</h2>
@@ -503,6 +585,7 @@ async function saveDocument(homeId){
   openDocuments(homeId);
 }
 function documentsPage(){
+  if(!canPage('documents'))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2><p>Sizning rolingizda bu bo‘lim yopiq.</p></div>';
   const docs=db.documents||[];
   return header('Hujjatlar','Uylar bo‘yicha kadastr, pasport va boshqa hujjatlar')+
   `<div class="panel"><div class="tablewrap"><table class="table">
@@ -845,6 +928,7 @@ async function saveHomeSeller(sellerId){
 
 
 function staff(){
+  if(!canPage('staff'))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2><p>Sizning rolingizda Xodimlar bo‘limi mavjud emas.</p></div>';
   return header('Xodimlar','Agent, rieltor va menejerlar bazasi','+ Xodim qo‘shish','openStaff()')+
   `<div class="panel">
     <div class="toolbar">
@@ -897,6 +981,7 @@ function staffManagerOptions(selected=''){
     managers.map(x=>`<option value="${x.id}" ${String(selected||'')===String(x.id)?'selected':''}>${esc(x.name)} — ${staffRoleLabel(x.role)}</option>`).join('');
 }
 function openStaff(){
+  if(!requirePage('staff'))return;
   modal(`<h2>👥 Xodim qo‘shish</h2>
     <div class="formgrid">
       ${input('staff_name','Ism familiya','Masalan: Sardor Bekchanov',1)}
@@ -910,6 +995,7 @@ function openStaff(){
     <button class="btn light" onclick="closeModal()">Bekor</button>`);
 }
 async function addStaff(){
+  if(!requirePage('staff'))return;
   const name=val('staff_name'),phone=val('staff_phone');
   if(!name||!phone){alert('Ism va telefonni kiriting.');return;}
   const managerVal=val('staff_manager');
@@ -919,6 +1005,7 @@ async function addStaff(){
   db.staff.unshift(data);closeModal();go('staff');
 }
 function editStaff(id){
+  if(!requirePage('staff'))return;
   const x=db.staff.find(a=>Number(a.id)===Number(id));if(!x)return;
   modal(`<h2>✏️ Xodimni tahrirlash</h2>
     <div class="formgrid">
@@ -941,6 +1028,7 @@ function editStaff(id){
   },20);
 }
 async function saveStaff(id){
+  if(!requirePage('staff'))return;
   const name=val('staff_name'),phone=val('staff_phone');
   if(!name||!phone){alert('Ism va telefonni kiriting.');return;}
   const managerVal=val('staff_manager');
@@ -951,6 +1039,7 @@ async function saveStaff(id){
   closeModal();go('staff');
 }
 async function toggleStaff(id,active){
+  if(!requirePage('staff'))return;
   const x=db.staff.find(a=>Number(a.id)===Number(id));if(!x)return;
   const newState=active===true||active==='true';
   const {data,error}=await client.from('staff').update({is_active:newState}).eq('id',id).select().single();
@@ -958,6 +1047,7 @@ async function toggleStaff(id,active){
   Object.assign(x,data);render('staff');
 }
 async function deleteStaff(id){
+  if(!requirePage('staff'))return;
   const x=db.staff.find(a=>Number(a.id)===Number(id));if(!x)return;
   if(!confirm(`${x.name} xodimini o‘chirishni tasdiqlaysizmi?`))return;
   const {error}=await client.from('staff').delete().eq('id',id);
@@ -968,6 +1058,7 @@ async function deleteStaff(id){
 function matches(){return header('Moslashtirish','Xaridor ↔ uy parametrlarini avtomatik solishtirish','+ Xaridor','openBuyer()')+
   `<div class="panel"><h3>Kimga qanday uy?</h3>${db.buyers.map(b=>{let m=findHomes(b);return `<div class="match"><b>👤 ${esc(b.name)}</b> — ${m.length} ta mos uy<br><span class="muted">${esc(b.city)}, ${esc(b.area)}, ${b.rooms} xona, ${b.m2} m², ${money(b.budget)} gacha</span><div>${m.slice(0,3).map(x=>`<div style="margin-top:8px">🏠 <b>${esc(x.title)}</b> — ${money(x.price)} <button class="small primary" onclick="showHome(${x.id})">Ko‘rish</button></div>`).join('')||'<span class="muted">Mos uy topilmadi.</span>'}</div></div>`}).join('')||'<div class="empty">Xaridor bazasi bo‘sh.</div>'}</div>`}
 function contracts(){
+  if(!canPage('contracts'))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2><p>Sizning rolingizda bu bo‘lim yopiq.</p></div>';
   return header('Shartnomalar','Sotish va Olib berish shartnomalari','+ Shartnoma yaratish','openContract()')+
   `<div class="panel"><h3>📄 Ko‘chmas mulk reklama xizmat shartnomalari</h3><p class="muted">Uy va buyurtmachi ma’lumotlarini tanlang. Shartnoma Word namunangizdagi mazmun asosida tayyorlanadi.</p>
   ${db.homes.map(h=>`<div class="match"><b>${esc(h.title)}</b> — ${money(h.price)}<br>👤 ${esc(h.seller||'-')} • 📞 ${esc(h.phone||'-')}<br><button class="small primary" onclick="openContractForSellerHome(${h.id})">📄 Sotish shartnomasi</button></div>`).join('')||'<div class="empty">Avval uy qo‘shing.</div>'}</div>`;
