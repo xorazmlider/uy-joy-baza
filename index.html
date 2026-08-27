@@ -4,31 +4,90 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Xorazm Uylar CRM</title>
 <style>
-:root{--ink:#172033;--muted:#6b7280;--line:#e7eaf0;--bg:#f6f7fb;--card:#fff;--accent:#111827;--accent2:#24324a;--green:#16a34a;--red:#dc2626;--shadow:0 8px 28px rgba(15,23,42,.07)}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,#f8f9fc 0%,#f3f5f9 100%);color:var(--ink)}button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:flex;min-height:100vh}
-.side{width:250px;background:linear-gradient(180deg,#0d1422 0%,#111827 100%);color:#fff;padding:22px 16px;position:fixed;inset:0 auto 0 0;box-shadow:8px 0 28px rgba(15,23,42,.08);z-index:10}.brand{font-size:21px;font-weight:850;line-height:1.2;padding:8px 10px 22px;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,.08)}.nav{display:block;width:100%;text-align:left;background:transparent;color:#b9c3d4;border:0;border-radius:12px;padding:12px 13px;margin:5px 0;font-weight:650;transition:.18s}.nav.active,.nav:hover{background:rgba(255,255,255,.11);color:#fff;transform:translateX(2px)}
-.main{margin-left:250px;width:calc(100% - 250px);padding:30px;max-width:1550px}.top{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:22px}.title{font-size:30px;font-weight:850;letter-spacing:-.6px}.sub{color:var(--muted);margin-top:4px}.btn{border:0;border-radius:12px;background:var(--accent);color:#fff;padding:11px 16px;font-weight:750;box-shadow:0 5px 14px rgba(17,24,39,.13);transition:.18s}.btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(17,24,39,.17)}.btn.light{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}.stat{background:rgba(255,255,255,.9);border-radius:18px;padding:20px;border:1px solid var(--line);box-shadow:var(--shadow);transition:.18s}.stat:hover{transform:translateY(-2px)}.num{font-size:30px;font-weight:850;letter-spacing:-.5px}.label{color:var(--muted);font-size:13px;margin-top:4px}
-.panel{background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow)}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}.search{flex:1;min-width:220px;padding:12px 14px;border:1px solid #dfe3ea;border-radius:12px;background:#fff;outline:none}.search:focus,.field:focus{border-color:#94a3b8;box-shadow:0 0 0 3px rgba(100,116,139,.12)}.filters{display:flex;gap:8px;flex-wrap:wrap}.chip{padding:9px 12px;border:1px solid #dfe3ea;border-radius:999px;background:#fff}.chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:17px}.card{border:1px solid var(--line);border-radius:17px;overflow:hidden;background:#fff;box-shadow:0 5px 20px rgba(15,23,42,.05);transition:.2s}.card:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(15,23,42,.1)}.pic{height:175px;background:linear-gradient(135deg,#e8ebf0,#dfe4ec);display:flex;align-items:center;justify-content:center;font-size:50px;overflow:hidden}.pic img{width:100%;height:100%;object-fit:cover}.cardbody{padding:15px}.price{font-size:20px;font-weight:850;letter-spacing:-.3px}.muted{font-size:13px;color:var(--muted);line-height:1.55}.actions{display:flex;gap:7px;margin-top:13px;flex-wrap:wrap}.small{padding:8px 11px;border-radius:9px;border:1px solid #dfe3ea;background:#fff;font-weight:650;transition:.15s}.small:hover{background:#f5f6f8}.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.table{width:100%;border-collapse:separate;border-spacing:0}.table th,.table td{padding:13px 10px;border-bottom:1px solid #edf0f4;text-align:left;font-size:14px}.table th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#7b8494;background:#f8f9fb}.empty{text-align:center;color:#777;padding:45px}.modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.58);backdrop-filter:blur(3px);z-index:200;align-items:center;justify-content:center;padding:15px}.box{background:#fff;border-radius:20px;width:min(720px,100%);max-height:92vh;overflow:auto;padding:22px;box-shadow:0 24px 70px rgba(15,23,42,.25)}.box h2{margin-top:0}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.field{padding:12px 13px;border:1px solid #dfe3ea;border-radius:11px;width:100%;background:#fff;outline:none}.full{grid-column:1/-1}.match{border-left:4px solid var(--accent);padding:13px;background:#f8f9fb;border-radius:10px;margin:9px 0}.danger{color:#b91c1c}.mobile-nav{display:none}
-.public-wrap{min-height:100vh;background:#f5f6f8;padding:24px}.public-box{width:min(680px,100%);margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:22px;padding:25px;box-shadow:var(--shadow)}.public-logo{text-align:center;font-size:25px;font-weight:850;margin-bottom:8px}.public-sub{text-align:center;color:#6b7280;margin-bottom:24px}.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}.choice{border:0;border-radius:16px;padding:24px 15px;background:var(--accent);color:#fff;font-weight:800;font-size:17px}.choice.buy{background:#fff;color:var(--ink);border:2px solid var(--accent)}.public-form{display:none}.public-form.show{display:block}.back{background:#fff;color:var(--ink);border:1px solid #ddd;margin-bottom:15px}.public-field{margin-bottom:12px}.public-field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.public-field input,.public-field select,.public-field textarea{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px}.public-field textarea{min-height:90px;resize:vertical}.public-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.public-full{grid-column:1/-1}.public-submit{width:100%;margin-top:8px;padding:13px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-weight:800}.public-note{font-size:12px;color:#6b7280;text-align:center;margin-top:14px}.public-success{display:none;text-align:center;padding:30px 10px}.public-success.show{display:block}.image-help{font-size:12px;color:#6b7280;margin-top:5px}.image-preview{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.image-preview img{width:82px;height:68px;object-fit:cover;border-radius:9px;border:1px solid #ddd}
-@media(max-width:900px){.stats{grid-template-columns:1fr 1fr}.grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}}
-@media(max-width:800px){.side{display:none}.main{margin:0;width:100%;padding:82px 14px 18px}.stats{grid-template-columns:1fr 1fr;gap:11px}.stat{padding:15px;border-radius:15px}.num{font-size:25px}.top{align-items:flex-start;margin-bottom:17px}.title{font-size:23px}.mobile-nav{display:flex;position:fixed;top:0;bottom:auto;left:0;right:0;height:64px;background:rgba(255,255,255,.97);border-bottom:1px solid #e4e7ec;z-index:100;justify-content:flex-start;align-items:center;padding:6px 7px;gap:3px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;box-shadow:0 4px 16px rgba(15,23,42,.09);backdrop-filter:blur(10px)}.mobile-nav button{flex:0 0 auto;min-width:67px;height:50px;border:0;background:none;color:#566071;border-radius:11px;font-size:11px;line-height:16px;padding:4px 7px;white-space:nowrap;font-weight:650}.mobile-nav button:hover,.mobile-nav button:active{background:#eef1f5;color:#111827}.formgrid{grid-template-columns:1fr}.full{grid-column:auto}.table{min-width:650px}.tablewrap{overflow:auto}.panel{padding:15px}.card{border-radius:15px}.pic{height:155px}.toolbar{gap:8px}}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f6f8;color:#17202a}
+button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:flex;min-height:100vh}.side{width:245px;background:#111827;color:#fff;padding:20px;position:fixed;inset:0 auto 0 0}.brand{font-size:21px;font-weight:800;margin-bottom:25px}.nav{display:block;width:100%;text-align:left;background:transparent;color:#cbd5e1;border:0;border-radius:10px;padding:12px;margin:5px 0}.nav.active,.nav:hover{background:#253047;color:#fff}.main{margin-left:245px;width:calc(100% - 245px);padding:25px;max-width:1500px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.title{font-size:27px;font-weight:800}.sub{color:#6b7280}.btn{border:0;border-radius:10px;background:#111827;color:#fff;padding:11px 15px;font-weight:700}.btn.light{background:#fff;color:#111827;border:1px solid #ddd}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}.stat{background:#fff;border-radius:15px;padding:18px;border:1px solid #eee}.num{font-size:27px;font-weight:800}.label{color:#6b7280;font-size:13px}.panel{background:#fff;border:1px solid #eee;border-radius:16px;padding:18px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}.search{flex:1;min-width:220px;padding:12px;border:1px solid #ddd;border-radius:10px}.filters{display:flex;gap:8px;flex-wrap:wrap}.chip{padding:9px 12px;border:1px solid #ddd;border-radius:20px;background:#fff}.chip.on{background:#111827;color:#fff}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}.card{border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;background:#fff}.pic{height:155px;background:#d8dde4;display:flex;align-items:center;justify-content:center;font-size:48px}.cardbody{padding:13px}.price{font-size:18px;font-weight:800}.muted{font-size:13px;color:#6b7280}.actions{display:flex;gap:7px;margin-top:12px}.small{padding:8px 10px;border-radius:8px;border:1px solid #ddd;background:#fff}.primary{background:#111827;color:#fff;border-color:#111827}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:12px 8px;border-bottom:1px solid #eee;text-align:left;font-size:14px}.empty{text-align:center;color:#777;padding:35px}.modal{display:none;position:fixed;inset:0;background:#0008;z-index:20;align-items:center;justify-content:center;padding:15px}.box{background:#fff;border-radius:18px;width:min(720px,100%);max-height:92vh;overflow:auto;padding:20px}.box h2{margin-top:0}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{padding:11px;border:1px solid #ddd;border-radius:10px;width:100%}.full{grid-column:1/-1}.match{border-left:4px solid #111827;padding:12px;background:#f7f8fa;border-radius:8px;margin:8px 0}.danger{color:#b91c1c}.mobile-nav{display:none}
+@media(max-width:800px){.side{display:none}.main{margin:0;width:100%;padding:76px 14px 14px}.stats{grid-template-columns:1fr 1fr}.top{align-items:flex-start}.title{font-size:22px}.mobile-nav{display:flex;position:fixed;top:0;bottom:auto;left:0;right:0;height:62px;background:#fff;border-bottom:1px solid #ddd;z-index:100;justify-content:flex-start;align-items:center;padding:6px 5px;gap:2px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;box-shadow:0 2px 8px #0001}.mobile-nav button{flex:0 0 auto;min-width:64px;height:50px;border:0;background:none;border-radius:9px;font-size:11px;line-height:16px;padding:4px 6px;white-space:nowrap}.mobile-nav button:hover,.mobile-nav button:active{background:#f1f3f5}.formgrid{grid-template-columns:1fr}.full{grid-column:auto}.table{min-width:650px}.tablewrap{overflow:auto}}
+
+.public-wrap{min-height:100vh;background:#f5f6f8;padding:24px}
+.public-box{width:min(680px,100%);margin:0 auto;background:#fff;border:1px solid #eee;border-radius:20px;padding:24px;box-shadow:0 8px 30px #00000010}
+.public-logo{text-align:center;font-size:25px;font-weight:800;margin-bottom:8px}.public-sub{text-align:center;color:#6b7280;margin-bottom:24px}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}.choice{border:0;border-radius:16px;padding:24px 15px;background:#111827;color:#fff;font-weight:800;font-size:17px}.choice.buy{background:#fff;color:#111827;border:2px solid #111827}
+.public-form{display:none}.public-form.show{display:block}.back{background:#fff;color:#111827;border:1px solid #ddd;margin-bottom:15px}
+.public-field{margin-bottom:12px}.public-field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.public-field input,.public-field select,.public-field textarea{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px}.public-field textarea{min-height:90px;resize:vertical}
+.public-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.public-full{grid-column:1/-1}.public-submit{width:100%;margin-top:8px;padding:13px;border:0;border-radius:10px;background:#111827;color:#fff;font-weight:800}
+.public-note{font-size:12px;color:#6b7280;text-align:center;margin-top:14px}
+.public-success{display:none;text-align:center;padding:30px 10px}.public-success.show{display:block}
 @media(max-width:600px){.public-wrap{padding:12px}.public-box{padding:18px}.choice-grid,.public-grid{grid-template-columns:1fr}.public-full{grid-column:auto}}
+
+
+.image-help{font-size:12px;color:#6b7280;margin-top:5px}
+.image-preview{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.image-preview img{width:82px;height:68px;object-fit:cover;border-radius:9px;border:1px solid #ddd}
+
+
+.login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#f5f7fb,#e9eef7);display:flex;align-items:center;justify-content:center;padding:18px;z-index:99999}
+.login-box{width:min(410px,100%);background:#fff;border:1px solid #e5e7eb;border-radius:22px;padding:28px;box-shadow:0 18px 60px #0002}
+.login-logo{text-align:center;font-size:27px;font-weight:900;margin-bottom:7px}.login-sub{text-align:center;color:#6b7280;margin-bottom:22px}
+.login-field{width:100%;padding:14px;border:1px solid #d1d5db;border-radius:11px;margin:6px 0 10px;outline:none}.login-field:focus{border-color:#111827;box-shadow:0 0 0 3px #11182712}
+.login-btn{width:100%;padding:14px;border:0;border-radius:11px;background:#111827;color:#fff;font-weight:800;font-size:16px;margin-top:7px}.login-error{min-height:20px;color:#b91c1c;text-align:center;font-size:13px;margin-top:10px}
+
+.public-site{min-height:100vh;background:#f5f6f8;padding:18px}
+.public-site-head{max-width:1200px;margin:0 auto 18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.public-site-logo{font-size:26px;font-weight:900}.public-site-sub{color:#6b7280;font-size:13px}
+.public-site-actions{display:flex;gap:8px;flex-wrap:wrap}
+.public-homes{max-width:1200px;margin:0 auto}
+.public-home-toolbar{background:#fff;border:1px solid #eee;border-radius:16px;padding:14px;margin-bottom:14px}
+.public-home-toolbar input{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px}
+.public-home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.public-home-card{border:1px solid #e5e7eb;border-radius:15px;overflow:hidden;background:#fff;box-shadow:0 3px 15px #00000008}
+.public-home-pic{height:190px;background:#e2e6eb;display:flex;align-items:center;justify-content:center;font-size:52px;overflow:hidden}
+.public-home-pic img{width:100%;height:100%;object-fit:cover}
+.public-home-body{padding:14px}.public-home-price{font-size:20px;font-weight:900;margin-bottom:5px}
+.public-home-title{font-weight:800;font-size:16px}.public-home-meta{color:#6b7280;font-size:13px;margin-top:5px;line-height:1.55}
+.public-home-btn{width:100%;margin-top:12px;padding:11px;border:0;border-radius:10px;background:#111827;color:#fff;font-weight:800}
+.public-contact{margin-top:10px;text-align:center;font-size:13px;color:#374151}
+.public-contact a{font-weight:900;color:#111827;text-decoration:none}
+.public-view{font-size:12px;color:#6b7280;margin-top:7px}
+@media(max-width:600px){.public-site{padding:12px}.public-site-head{align-items:flex-start}.public-site-logo{font-size:22px}.public-home-grid{grid-template-columns:1fr}}
+
+.inquiry-panel{margin-top:10px;padding:10px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa}
+.inquiry-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.inquiry-list{margin-top:8px;display:grid;gap:7px}
+.inquiry-item{padding:9px;border:1px solid #e5e7eb;border-radius:9px;background:#fff}
+.inquiry-meta{font-size:12px;color:#6b7280;margin-top:3px}
+.inquiry-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+
 </style>
+  <link rel="apple-touch-icon" href="logo-tel.PNG">
+<link rel="icon" type="image/png" href="logo-tel.PNG">
 </head>
 <body>
+
+
+<div id="loginScreen" class="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+  <div class="login-logo">XORAZMLIDER CRM</div>
+</div>
+    <div class="login-sub">Yopiq ichki baza. Kirish uchun login va parol kerak.</div>
+    <form onsubmit="loginCRM(event)">
+      <input id="loginEmail" class="login-field" type="email" autocomplete="username" placeholder="Email" required>
+      <input id="loginPassword" class="login-field" type="password" autocomplete="current-password" placeholder="Parol" required>
+      <button id="loginBtn" class="login-btn" type="submit">Kirish</button>
+      <div id="loginError" class="login-error"></div>
+    </form>
+  </div>
+</div>
 
 <div id="publicApp" style="display:none"></div>
 
 <div class="app">
 <aside class="side"><div class="brand">🏠 Xorazm Uylar CRM</div>
-<button class="nav active" data-page="dashboard">📊 Bosh sahifa</button><button class="nav" data-page="homes">🏠 Uylar</button><button class="nav" data-page="buyers">👤 Xaridorlar</button><button class="nav" data-page="sellers">🤝 Sotuvchilar</button><button class="nav" data-page="matches">🎯 Moslashtirish</button><button class="nav" data-page="sold">✅ Sotilgan</button>
+<button class="nav active" data-page="dashboard">📊 Bosh sahifa</button><button class="nav" data-page="homes">🏠 Uylar</button><button class="nav" data-page="buyers">👤 Xaridorlar</button><button class="nav" data-page="sellers">🤝 Sotuvchilar</button><button class="nav" data-page="matches">🎯 Moslashtirish</button><button class="nav" data-page="sold">✅ Sotilgan</button><button class="nav" onclick="logoutCRM()">🚪 Chiqish</button>
 <div style="margin-top:30px;color:#94a3b8;font-size:12px">Online versiya • ma'lumotlar Supabase bazasida saqlanadi</div></aside>
 <main class="main"><div id="page"></div></main>
 </div>
-<div class="mobile-nav"><button onclick="go('dashboard')">📊<br>Bosh</button><button onclick="go('homes')">🏠<br>Uylar</button><button onclick="go('buyers')">👤<br>Xaridor</button><button onclick="go('sellers')">🤝<br>Sotuvchi</button><button onclick="go('matches')">🎯<br>Mos</button><button onclick="go('sold')">✅<br>Sotilgan</button></div>
+<div class="mobile-nav"><button onclick="go('dashboard')">📊<br>Bosh</button><button onclick="go('homes')">🏠<br>Uylar</button><button onclick="go('buyers')">👤<br>Xaridor</button><button onclick="go('sellers')">🤝<br>Sotuvchi</button><button onclick="go('matches')">🎯<br>Mos</button><button onclick="go('sold')">✅<br>Sotilgan</button><button class="nav" onclick="logoutCRM()" style="color:#1683d8;">🚪 Chiqish</button></div>
 <div id="modal" class="modal"><div class="box" id="modalBox"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -40,17 +99,80 @@ let db={homes:[],buyers:[],sellers:[],inquiries:[]};
 
 const localDb=JSON.parse(localStorage.getItem(KEY)||'null');
 
+async function loginCRM(event){
+  event?.preventDefault();
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPassword').value;
+  const btn=document.getElementById('loginBtn');
+  const err=document.getElementById('loginError');
+  err.textContent='';
+  if(!email||!password){err.textContent='Email va parolni kiriting.';return;}
+  btn.disabled=true;btn.textContent='Tekshirilmoqda...';
+  try{
+    if(!window.supabase || !client){
+      throw new Error('Supabase kutubxonasi yuklanmadi. Internet aloqasini tekshiring.');
+    }
+    const {data,error}=await client.auth.signInWithPassword({email,password});
+    if(error) throw error;
+    if(!data || !data.session) throw new Error('Sessiya yaratilmadi.');
+    await showCRM();
+  }catch(e){
+    console.error('CRM login:',e);
+    const msg=String(e?.message||e||'Noma’lum xatolik');
+    if(/invalid login credentials/i.test(msg)){
+      err.textContent='Login yoki parol noto‘g‘ri.';
+    }else if(/email not confirmed/i.test(msg)){
+      err.textContent='Bu email Supabase’da tasdiqlanmagan.';
+    }else if(/failed to fetch|network/i.test(msg)){
+      err.textContent='Internet yoki Supabase ulanishida xatolik.';
+    }else{
+      err.textContent='Kirishda xatolik: '+msg;
+    }
+  }finally{
+    btn.disabled=false;btn.textContent='Kirish';
+  }
+}
+
+async function logoutCRM(){
+  const {error}=await client.auth.signOut();
+  if(error){
+    alert('Chiqishda xatolik: '+(error.message||error));
+    return;
+  }
+  showLogin();
+}
+
+function showLogin(){
+  document.getElementById('loginScreen').style.display='flex';
+  document.querySelector('.app').style.display='none';
+  document.querySelector('.mobile-nav').style.display='none';
+}
+
+async function showCRM(){
+  document.getElementById('loginScreen').style.display='none';
+  document.querySelector('.app').style.display='flex';
+  document.querySelector('.mobile-nav').style.display='';
+  await refresh();
+}
+
 async function loadDb(){
-  const [h,b,s,i]=await Promise.all([
+  const [h,b,s]=await Promise.all([
     client.from('homes').select('*').order('created_at',{ascending:false}),
     client.from('buyers').select('*').order('created_at',{ascending:false}),
-    client.from('sellers').select('*').order('created_at',{ascending:false}),
-    client.from('home_inquiries').select('*').order('created_at',{ascending:false})
+    client.from('sellers').select('*').order('created_at',{ascending:false})
   ]);
   if(h.error) throw h.error;
   if(b.error) throw b.error;
   if(s.error) throw s.error;
-  if(i.error) throw i.error;
+
+  let inquiryData=[];
+  try{
+    const i=await client.from('home_inquiries').select('*').order('created_at',{ascending:false});
+    if(!i.error) inquiryData=i.data||[];
+    else console.warn('home_inquiries unavailable:',i.error.message);
+  }catch(e){
+    console.warn('home_inquiries unavailable:',e);
+  }
 
   const cloudEmpty=!h.data.length&&!b.data.length&&!s.data.length;
   const hasLocal=localDb && (localDb.homes?.length||localDb.buyers?.length||localDb.sellers?.length);
@@ -64,9 +186,8 @@ async function loadDb(){
     return loadDb();
   }
 
-  db={homes:h.data||[],buyers:b.data||[],sellers:s.data||[],inquiries:i.data||[]};
+  db={homes:h.data||[],buyers:b.data||[],sellers:s.data||[],inquiries:inquiryData};
 }
-
 async function refresh(){
   try{await loadDb();render();}
   catch(e){
@@ -78,7 +199,33 @@ async function refresh(){
   }
 }
 
-function money(n){if(!n)return '—';n=Number(n);if(n>=1e9)return (n/1e9).toFixed(2)+' mlrd so‘m';return Math.round(n/1e6)+' mln so‘m'}
+function parseMoneyInput(v){
+  const s=String(v??'').trim().replace(/\s/g,'').replace(/,/g,'');
+  if(!s)return 0;
+  const usd=/\$|usd|dollar|доллар/i.test(s);
+  const n=Number(s.replace(/[^0-9.\-]/g,''));
+  if(!Number.isFinite(n))return NaN;
+  return usd ? -Math.abs(n) : Math.abs(n);
+}
+function moneyCurrency(n){
+  const v=Number(n);
+  return v<0?'USD':'UZS';
+}
+function moneyAmount(n){
+  return Math.abs(Number(n)||0);
+}
+function money(n){
+  if(n===null||n===undefined||n===''||!Number.isFinite(Number(n))||Number(n)===0)return '—';
+  const v=Number(n), a=Math.abs(v);
+  if(v<0)return '$'+Math.round(a).toLocaleString('en-US');
+  if(a>=1e9)return (a/1e9).toFixed(2)+' mlrd so‘m';
+  return Math.round(a/1e6)+' mln so‘m';
+}
+function priceInputValue(n){
+  if(n===null||n===undefined||n==='')return '';
+  const v=Number(n);
+  return v<0 ? '$'+Math.round(Math.abs(v)) : String(v);
+}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function go(p){document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render(p)}
 function header(t,sub,btn,fn){return `<div class="top"><div><div class="title">${t}</div><div class="sub">${sub}</div></div>${btn?`<button class="btn" onclick="${fn}">${btn}</button>`:''}</div>`}
@@ -93,10 +240,36 @@ function render(p='dashboard'){
   document.getElementById('page').innerHTML=h;
 }
 function dashboard(){
-  return header('Xorazm Uylar CRM','Sotuvchi, xaridor va uylar bazasi','📲 Instagram ariza linki','openInstagramLink()')+
+  const html=header('Xorazm Uylar CRM','Sotuvchi, xaridor va uylar bazasi','📲 Instagram ariza linki','openInstagramLink()')+
   `<div style="margin-bottom:15px"><button class="btn" onclick="openBuyer()">+ Yangi mijoz</button></div>`+
-  `<div class="stats"><div class="stat"><div class="num">${db.homes.filter(x=>x.status!=='Sotildi').length}</div><div class="label">Faol uylar</div></div><div class="stat"><div class="num">${db.buyers.length}</div><div class="label">Xaridorlar</div></div><div class="stat"><div class="num">${db.sellers.length}</div><div class="label">Sotuvchilar</div></div><div class="stat" onclick="go('sold')" style="cursor:pointer"><div class="num">${db.homes.filter(x=>x.status==='Sotildi').length}</div><div class="label">Sotilgan uylar</div></div></div>
+  `<div class="stats">
+    <div class="stat"><div class="num">${db.homes.filter(x=>x.status!=='Sotildi').length}</div><div class="label">Faol uylar</div></div>
+    <div class="stat"><div class="num">${db.buyers.length}</div><div class="label">Xaridorlar</div></div>
+    <div class="stat"><div class="num">${db.sellers.length}</div><div class="label">Sotuvchilar</div></div>
+    <div class="stat" onclick="go('sold')" style="cursor:pointer"><div class="num">${db.homes.filter(x=>x.status==='Sotildi').length}</div><div class="label">Sotilgan uylar</div></div>
+  </div>
+  <div class="panel" id="adminStats"><h3>📊 Sayt statistikasi</h3><div class="muted">Yuklanmoqda...</div></div>
   <div class="panel"><h3>🎯 Tezkor moslashtirish</h3><p class="sub">Xaridor va uy parametrlarini solishtiring.</p>${db.buyers.slice(0,5).map(b=>`<div class="match"><b>${esc(b.name)}</b> — ${esc(b.city)}, ${esc(b.area)}, ${b.rooms} xona, ${b.m2} m², ${money(b.budget)} gacha<br><button class="small primary" onclick="showBuyerMatches(${b.id})">Mos uylarni ko‘rsatish</button></div>`).join('')||'<div class="empty">Hali xaridor yo‘q.</div>'}</div>`;
+  setTimeout(loadAdminStats,0);
+  return html;
+}
+async function loadAdminStats(){
+  const box=document.getElementById('adminStats');if(!box)return;
+  try{
+    const {data,error}=await client.rpc('get_admin_stats');
+    if(error)throw error;
+    const s=data||{};
+    box.innerHTML=`<h3>📊 Sayt statistikasi</h3>
+      <div class="stats" style="margin-bottom:0">
+        <div class="stat"><div class="num">${Number(s.total_visits||0)}</div><div class="label">Jami kirishlar</div></div>
+        <div class="stat"><div class="num">${Number(s.today_visits||0)}</div><div class="label">Bugungi kirishlar</div></div>
+        <div class="stat"><div class="num">${Number(s.total_home_views||0)}</div><div class="label">Uylar jami ko‘rilishi</div></div>
+        <div class="stat"><div class="num">${Number(s.today_home_views||0)}</div><div class="label">Bugun uylar ko‘rilishi</div></div>
+      </div>
+      <div style="margin-top:14px"><b>🔥 Eng ko‘p ko‘rilgan uylar</b>${(s.top_homes||[]).map((x,i)=>`<div class="match">${i+1}. <b>${esc(x.title)}</b> — 👁️ ${Number(x.view_count||0)}</div>`).join('')||'<div class="muted">Hali statistika yo‘q.</div>'}</div>`;
+  }catch(e){
+    box.innerHTML=`<h3>📊 Sayt statistikasi</h3><div class="muted">Statistika hali sozlanmagan. Supabase SQL faylini bir marta ishga tushiring.</div>`;
+  }
 }
 function homes(){
   return header('Uylar','Faol sotiladigan uylar bazasi','+ Uy qo‘shish','openHome()')+
@@ -111,26 +284,250 @@ function homeCards(a){return `<div class="grid">${a.map(x=>{
   const cover=imgs[0] ? `<img src="${esc(imgs[0])}" style="width:100%;height:155px;object-fit:cover" onerror="this.style.display='none';this.parentElement.innerHTML='🏠'">` : '🏠';
   const inquiryCount=db.inquiries.filter(q=>Number(q.home_id)===Number(x.id)).length;
   return `<div class="card"><div class="pic">${cover}</div><div class="cardbody">
-    <div class="price">${money(x.price)}</div>
-    <b>${esc(x.title)}</b>
+    <div class="price">${money(x.price)}</div><b>${esc(x.title)}</b>
     <div class="muted">📍 ${esc(x.city)} • ${esc(x.area)}</div>
     <div class="muted">🏠 ${x.rooms} xona • 📐 ${x.m2} m² • ${esc(x.finish)}</div>
     <div class="muted">👤 ${esc(x.seller)} • ${esc(x.phone)}</div>
     ${imgs.length?`<div class="muted">📷 ${imgs.length} ta rasm</div>`:''}
     <div class="actions">
       <button class="small primary" onclick="showHome(${x.id})">🏠 Uy ichiga kirish</button>
+      <button class="small" onclick="showHomeMatches(${x.id})">🎯 Mos xaridorlar (${findBuyers(x).length})</button>
       <button class="small" onclick="showHomeInquiries(${x.id})">📞 Murojaatlar (${inquiryCount})</button>
-      <button class="small" onclick="showHomeMatches(${x.id})">🎯 Mos xaridorlar</button>
       <button class="small" onclick="editHome(${x.id})">Tahrir</button>
     </div>
   </div></div>`;
-}).join('')||'<div class="empty">Uylar topilmadi.</div>'}</div>}
+}).join('')||'<div class="empty">Uylar topilmadi.</div>'}</div>`}
 function filterHomes(q){q=q.toLowerCase();document.getElementById('homeList').innerHTML=homeCards(db.homes.filter(x=>x.status!=='Sotildi'&&JSON.stringify(x).toLowerCase().includes(q)))}
 function soldHomes(){
   const sold=db.homes.filter(x=>x.status==='Sotildi');
   return header('Sotilgan uylar','Sotilgan uylar arxivi')+
     `<div class="panel"><div id="soldHomeList">${homeCards(sold)}</div></div>`;
 }
+function showHome(id){
+  const x=db.homes.find(a=>Number(a.id)===Number(id));if(!x)return;
+  const imgs=getImageUrls(x.note);
+  const gallery=imgs.length?`<div class="image-preview" style="margin-bottom:12px">${imgs.map(u=>`<img src="${esc(u)}" style="width:120px;height:90px;object-fit:cover" onclick="window.open('${esc(u)}','_blank')">`).join('')}</div>`:'';
+  const cleanNote=String(x.note||'').replace(/\n?\n?\[PROPERTY_IMAGES\][\s\S]*?\[\/PROPERTY_IMAGES\]/g,'').trim();
+  const rows=db.inquiries.filter(q=>Number(q.home_id)===Number(id));
+  modal(`<h2>🏠 ${esc(x.title)}</h2>${gallery}<div class="match"><b>${money(x.price)}</b><br>📍 ${esc(x.city)}, ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}<br>👤 ${esc(x.seller)} • 📞 ${esc(x.phone)}${cleanNote?`<br>📝 ${esc(cleanNote)}`:''}</div>
+  <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0">📞 Shu uyni so‘ragan mijozlar (${rows.length})</h3><button class="small primary" onclick="openHomeInquiry(${id})">➕ Mijoz qo‘shish</button></div><div class="inquiry-list">${renderHomeInquiries(id)}</div></div>
+  <button class="btn light" onclick="closeModal()">Yopish</button>`);
+}
+
+function renderHomeInquiries(homeId){
+  const rows=db.inquiries.filter(q=>Number(q.home_id)===Number(homeId));
+  if(!rows.length) return '<div class="inquiry-meta">Hali bu uyni so‘ragan mijoz yo‘q.</div>';
+  return rows.map(q=>`<div class="inquiry-item">
+    <b>👤 ${esc(q.name||'-')}</b> — ${esc(q.status||'Yangi')}<br>
+    📞 ${esc(q.phone||'-')}
+    ${q.city?`<div class="inquiry-meta">🏠 Talab: ${esc(q.city)}${q.area?', '+esc(q.area):''} • ${q.rooms||'-'} xona • ${q.m2||'-'} m² • ${money(q.budget||'')}</div>`:''}
+    ${q.finish?`<div class="inquiry-meta">🔑 ${esc(q.finish)}</div>`:''}
+    ${q.note?`<div class="inquiry-meta">📝 ${esc(q.note)}</div>`:''}
+    ${q.created_at?`<div class="inquiry-meta">📅 ${new Date(q.created_at).toLocaleString('uz-UZ')}</div>`:''}
+    <div class="inquiry-actions">
+      <a class="small" href="tel:${esc(q.phone||'')}">📞 Qo‘ng‘iroq</a>
+      <button class="small primary" onclick="showInquiryMatches(${q.id})">🎯 Mos uylar (${findHomesForInquiry(q).length})</button>
+      <button class="small" onclick="editHomeInquiry(${q.id})">Tahrir</button>
+      <button class="small" onclick="deleteHomeInquiry(${q.id})">O‘chirish</button>
+    </div>
+  </div>`).join('');
+}
+
+
+function showHomeInquiryMatches(homeId){
+  const h=db.homes.find(x=>Number(x.id)===Number(homeId));
+  if(!h)return;
+  const rows=db.inquiries.filter(q=>findHomesForInquiry(q).some(x=>Number(x.id)===Number(homeId)));
+  modal(`<h2>📞 ${esc(h.title)} uchun mos murojaatlar</h2>
+    <p><b>${rows.length} ta mijoz</b> bu uy talabiga mos keladi.</p>
+    ${rows.map(q=>`<div class="match">
+      <b>👤 ${esc(q.name)}</b><br>
+      📞 ${esc(q.phone||'-')}<br>
+      ${esc(q.city||'')} ${q.area?'• '+esc(q.area):''} • ${q.rooms||'-'} xona • ${q.m2||'-'} m²<br>
+      Budjet: ${money(q.budget||'')} ${q.note?`<br><span class="muted">📝 ${esc(q.note)}</span>`:''}
+      <br><a class="small primary" href="tel:${esc(q.phone||'')}">📞 Uy taklif qilish</a>
+    </div>`).join('')||'<div class="empty">Mos murojaat topilmadi.</div>'}
+    <button class="btn light" onclick="closeModal()">Yopish</button>`);
+}
+
+function showHomeInquiries(homeId){
+  const h=db.homes.find(x=>Number(x.id)===Number(homeId));
+  if(!h)return;
+  modal(`<h2>📞 ${esc(h.title)} — murojaatlar</h2>
+    <p>${esc(h.city)} • ${esc(h.area)} • ${money(h.price)}</p>
+    ${renderHomeInquiries(homeId)}
+    <br><button class="btn" onclick="openHomeInquiry(${homeId})">+ Mijoz qo‘shish</button>
+    <button class="btn light" onclick="closeModal()">Yopish</button>`);
+}
+
+function openHomeInquiry(homeId, buyerId=null){
+  const h=db.homes.find(x=>Number(x.id)===Number(homeId));
+  if(!h)return;
+  const b=buyerId?db.buyers.find(x=>Number(x.id)===Number(buyerId)):null;
+  modal(`<h2>📞 Shu uyga murojaat qilgan mijoz</h2>
+    <p><b>🏠 ${esc(h.title)}</b> — ${money(h.price)}</p>
+    <div class="formgrid">
+      ${input('inquiry_name','Mijoz ismi','Sardor',1)}
+      ${input('inquiry_phone','Telefon','+998...',1)}
+      ${input('inquiry_city','Kerakli shahar/tuman',h.city||'Urganch',1)}
+      ${input('inquiry_area','Kerakli hudud',h.area||'Stadion',0)}
+      ${input('inquiry_rooms','Kerakli xona soni',String(h.rooms||'2'),1)}
+      ${input('inquiry_m2','Kerakli maydon m²',String(h.m2||'60'),1)}
+      ${input('inquiry_budget','Budjet (so‘m yoki dollar)',String(h.price||''),1)}
+      ${input('inquiry_finish','Ta’mir talabi',h.finish||'Farqi yo‘q',0)}
+      ${input('inquiry_status','Holati','Yangi',1)}
+      ${input('inquiry_note','Izoh','Masalan: 2-3 xona, Stadion yaqinidan, 500 mln gacha',0,true)}
+    </div><br>
+    <button class="btn" onclick="saveHomeInquiry(${homeId})">Saqlash</button>
+    <button class="btn light" onclick="showHomeInquiries(${homeId})">Bekor</button>`);
+  if(b){
+    setTimeout(()=>{
+      const n=document.getElementById('f_inquiry_name');
+      const p=document.getElementById('f_inquiry_phone');
+      if(n)n.value=b.name||'';
+      if(p)p.value=b.phone||'';
+      const c=document.getElementById('f_inquiry_city'); if(c)c.value=b.city||h.city||'';
+      const a=document.getElementById('f_inquiry_area'); if(a)a.value=b.area||h.area||'';
+      const r=document.getElementById('f_inquiry_rooms'); if(r)r.value=b.rooms||h.rooms||'';
+      const m=document.getElementById('f_inquiry_m2'); if(m)m.value=b.m2||h.m2||'';
+      const bud=document.getElementById('f_inquiry_budget'); if(bud)bud.value=b.budget||h.price||'';
+      const fin=document.getElementById('f_inquiry_finish'); if(fin)fin.value=b.finish||h.finish||'';
+      const note=document.getElementById('f_inquiry_note'); if(note)note.value=b.note||'';
+    },20);
+  }
+}
+
+async function saveHomeInquiry(homeId){
+  const name=val('inquiry_name'), phone=val('inquiry_phone');
+  if(!name||!phone){alert('Mijoz ismi va telefonini kiriting.');return;}
+  const row={
+    home_id:homeId,
+    name,
+    phone,
+    city:val('inquiry_city'),
+    area:val('inquiry_area'),
+    rooms:Number(val('inquiry_rooms'))||null,
+    m2:Number(val('inquiry_m2'))||null,
+    budget:val('inquiry_budget'),
+    finish:val('inquiry_finish'),
+    status:val('inquiry_status')||'Yangi',
+    note:val('inquiry_note')
+  };
+  const {data,error}=await client.from('home_inquiries').insert(row).select().single();
+  if(error)return alert('Saqlashda xatolik: '+error.message);
+  db.inquiries.unshift(data);
+  closeModal();
+  render('homes');
+}
+
+async 
+function findHomesForInquiry(q){
+  if(!q)return [];
+  const city=String(q.city||'').trim().toLowerCase();
+  const area=String(q.area||'').trim().toLowerCase();
+  const rooms=Number(q.rooms)||0;
+  const m2=Number(q.m2)||0;
+  const budget=q.budget||'';
+  const finish=String(q.finish||'').trim().toLowerCase();
+
+  return db.homes.filter(h=>{
+    if(h.status==='Sotildi') return false;
+    if(city && String(h.city||'').trim().toLowerCase()!==city) return false;
+    if(area){
+      const ha=String(h.area||'').trim().toLowerCase();
+      if(!ha.includes(area) && !area.includes(ha)) return false;
+    }
+    if(rooms && Number(h.rooms)!==rooms) return false;
+    if(m2 && !(Number(h.m2)>=m2*.85 && Number(h.m2)<=m2*1.2)) return false;
+    if(budget){
+      if(moneyCurrency(h.price)!==moneyCurrency(budget)) return false;
+      if(moneyAmount(h.price)>moneyAmount(budget)) return false;
+    }
+    if(finish && finish!=='farqi yo‘q' && finish!=='farqi yoq'){
+      if(String(h.finish||'').trim().toLowerCase()!==finish) return false;
+    }
+    return true;
+  });
+}
+
+function showInquiryMatches(id){
+  const q=db.inquiries.find(x=>Number(x.id)===Number(id));
+  if(!q)return;
+  const m=findHomesForInquiry(q);
+  modal(`<h2>🎯 ${esc(q.name)} uchun mos uylar</h2>
+    <p>Talab: ${esc(q.city||'-')}${q.area?', '+esc(q.area):''} • ${q.rooms||'-'} xona • ${q.m2||'-'} m² • ${money(q.budget||'')}</p>
+    ${m.map(x=>`<div class="match">
+      <b>🏠 ${esc(x.title)}</b><br>
+      ${esc(x.city)} • ${esc(x.area)} • ${x.rooms} xona • ${x.m2} m²<br>
+      <b>${money(x.price)}</b> • ${esc(x.finish||'')}<br>
+      <button class="small primary" onclick="showHome(${x.id})">Uy tafsiloti</button>
+    </div>`).join('')||'<div class="empty">Hozircha bu mijozga mos uy topilmadi.</div>'}
+    <button class="btn light" onclick="closeModal()">Yopish</button>`);
+}
+
+function editHomeInquiry(id){
+  const q=db.inquiries.find(x=>Number(x.id)===Number(id));
+  if(!q)return;
+  const h=db.homes.find(x=>Number(x.id)===Number(q.home_id));
+  if(!h)return;
+  modal(`<h2>✏️ Mijoz talabini tahrirlash</h2>
+    ${input('inquiry_name','Mijoz ismi','',1)}
+    ${input('inquiry_phone','Telefon','',1)}
+    ${input('inquiry_city','Kerakli shahar/tuman','',1)}
+    ${input('inquiry_area','Kerakli hudud','',0)}
+    ${input('inquiry_rooms','Xona soni','',1)}
+    ${input('inquiry_m2','Maydon m²','',1)}
+    ${input('inquiry_budget','Budjet (so‘m yoki dollar)','',1)}
+    ${input('inquiry_finish','Ta’mir talabi','',0)}
+    ${input('inquiry_status','Holati','Yangi',1)}
+    ${input('inquiry_note','Izoh','',0,true)}<br>
+    <button class="btn" onclick="updateHomeInquiry(${id},${h.id})">Saqlash</button>
+    <button class="btn light" onclick="showHomeInquiries(${h.id})">Bekor</button>`);
+  setTimeout(()=>{
+    document.getElementById('f_inquiry_name').value=q.name||'';
+    document.getElementById('f_inquiry_phone').value=q.phone||'';
+    document.getElementById('f_inquiry_city').value=q.city||'';
+    document.getElementById('f_inquiry_area').value=q.area||'';
+    document.getElementById('f_inquiry_rooms').value=q.rooms||'';
+    document.getElementById('f_inquiry_m2').value=q.m2||'';
+    document.getElementById('f_inquiry_budget').value=q.budget||'';
+    document.getElementById('f_inquiry_finish').value=q.finish||'';
+    document.getElementById('f_inquiry_status').value=q.status||'Yangi';
+    document.getElementById('f_inquiry_note').value=q.note||'';
+  },20);
+}
+
+async function updateHomeInquiry(id,homeId){
+  const row={
+    name:val('inquiry_name'),
+    phone:val('inquiry_phone'),
+    city:val('inquiry_city'),
+    area:val('inquiry_area'),
+    rooms:Number(val('inquiry_rooms'))||null,
+    m2:Number(val('inquiry_m2'))||null,
+    budget:val('inquiry_budget'),
+    finish:val('inquiry_finish'),
+    status:val('inquiry_status')||'Yangi',
+    note:val('inquiry_note')
+  };
+  if(!row.name||!row.phone){alert('Mijoz ismi va telefonini kiriting.');return;}
+  const {data,error}=await client.from('home_inquiries').update(row).eq('id',id).select().single();
+  if(error)return alert('Tahrirlashda xatolik: '+error.message);
+  const idx=db.inquiries.findIndex(x=>Number(x.id)===Number(id));
+  if(idx>=0)db.inquiries[idx]=data;
+  closeModal();
+  render('homes');
+}
+
+async function deleteHomeInquiry(id){
+  if(!confirm('Bu murojaatni o‘chirishni tasdiqlaysizmi?'))return;
+  const {error}=await client.from('home_inquiries').delete().eq('id',id);
+  if(error)return alert('O‘chirishda xatolik: '+error.message);
+  db.inquiries=db.inquiries.filter(x=>Number(x.id)!==Number(id));
+  closeModal();
+  render('homes');
+}
+
 function buyers(){return header('Xaridorlar','Sizga uy qidirayotgan mijozlar','+ Xaridor qo‘shish','openBuyer()')+
   `<div class="panel"><div class="toolbar"><input class="search" placeholder="Ism, telefon, hudud..." oninput="filterBuyers(this.value)"></div><div id="buyerList">${buyerRows(db.buyers)}</div></div>`}
 function buyerRows(a){return `<div class="tablewrap"><table class="table"><tr><th>Mijoz</th><th>Talab</th><th>Budjet</th><th>Aloqa</th><th></th></tr>${a.map(x=>`<tr><td><b>${esc(x.name)}</b><br><span class="muted">${esc(x.note)}</span></td><td>${esc(x.city)} • ${esc(x.area)}<br>${x.rooms} xona • ${x.m2} m² • ${esc(x.finish)}</td><td>${money(x.budget)} gacha</td><td>${esc(x.phone)}</td><td><button class="small primary" onclick="showBuyerMatches(${x.id})">🎯 Mos uylar</button> <button class="small" onclick="editBuyer(${x.id})">Tahrir</button> <button class="small" onclick="del('buyers',${x.id})">×</button></td></tr>`).join('')}</table></div>`}
@@ -139,87 +536,13 @@ function sellers(){return header('Sotuvchilar','Uy egalari va realtorlar bazasi'
   `<div class="panel"><div class="tablewrap"><table class="table"><tr><th>Ism</th><th>Telefon</th><th>Izoh</th><th></th></tr>${db.sellers.map(x=>`<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.phone)}</td><td>${esc(x.note)}</td><td><button class="small" onclick="del('sellers',${x.id})">O‘chirish</button></td></tr>`).join('')}</table></div></div>`}
 function matches(){return header('Moslashtirish','Xaridor ↔ uy parametrlarini avtomatik solishtirish','+ Xaridor','openBuyer()')+
   `<div class="panel"><h3>Kimga qanday uy?</h3>${db.buyers.map(b=>{let m=findHomes(b);return `<div class="match"><b>👤 ${esc(b.name)}</b> — ${m.length} ta mos uy<br><span class="muted">${esc(b.city)}, ${esc(b.area)}, ${b.rooms} xona, ${b.m2} m², ${money(b.budget)} gacha</span><div>${m.slice(0,3).map(x=>`<div style="margin-top:8px">🏠 <b>${esc(x.title)}</b> — ${money(x.price)} <button class="small primary" onclick="showHome(${x.id})">Ko‘rish</button></div>`).join('')||'<span class="muted">Mos uy topilmadi.</span>'}</div></div>`}).join('')||'<div class="empty">Xaridor bazasi bo‘sh.</div>'}</div>`}
-function findHomes(b){return db.homes.filter(h=>h.status!=='Sotildi'&&(h.city===b.city)&&(!b.area||h.area.toLowerCase().includes(b.area.toLowerCase())||b.area.toLowerCase().includes(h.area.toLowerCase()))&&(Number(h.rooms)===Number(b.rooms))&&(Number(h.m2)>=Number(b.m2)*.85&&Number(h.m2)<=Number(b.m2)*1.2)&&(Number(h.price)<=Number(b.budget))&&(!b.finish||h.finish===b.finish))}
-function findBuyers(h){return db.buyers.filter(b=>b.city===h.city&&Number(b.rooms)===Number(h.rooms)&&Number(b.m2)>=Number(h.m2)*.85&&Number(b.m2)<=Number(h.m2)*1.2&&Number(b.budget)>=Number(h.price)&&(!b.finish||b.finish===h.finish))}
+function findHomes(b){return db.homes.filter(h=>h.status!=='Sotildi'&&(h.city===b.city)&&(!b.area||h.area.toLowerCase().includes(b.area.toLowerCase())||b.area.toLowerCase().includes(h.area.toLowerCase()))&&(Number(h.rooms)===Number(b.rooms))&&(Number(h.m2)>=Number(b.m2)*.85&&Number(h.m2)<=Number(b.m2)*1.2)&&(moneyCurrency(h.price)===moneyCurrency(b.budget)&&moneyAmount(h.price)<=moneyAmount(b.budget))&&(!b.finish||h.finish===b.finish))}
+function findBuyers(h){return db.buyers.filter(b=>b.city===h.city&&Number(b.rooms)===Number(h.rooms)&&Number(b.m2)>=Number(h.m2)*.85&&Number(b.m2)<=Number(h.m2)*1.2&&moneyCurrency(b.budget)===moneyCurrency(h.price)&&moneyAmount(b.budget)>=moneyAmount(h.price)&&(!b.finish||b.finish===h.finish))}
 function showBuyerMatches(id){let b=db.buyers.find(x=>x.id===id),m=findHomes(b);if(!b)return;modal(`<h2>🎯 ${esc(b.name)} uchun mos uylar</h2><p>${esc(b.city)} • ${esc(b.area)} • ${b.rooms} xona • ${b.m2} m² • ${money(b.budget)} gacha</p>${m.map(x=>`<div class="match"><b>${esc(x.title)}</b><br>${esc(x.city)} • ${esc(x.area)} • ${x.rooms} xona • ${x.m2} m²<br><b>${money(x.price)}</b> • 📞 ${esc(x.phone)}<br><button class="small primary" onclick="showHome(${x.id})">Uy tafsiloti</button></div>`).join('')||'<div class="empty">Aniq mos uy topilmadi.</div>'}<button class="btn light" onclick="closeModal()">Yopish</button>`)}
 function showHomeMatches(id){let h=db.homes.find(x=>x.id===id),m=findBuyers(h);if(!h)return;modal(`<h2>🎯 ${esc(h.title)} uchun mos xaridorlar</h2><p>${esc(h.city)} • ${esc(h.area)} • ${h.rooms} xona • ${h.m2} m² • ${money(h.price)}</p>${m.map(x=>`<div class="match"><b>${esc(x.name)}</b><br>${esc(x.city)} • ${esc(x.area)} • ${x.rooms} xona • ${x.m2} m²<br>Budjet: ${money(x.budget)} gacha • 📞 ${esc(x.phone)}<br><span class="muted">${esc(x.note)}</span></div>`).join('')||'<div class="empty">Mos xaridor topilmadi.</div>'}<button class="btn light" onclick="closeModal()">Yopish</button>`)}
-function showHome(id){
-  let x=db.homes.find(a=>a.id===id);if(!x)return;
-  const imgs=getImageUrls(x.note);
-  const gallery=imgs.length?`<div class="image-preview" style="margin-bottom:12px">${imgs.map(u=>`<img src="${esc(u)}" style="width:120px;height:90px" onclick="window.open('${esc(u)}','_blank')" title="Rasmni ochish">`).join('')}</div>`:'';
-  const cleanNote=String(x.note||'').replace(/\n?\n?\[PROPERTY_IMAGES\][\s\S]*?\[\/PROPERTY_IMAGES\]/g,'').trim();
-  modal(`<h2>${esc(x.title)}</h2>${gallery}<div class="match"><b>${money(x.price)}</b><br>📍 ${esc(x.city)}, ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}<br>👤 ${esc(x.seller)} • 📞 ${esc(x.phone)}${cleanNote?`<br>${esc(cleanNote)}`:''}</div><button class="btn light" onclick="closeModal()">Yopish</button>`);
-}
 
-function renderHomeInquiries(homeId){
-  const rows=db.inquiries.filter(q=>Number(q.home_id)===Number(homeId));
-  if(!rows.length) return '<div class="muted">Hali bu uyni so‘ragan mijoz yo‘q.</div>';
-  return rows.map(q=>`<div class="match">
-    <b>👤 ${esc(q.name||'-')}</b> — ${esc(q.status||'Yangi')}<br>
-    📞 ${esc(q.phone||'-')}
-    ${q.note?`<br>📝 ${esc(q.note)}`:''}
-    <br><a class="small primary" href="tel:${esc(q.phone||'')}">📞 Qo‘ng‘iroq</a>
-    <button class="small" onclick="deleteHomeInquiry(${q.id})">O‘chirish</button>
-  </div>`).join('');
-}
-
-function showHome(id){
-  const x=db.homes.find(a=>Number(a.id)===Number(id));
-  if(!x)return;
-  const rows=db.inquiries.filter(q=>Number(q.home_id)===Number(id));
-  modal(`<h2>🏠 ${esc(x.title)}</h2>
-    <div class="match">
-      <b>${money(x.price)}</b><br>
-      📍 ${esc(x.city)}, ${esc(x.area)}<br>
-      🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>
-      🔑 ${esc(x.finish)}<br>
-      👤 ${esc(x.seller)} • 📞 ${esc(x.phone)}
-    </div>
-    <div class="panel">
-      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
-        <h3 style="margin:0">📞 Shu uyni so‘ragan mijozlar (${rows.length})</h3>
-        <button class="small primary" onclick="openHomeInquiry(${id})">➕ Mijoz qo‘shish</button>
-      </div>
-      <div style="margin-top:10px">${renderHomeInquiries(id)}</div>
-    </div>
-    <button class="btn light" onclick="closeModal()">Yopish</button>`);
-}
-
-function openHomeInquiry(homeId){
-  const h=db.homes.find(x=>Number(x.id)===Number(homeId));
-  if(!h)return;
-  modal(`<h2>➕ Shu uy uchun mijoz qo‘shish</h2>
-    <div class="formgrid">
-      ${input('inquiry_name','Mijoz ismi','Sardor',1)}
-      ${input('inquiry_phone','Telefon','+998...',1)}
-      ${input('inquiry_status','Holati','Yangi',1)}
-      ${input('inquiry_note','Izoh','Masalan: narxini so‘radi',0,true)}
-    </div><br>
-    <button class="btn" onclick="saveHomeInquiry(${homeId})">💾 Saqlash</button>
-    <button class="btn light" onclick="showHome(${homeId})">Bekor qilish</button>`);
-}
-
-async function saveHomeInquiry(homeId){
-  const name=val('inquiry_name'), phone=val('inquiry_phone');
-  if(!name||!phone){alert('Ism va telefonni kiriting.');return;}
-  const row={home_id:homeId,name,phone,status:val('inquiry_status')||'Yangi',note:val('inquiry_note')};
-  const res=await client.from('home_inquiries').insert(row);
-  if(res.error){alert('Saqlashda xatolik: '+res.error.message);return;}
-  await refresh();
-  showHome(homeId);
-}
-
-async function deleteHomeInquiry(id){
-  if(!confirm('Bu mijoz murojaatini o‘chirasizmi?'))return;
-  const res=await client.from('home_inquiries').delete().eq('id',id);
-  if(res.error){alert('O‘chirishda xatolik: '+res.error.message);return;}
-  await refresh();
-  closeModal();
-}
-
-
-function openHome(){modal(`<h2>🏠 Uy qo‘shish</h2><div class="formgrid">${input('title','Uy nomi','Masalan: 2 xonali pod klyuch uy',1)}${input('city','Shahar/tuman','Urganch',1)}${input('area','Hudud/mavze','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Maydon m²','60',1)}${input('price','Narx so‘m','680000000',1)}${input('finish','Ta’mir holati','Pod klyuch',1)}${input('seller','Sotuvchi ismi','Sardor',1)}${input('phone','Telefon','+998...',1)}<div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>${input('note','Izoh','Stadion yonida',1,true)}</div><br><button class="btn" onclick="addHome()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
-function openBuyer(){modal(`<h2>👤 Xaridor qo‘shish</h2><div class="formgrid">${input('name','Mijoz ismi','Mijoz 1',1)}${input('phone','Telefon','+998...',1)}${input('city','Shahar/tuman','Urganch',1)}${input('area','Kerakli hudud','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Kerakli maydon m²','60',1)}${input('budget','Budjet so‘m','700000000',1)}${input('finish','Ta’mir talabi','Pod klyuch',1)}${input('type','Uy turi','Uy',1)}${input('note','Izoh','Stadion yaqinidan kerak',1,true)}</div><br><button class="btn" onclick="addBuyer()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
+function openHome(){modal(`<h2>🏠 Uy qo‘shish</h2><div class="formgrid">${input('title','Uy nomi','Masalan: 2 xonali pod klyuch uy',1)}${input('city','Shahar/tuman','Urganch',1)}${input('area','Hudud/mavze','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Maydon m²','60',1)}${input('price','Narx (so‘m yoki dollar)','680000000 yoki $170000',1)}${input('finish','Ta’mir holati','Pod klyuch',1)}${input('seller','Sotuvchi ismi','Sardor',1)}${input('phone','Telefon','+998...',1)}<div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>${input('note','Izoh','Stadion yonida',1,true)}</div><br><button class="btn" onclick="addHome()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
+function openBuyer(){modal(`<h2>👤 Xaridor qo‘shish</h2><div class="formgrid">${input('name','Mijoz ismi','Mijoz 1',1)}${input('phone','Telefon','+998...',1)}${input('city','Shahar/tuman','Urganch',1)}${input('area','Kerakli hudud','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Kerakli maydon m²','60',1)}${input('budget','Budjet (so‘m yoki dollar)','700000000 yoki $170000',1)}${input('finish','Ta’mir talabi','Pod klyuch',1)}${input('type','Uy turi','Uy',1)}${input('note','Izoh','Stadion yaqinidan kerak',1,true)}</div><br><button class="btn" onclick="addBuyer()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
 function openSeller(){modal(`<h2>🤝 Sotuvchi qo‘shish</h2>${input('name','Ism','Sardor',1)}${input('phone','Telefon','+998...',1)}${input('note','Izoh','Uy egasi',1,true)}<br><button class="btn" onclick="addSeller()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
 function input(id,label,ph,required,full){return `<div class="${full?'full':''}"><label class="muted">${label}</label><input id="f_${id}" class="field" placeholder="${ph}" ${required?'required':''}></div>`}
 function val(k){return document.getElementById('f_'+k)?.value.trim()||''}
@@ -255,7 +578,7 @@ async function addHome(){
     if(imageUrls.length){
       note=(note?'\\n\\n':'')+'[PROPERTY_IMAGES]\\n'+imageUrls.join('\\n')+'\\n[/PROPERTY_IMAGES]';
     }
-    const row={title:val('title'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),price:Number(val('price')),finish:val('finish'),seller:val('seller'),phone:val('phone'),status:'Faol',note};
+    const row={title:val('title'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),price:parseMoneyInput(val('price')),finish:val('finish'),seller:val('seller'),phone:val('phone'),status:'Faol',note};
     const {data,error}=await client.from('homes').insert(row).select().single();
     if(error)throw error;
     db.homes.unshift(data);closeModal();go('homes');
@@ -264,7 +587,7 @@ async function addHome(){
   }
 }
 async function addBuyer(){
-  const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),budget:Number(val('budget')),finish:val('finish'),type:val('type'),note:val('note')};
+  const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),budget:parseMoneyInput(val('budget')),finish:val('finish'),type:val('type'),note:val('note')};
   const {data,error}=await client.from('buyers').insert(row).select().single();
   if(error)return alert('Saqlashda xatolik: '+error.message);
   db.buyers.unshift(data);closeModal();go('buyers');
@@ -280,7 +603,8 @@ async function editHome(id){
   let x=db.homes.find(a=>a.id===id);if(!x)return;
   openHome();
   setTimeout(()=>{
-    ['title','city','area','rooms','m2','price','finish','seller','phone','note'].forEach(k=>document.getElementById('f_'+k).value=x[k]??'');
+    ['title','city','area','rooms','m2','finish','seller','phone','note'].forEach(k=>document.getElementById('f_'+k).value=x[k]??'');
+     document.getElementById('f_price').value=priceInputValue(x.price);
     const existing=getImageUrls(x.note);
     const preview=document.getElementById('f_image_preview');
     if(preview && existing.length) preview.innerHTML=existing.map(u=>`<img src="${esc(u)}" onerror="this.style.display='none'">`).join('');
@@ -299,7 +623,7 @@ async function editHome(id){
         if(files.length) imageUrls=await uploadPropertyImages(files,val('title'));
         let note=val('note').replace(/\n?\n?\[PROPERTY_IMAGES\][\s\S]*?\[\/PROPERTY_IMAGES\]/g,'').trim();
         if(imageUrls.length) note=(note?'\\n\\n':'')+'[PROPERTY_IMAGES]\\n'+imageUrls.join('\\n')+'\\n[/PROPERTY_IMAGES]';
-        const row={title:val('title'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),price:Number(val('price')),finish:val('finish'),seller:val('seller'),phone:val('phone'),note};
+        const row={title:val('title'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),price:parseMoneyInput(val('price')),finish:val('finish'),seller:val('seller'),phone:val('phone'),note};
         const {data,error}=await client.from('homes').update(row).eq('id',id).select().single();
         if(error)throw error;
         Object.assign(x,data);closeModal();go('homes');
@@ -310,10 +634,11 @@ async function editHome(id){
 async function editBuyer(id){
   let x=db.buyers.find(a=>a.id===id);if(!x)return;
   openBuyer();
-  setTimeout(()=>{['name','phone','city','area','rooms','m2','budget','finish','type','note'].forEach(k=>document.getElementById('f_'+k).value=x[k]??'');
+  setTimeout(()=>{['name','phone','city','area','rooms','m2','finish','type','note'].forEach(k=>document.getElementById('f_'+k).value=x[k]??'');
+     document.getElementById('f_budget').value=priceInputValue(x.budget);
     const btn=document.querySelector('#modalBox .btn');
     btn.onclick=async()=>{
-      const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),budget:Number(val('budget')),finish:val('finish'),type:val('type'),note:val('note')};
+      const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),budget:parseMoneyInput(val('budget')),finish:val('finish'),type:val('type'),note:val('note')};
       const {data,error}=await client.from('buyers').update(row).eq('id',id).select().single();
       if(error)return alert('Tahrirlashda xatolik: '+error.message);
       Object.assign(x,data);closeModal();go('buyers');
@@ -364,32 +689,101 @@ function publicShell(content){
   return `<div class="public-wrap"><div class="public-box">${content}</div></div>`;
 }
 
-function publicHome(){
+async function publicHome(){
   document.body.style.background='#f5f6f8';
   document.querySelector('.app').style.display='none';
   document.querySelector('.mobile-nav').style.display='none';
+  document.getElementById('loginScreen').style.display='none';
   const app=document.getElementById('publicApp');
   app.style.display='block';
-  app.innerHTML=publicShell(`
-    <div class="public-logo">🏠 Xorazm Uylar</div>
-    <div class="public-sub">Uy sotish yoki uy olish bo‘yicha ma’lumot qoldiring</div>
-
-    <div id="publicChoice">
-      <h2 style="text-align:center">Siz nima qilmoqchisiz?</h2>
-      <div class="choice-grid">
-        <button class="choice" onclick="showPublicForm('sell')">🏠<br>Uyimni sotmoqchiman</button>
-        <button class="choice buy" onclick="showPublicForm('buy')">🔑<br>Uy olmoqchiman</button>
+  app.innerHTML=`<div class="public-site">
+    <div class="public-site-head">
+      <div><div class="public-site-logo">🏠 Xorazm Uylar</div><div class="public-site-sub">Sotuvdagi uylar</div></div>
+      <div class="public-site-actions">
+        <button class="btn light" onclick="showPublicForm('sell')">🏠 Uyimni sotmoqchiman</button>
+        <button class="btn" onclick="showPublicForm('buy')">🔑 Uy olmoqchiman</button>
       </div>
-      <div class="public-note">Siz yuborgan ma’lumotlar faqat CRM bazasiga tushadi.</div>
     </div>
-
+    <div class="public-homes">
+      <div class="public-home-toolbar"><input id="publicHomeSearch" placeholder="🔎 Uy, hudud, shahar yoki narx bo‘yicha qidiring..." oninput="filterPublicHomes(this.value)"></div>
+      <div id="publicHomeList" class="public-home-grid"><div class="empty">Uylar yuklanmoqda...</div></div>
+      <div class="public-contact">Murojaat uchun: <a href="tel:+998999625454">📞 +998 99 962 54 54</a></div>
+    </div>
+    <div id="publicChoice" style="display:none"></div>
     <div id="publicForm" class="public-form"></div>
     <div id="publicSuccess" class="public-success"></div>
-  `);
+  </div>`;
+  trackSiteVisit();
+  await loadPublicHomes();
+}
+
+
+let publicHomesDb=[];
+
+function publicImages(note){
+  const m=String(note||'').match(/\[PROPERTY_IMAGES\]([\s\S]*?)\[\/PROPERTY_IMAGES\]/);
+  return m ? m[1].split(/\r?\n/).map(s=>s.trim()).filter(Boolean) : [];
+}
+function publicHomeCards(a){
+  return a.map(x=>{
+    const imgs=publicImages(x.images_text);
+    const cover=imgs[0] ? `<img src="${esc(imgs[0])}" onerror="this.parentElement.innerHTML='🏠'">` : '🏠';
+    return `<div class="public-home-card">
+      <div class="public-home-pic">${cover}</div>
+      <div class="public-home-body">
+        <div class="public-home-price">${money(x.price)}</div>
+        <div class="public-home-title">${esc(x.title)}</div>
+        <div class="public-home-meta">📍 ${esc(x.city)} • ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}</div>
+        <div class="public-view">👁️ ${Number(x.view_count||0)} marta ko‘rilgan</div>
+        <button class="public-home-btn" onclick="showPublicHome(${x.id})">Uy haqida batafsil</button>
+      </div>
+    </div>`;
+  }).join('')||'<div class="empty">Hozircha sotuvda uylar yo‘q.</div>';
+}
+async function loadPublicHomes(){
+  const {data,error}=await client.from('public_homes').select('*').eq('status','Faol').order('created_at',{ascending:false});
+  if(error){
+    console.error(error);
+    document.getElementById('publicHomeList').innerHTML='<div class="empty">Uylarni yuklashda xatolik. Iltimos, keyinroq urinib ko‘ring.</div>';
+    return;
+  }
+  publicHomesDb=data||[];
+  document.getElementById('publicHomeList').innerHTML=publicHomeCards(publicHomesDb);
+}
+function filterPublicHomes(q){
+  q=String(q||'').toLowerCase().trim();
+  const a=publicHomesDb.filter(x=>`${x.title} ${x.city} ${x.area} ${x.price} ${x.rooms} ${x.m2} ${x.finish}`.toLowerCase().includes(q));
+  document.getElementById('publicHomeList').innerHTML=publicHomeCards(a);
+}
+async function showPublicHome(id){
+  const x=publicHomesDb.find(a=>a.id===id);
+  if(!x)return;
+  const imgs=publicImages(x.images_text);
+  const gallery=imgs.length?`<div class="image-preview" style="margin-bottom:12px">${imgs.map(u=>`<img src="${esc(u)}" style="width:120px;height:90px" onclick="window.open('${esc(u)}','_blank')">`).join('')}</div>`:'';
+  modal(`<h2>${esc(x.title)}</h2>${gallery}
+    <div class="match"><b>${money(x.price)}</b><br>📍 ${esc(x.city)}, ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}</div>
+    <div class="public-contact">Murojaat uchun: <a href="tel:+998999625454">📞 +998 99 962 54 54</a></div>
+    <button class="btn light" onclick="closeModal()">Yopish</button>`);
+  const {data}=await client.rpc('increment_home_view',{p_home_id:id});
+  if(data!==null){
+    x.view_count=Number(x.view_count||0)+1;
+  }
+  const card=document.querySelector(`.public-home-btn[onclick="showPublicHome(${id})"]`);
+  if(card){const v=card.parentElement.querySelector('.public-view');if(v)v.textContent=`👁️ ${Number(x.view_count||0)} marta ko‘rilgan`;}
+}
+function visitorKey(){
+  let k=localStorage.getItem('xul_visitor_key');
+  if(!k){k=(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2));localStorage.setItem('xul_visitor_key',k);}
+  return k;
+}
+async function trackSiteVisit(){
+  try{await client.rpc('track_site_visit',{p_visitor_key:visitorKey()});}catch(e){console.warn('Statistika:',e.message||e);}
 }
 
 function showPublicForm(type){
   document.getElementById('publicChoice').style.display='none';
+  const homesSection=document.querySelector('.public-homes');
+  if(homesSection) homesSection.style.display='none';
   const box=document.getElementById('publicForm');
   box.className='public-form show';
 
@@ -406,7 +800,7 @@ function showPublicForm(type){
         ${publicInput('area','Hudud/mavze','Stadion')}
         ${publicInput('rooms','Xona soni','5','number')}
         ${publicInput('m2','Maydon m²','200','number')}
-        ${publicInput('price','Narx so‘m','700000000','number')}
+        ${publicInput('price','Narx (so‘m yoki dollar)','700000000 yoki $170000')}
         ${publicInput('finish','Ta’mir holati','Remontli')}
         ${publicInput('type','Uy turi','Hovli')}
         <div class="public-field public-full"><label>📷 Uy rasmlari</label>
@@ -431,7 +825,7 @@ function showPublicForm(type){
         ${publicInput('area','Kerakli hudud','Stadion')}
         ${publicInput('rooms','Xona soni','3','number')}
         ${publicInput('m2','Kerakli maydon m²','80','number')}
-        ${publicInput('budget','Budjet so‘m','800000000','number')}
+        ${publicInput('budget','Budjet (so‘m yoki dollar)','800000000 yoki $170000')}
         ${publicInput('finish','Ta’mir talabi','Remontli')}
         ${publicInput('type','Uy turi','Hovli')}
         <div class="public-field public-full"><label>Qo‘shimcha talab</label><textarea id="pf_note" placeholder="Masalan: maktab yaqinidan kerak"></textarea></div>
@@ -499,7 +893,7 @@ async function submitPublicSell(){
 
   try{
     const sellerRow={name,phone,note:'Instagram ariza'};
-    const sellerRes=await client.from('sellers').insert(sellerRow).select().single();
+    const sellerRes=await client.from('sellers').insert(sellerRow);
     if(sellerRes.error) throw sellerRes.error;
 
     let imageUrls=[];
@@ -516,14 +910,14 @@ async function submitPublicSell(){
       area:pf('area'),
       rooms:Number(pf('rooms'))||0,
       m2:Number(pf('m2'))||0,
-      price:Number(pf('price'))||0,
+      price:parseMoneyInput(pf('price'))||0,
       finish:pf('finish'),
       seller:name,
       phone,
       status:'Faol',
       note
     };
-    const homeRes=await client.from('homes').insert(homeRow).select().single();
+    const homeRes=await client.from('homes').insert(homeRow);
     if(homeRes.error) throw homeRes.error;
 
     publicSuccess(imageUrls.length
@@ -547,12 +941,12 @@ async function submitPublicBuy(){
     area:pf('area'),
     rooms:Number(pf('rooms'))||0,
     m2:Number(pf('m2'))||0,
-    budget:Number(pf('budget'))||0,
+    budget:parseMoneyInput(pf('budget'))||0,
     finish:pf('finish'),
     type:pf('type'),
     note:pf('note')
   };
-  const res=await client.from('buyers').insert(row).select().single();
+  const res=await client.from('buyers').insert(row);
   if(res.error){alert('Saqlashda xatolik: '+res.error.message);return;}
   publicSuccess('Xarid talabangiz qabul qilindi. Sizga mos uylar topilganda bog‘lanamiz.');
 }
@@ -587,13 +981,25 @@ async function copyInstagramLink(link){
 
 function modal(x){document.getElementById('modalBox').innerHTML=x;document.getElementById('modal').style.display='flex'}
 function closeModal(){document.getElementById('modal').style.display='none'}
-document.querySelectorAll('.nav').forEach(x=>x.onclick=()=>go(x.dataset.page));
+document.querySelectorAll('.nav[data-page]').forEach(x=>x.onclick=()=>go(x.dataset.page));
 
-if(new URLSearchParams(window.location.search).get('form')==='1'){
+const params=new URLSearchParams(window.location.search);
+const isPublicForm=params.get('form')==='1';
+const isAdmin=params.get('admin')==='1';
+
+if(isPublicForm){
   publicHome();
+}else if(isAdmin){
+  showLogin();
+  client.auth.getSession().then(({data})=>{
+    if(data.session) showCRM();
+  });
+  client.auth.onAuthStateChange((event,session)=>{
+    if(session){ showCRM(); }
+    else if(event==='SIGNED_OUT'){ showLogin(); }
+  });
 }else{
-  document.getElementById('page').innerHTML='<div class="panel"><h2>⏳ Xorazm Uylar CRM yuklanmoqda...</h2><p class="muted">Online baza bilan bog‘lanilmoqda.</p></div>';
-  refresh();
+  publicHome();
 }
 </script>
 </body></html>
