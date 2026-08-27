@@ -162,7 +162,49 @@
       background:#f9fafb;
     }
 
-  </style>
+  
+/* =========================
+   SHARTNOMA MODULI
+========================= */
+.contract-modal{
+  position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;
+  overflow:auto;padding:20px;
+}
+.contract-box{
+  max-width:1000px;margin:auto;background:#fff;border-radius:16px;padding:20px;
+}
+.contract-form{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:15px;
+}
+.contract-form label{font-weight:bold;font-size:13px}
+.contract-form input,.contract-form select,.contract-form textarea{
+  width:100%;padding:10px;margin-top:5px;border:1px solid #ddd;border-radius:8px;
+}
+.contract-form textarea{min-height:70px}
+.contract-buttons{margin-bottom:15px}
+.contract-preview{
+  background:#fff;border:1px solid #ddd;padding:28px;line-height:1.45;
+  font-family:"Times New Roman",serif;font-size:14px;
+}
+.contract-preview h2{text-align:center;font-size:18px}
+.contract-table{width:100%;border-collapse:collapse;margin:12px 0}
+.contract-table th,.contract-table td{border:1px solid #222;padding:7px;vertical-align:top}
+.contract-sign{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:25px}
+.contract-pagebreak{page-break-before:always}
+@media(max-width:600px){
+  .contract-form,.contract-sign{grid-template-columns:1fr}
+  .contract-modal{padding:8px}.contract-box{padding:12px}.contract-preview{padding:14px;font-size:13px}
+}
+@media print{
+  body *{visibility:hidden!important}
+  #contractModal,#contractModal *{visibility:visible!important}
+  #contractModal{position:static;background:#fff;padding:0}
+  .contract-box{max-width:none;padding:0}
+  .contract-form,.contract-buttons,.contract-close{display:none!important}
+  .contract-preview{border:0;padding:10mm}
+}
+
+</style>
 </head>
 
 <body>
@@ -526,6 +568,20 @@ function showHomes(data) {
 
           </select>
 
+
+          <button
+            style="background:#111;color:#fff"
+            onclick="openContractForHome(${home.id}, 'sell')"
+          >
+            📄 Shartnoma
+          </button>
+
+          <button
+            style="background:#2563eb;color:#fff"
+            onclick="openContractForHome(${home.id}, 'buy')"
+          >
+            🏠 Olib berish
+          </button>
 
           <button
             class="delete"
@@ -988,7 +1044,250 @@ function escapeHtml(value) {
 
 }
 
+
+/* =========================
+   SHARTNOMA
+========================= */
+function contractEsc(v){
+  return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+function cval(id){ return document.getElementById(id)?.value || ""; }
+
+function openContractForHome(homeId, type="sell"){
+  const home = homes.find(h => Number(h.id) === Number(homeId));
+  if(!home) return;
+
+  document.getElementById("contractModal").classList.remove("hidden");
+  document.getElementById("contractType").value = type;
+  document.getElementById("contractNum").value = "";
+  document.getElementById("contractDate").value = new Date().toISOString().slice(0,10);
+
+  document.getElementById("contractClient").value = type === "sell"
+    ? (home.seller || "")
+    : "";
+  document.getElementById("contractPhone").value = type === "sell"
+    ? (home.phone || "")
+    : "";
+
+  document.getElementById("contractAddress").value =
+    [home.city, home.area].filter(Boolean).join(", ");
+  document.getElementById("contractHouse").value = home.title || "";
+  document.getElementById("contractRooms").value = home.rooms ?? "";
+  document.getElementById("contractFloor").value = "";
+  document.getElementById("contractLand").value = "";
+  document.getElementById("contractBalcony").value = "";
+  document.getElementById("contractPrice").value =
+    home.price ? formatContractPrice(home.price) : "";
+  document.getElementById("contractPhone2").value = "";
+  document.getElementById("contractOffer").value = "";
+  document.getElementById("contractFee").value = "";
+  document.getElementById("contractInfo").value =
+    type === "sell"
+      ? [home.type, home.finish, home.note].filter(Boolean).join(" | ")
+      : "Talabga mos uy-joy izlash va topib berish.";
+
+  renderContract();
+}
+
+function formatContractPrice(value){
+  const n=Number(value);
+  if(!Number.isFinite(n)) return value;
+  if(n<0) return "$"+Math.round(Math.abs(n)).toLocaleString("en-US");
+  if(n>=1e9) return (n/1e9).toFixed(2)+" mlrd so‘m";
+  return Math.round(n/1e6)+" mln so‘m";
+}
+
+function closeContract(){
+  document.getElementById("contractModal").classList.add("hidden");
+}
+
+function contractHeader(title){
+  return `<div class="contract-preview">
+  <h2>${title}</h2>
+  <div style="text-align:center">_____ -СОНЛИ ШАРТНОМАСИ</div>
+  <p>Урганч ш. ${contractEsc(cval("contractDate"))} йил</p>
+  <p style="text-indent:25px">
+  <b>Худайберганов Алишер Сапарбаевич</b> номидан 25.04.2026 йилдаги № 0013281680-сон маълумотнома асосида
+  фаолият юритувчи (кейинги ўринларда – БАЖАРУВЧИ) бир томондан ва фуқаро
+  <u>${contractEsc(cval("contractClient"))}</u> (кейинги ўринларда – БУЮРТМАЧИ) иккинчи томондан,
+  ${title.includes("СОТИШ") ? "реклама хизматлари кўрсатилиши" : "уй топишга ёрдам бериш хизмати кўрсатилиши"} ҳақида туздилар:
+  </p>`;
+}
+
+function contractProperty(){
+ return `<table class="contract-table">
+ <tr><td colspan="6"><b>МАНЗИЛ:</b> ${contractEsc(cval("contractAddress"))}</td></tr>
+ <tr><th>Уй</th><th>Хона сони</th><th>Қавати</th><th>Ер ҳажми</th><th>Балкон</th><th>Нархи</th></tr>
+ <tr><td>${contractEsc(cval("contractHouse"))}</td><td>${contractEsc(cval("contractRooms"))}</td>
+ <td>${contractEsc(cval("contractFloor"))}</td><td>${contractEsc(cval("contractLand"))}</td>
+ <td>${contractEsc(cval("contractBalcony"))}</td><td>${contractEsc(cval("contractPrice"))}</td></tr>
+ <tr><td colspan="6"><b>Маълумот:</b> ${contractEsc(cval("contractInfo"))}</td></tr>
+ <tr><td colspan="6"><b>Олиш:</b> ${contractEsc(cval("contractInfo"))}</td></tr>
+ <tr><td colspan="3"><b>Моб:</b> ${contractEsc(cval("contractPhone"))}</td>
+ <td colspan="3"><b>Моб:</b> ${contractEsc(cval("contractPhone2"))} &nbsp; <b>Таклиф:</b> ${contractEsc(cval("contractOffer"))}</td></tr>
+ </table>`;
+}
+
+function contractClauses(){
+ return `<p><b>2. МАЖБУРИЯТ</b></p>
+ <p style="text-indent:25px">2.1. «БУЮРТМАЧИ»нинг ҳуқуқий ва қонуний манфаатларини бузмаслик. Хизматлар кўрсатиш жараёнида олинган махфий маълумотларни ошкор қилмаслик.</p>
+ <p style="text-indent:25px">2.2. «БУЮРТМАЧИ» томонидан тақдим этилган ҳужжатларнинг қонун ҳужжатлари талабларига мувофиқлигини текшириб кўриш, агар хатолар аниқланса, дарҳол хабар бериш.</p>
+ <p style="text-indent:25px">2.3. «БУЮРТМАЧИ» турмуш ўртоғи ва рўйхатда турган ҳамда олди-сотдига алоқаси бор шахсларни мулкни расмийлаштиришга келишларини таъминлайди.</p>
+ <p style="text-indent:25px">2.4. Бажарувчи томонидан буюртма бажарилгандан кейин хизмат шартномаси ва далолатнома хизмат нархи ўзгармаган ҳолда қайта расмийлаштирилади.</p>
+ <p><b>3. ТОМОНЛАР ҲУҚУҚИ ВА ЖАВОБГАРЛИК</b></p>
+ <p style="text-indent:25px">3.1. Томонлар келишуви бажарилмаган ҳолларда келиб чиққан келишмовчиликлар Ўзбекистон Республикаси Хоразм вилояти Урганч шаҳар суди томонидан кўриб чиқилади.</p>
+ <p style="text-indent:25px">3.2. Буюртмачи қоидаларни бузса, жавобгарликни ўз зиммасига олади.</p>
+ <p><b>4. ҲИСОБ ҚОИДАСИ, БУЮРТМА МУДДАТИ, БЕКОР ҚИЛИШ</b></p>
+ <p style="text-indent:25px">4.1. Буюртма имзолангандан кейин кучга киради ва бажарилмагунча муддати тугамайди.</p>
+ <p style="text-indent:25px">4.2. Буюртма томонларнинг розилиги асосида ёзма равишда ўзгартирилади ёки бекор қилинади.</p>
+ <p style="text-indent:25px">4.3. Хизмат ҳақи: <u>${contractEsc(cval("contractFee"))}</u> сўм.</p>
+ <p style="text-indent:25px">4.4. Агарда «БАЖАРУВЧИ» хизматидан «БУЮРТМАЧИ» фойдаланмаса, хизмат ҳақи тўланмайди.</p>
+ <p style="text-indent:25px">4.5. Агарда бажарувчининг мижози дўст ёки қариндошига сотилса/сотиб олинса, бажарувчига хизмат ҳақи тўлиқ тўланади.</p>
+ <p><b>5. ҚЎШИМЧА ШАРТЛАР</b></p>
+ <p style="text-indent:25px">5.1. Кўчмас мулк билан боғлиқ турли ҳолатлар бўйича Бажарувчига даъво қилинмайди, чунки мижоз далолатнома асосида қабул қилиши керак.</p>
+ <p style="text-indent:25px">5.2. Буюртма 1 та нусха асосида имзоланади ва бажарилмагунча кучга эга.</p>`;
+}
+
+function contractSign(){
+ return `<div class="contract-sign">
+ <div><b>«БАЖАРУВЧИ»</b><br>ЯТТ Худайберганов Алишер Сапарбаевич<br><br>Имзо: __________________</div>
+ <div><b>«БУЮРТМАЧИ»</b><br>Ф.И.Ш.: ${contractEsc(cval("contractClient"))}<br><br>Имзо: __________________</div>
+ </div></div>`;
+}
+
+function sellAppendix(){
+ return `<div class="contract-preview contract-pagebreak">
+ <div style="text-align:center"><b>_____ -сонли шартномага 1-илова</b><br><br><b>Сотиладиган уй ҳақида</b></div>
+ <p><b>1. Қисқача маълумот</b></p>
+ <table class="contract-table"><tr><td>
+ ☐ Нақд &nbsp; ☐ Кредит &nbsp; ☐ Шартнома<br>
+ ☐ Умумий ер майдони: ${contractEsc(cval("contractLand"))}<br>
+ ☐ Қавати: ${contractEsc(cval("contractFloor"))} &nbsp; ☐ Лифт<br>
+ ☐ Хоналар сони: ${contractEsc(cval("contractRooms"))}<br>
+ ☐ Нимадан қурилган: __________<br>☐ Қурилган вақти: __________<br>
+ ☐ Мебел<br>☐ Хона баландлиги: ______<br>☐ Ремонт: ______<br>
+ ☐ Отопления (оддий)<br>☐ Отопления (2 контур)
+ </td><td>
+ ☐ Мактаб: __________<br>☐ Боғча: __________<br>☐ Дўкон<br>
+ ☐ Сув &nbsp; ☐ Электр энергия &nbsp; ☐ Газ<br>☐ Маршрут: __________<br>
+ ☐ Болалар майдони<br>☐ Автотураргоҳ (Парковка)<br>☐ Шифохона: __________
+ </td></tr></table>
+ <p style="text-align:center"><b>Кўрсатиладиган хизматлар</b><br>Хизматлар рўйхати ва хизматлар учун тўлов</p>
+ <table class="contract-table">
+ <tr><th>№</th><th>Хизматлар номи</th><th>ҚҚС билан нархи</th><th>Асос</th><th>Миқдори</th><th>Тўлов миқдори (сўмда)</th></tr>
+ <tr><td>1.1</td><td>Олдиндан тўлов (тасвирга олиш ва монтаж учун)</td><td></td><td>шартнома</td><td></td><td></td></tr>
+ <tr><td>2.1</td><td>Квартира ёки Ховли-жойни реклама асосида сотиш учун (Сотилгандан кейин)</td>
+ <td>${contractEsc(cval("contractFee"))}</td><td>шартнома</td><td></td><td>${contractEsc(cval("contractFee"))}</td></tr>
+ <tr><td colspan="5"><b>Жами (олдиндан тўлов):</b></td><td></td></tr>
+ </table>
+ <p>Бирлиги — Миллий валюта (сўм)</p>
+ <div class="contract-sign"><div><b>“XORAZM LIDER” Youtube, instagram<br>асосчиси</b><br>____________ А.С.Худайберганов<br>м.ў.</div>
+ <div>Мижоз номидан:<br>_________________________<br>(имзо)</div></div>
+ </div>`;
+}
+
+function renderContract(){
+ const type=cval("contractType");
+ const sell=type==="sell";
+ const title=sell ? "КЎЧМАС МУЛКНИ СОТИШ ХИЗМАТИ ТЎҒРИСИДА"
+                  : "КЎЧМАС МУЛК ОЛИШ ХИЗМАТИ ТЎҒРИСИДА";
+ let out=contractHeader(title);
+ out+=`<p><b>1. ШАРТНОМА МАЗМУНИ</b></p>`;
+ if(sell){
+   out+=`<p style="text-indent:25px">1.1 «БУЮРТМАЧИ» ўзига тегишли бўлган мулкнинг тўлиқ маълумотларини «БАЖАРУВЧИ»га бериш, жумладан мулк бозорида харидорлар топиш ва сотиш хизматларини кўрсатиш ҳуқуқини «БАЖАРУВЧИ»га беради.</p>
+   <p style="text-indent:25px">1.2. «БУЮРТМАЧИ» рўйхатда турувчи маълумотларини бериш ва сотишга розилик олишни таъминлайди. «БАЖАРУВЧИ» кўчмас мулкни кўрсатиш ва ҳужжатларни тайёрлашга ёрдам беради.</p>`;
+ }else{
+   out+=`<p style="text-indent:25px">1.1 «БУЮРТМАЧИ» талаб-таклифига асосан, уй-жойлар бозоридан хонадонлар излашга, топиб бериш хизматини кўрсатиш ҳуқуқини «БАЖАРУВЧИ»га беради.</p>
+   <p style="text-indent:25px">1.2. «БАЖАРУВЧИ» талаб-таклифга мос келадиган уй-жойларни «БУЮРТМАЧИ»га таклиф қилади, кўчмас мулкни кўрсатиш ва ҳужжатларни тайёрлашга ёрдам беради.</p>`;
+ }
+ out+=`<p style="text-indent:25px">1.3. «БАЖАРУВЧИ» хизматларни кўрсатиш мажбуриятини олади, «БУЮРТМАЧИ» эса белгиланган муддатда тўловларни амалга оширади.</p>`;
+ out+=contractProperty()+contractClauses()+contractSign();
+ if(sell) out+=sellAppendix();
+ document.getElementById("contractPreview").innerHTML=out;
+}
+
+function saveContractDraft(){
+ const ids=["contractType","contractNum","contractDate","contractClient","contractPhone","contractAddress",
+ "contractHouse","contractRooms","contractFloor","contractLand","contractBalcony","contractPrice",
+ "contractPhone2","contractOffer","contractFee","contractInfo"];
+ const data={}; ids.forEach(id=>data[id]=document.getElementById(id)?.value||"");
+ localStorage.setItem("crm_contract_draft",JSON.stringify(data));
+ alert("✅ Shartnoma ma'lumotlari saqlandi.");
+}
+
 </script>
+
+
+<!-- SHARTNOMA MODALI -->
+<div id="contractModal" class="contract-modal hidden">
+  <div class="contract-box">
+    <button class="contract-close" style="float:right;background:#e53935;color:#fff" onclick="closeContract()">✕ Yopish</button>
+    <h2>📄 Shartnoma yaratish</h2>
+
+    <div class="contract-form">
+      <label>Shartnoma turi
+        <select id="contractType" onchange="renderContract()">
+          <option value="sell">Uy sotish xizmati</option>
+          <option value="buy">Uy olib berish xizmati</option>
+        </select>
+      </label>
+      <label>Shartnoma raqami
+        <input id="contractNum" placeholder="001">
+      </label>
+      <label>Sana
+        <input id="contractDate" type="date">
+      </label>
+      <label>Buyurtmachi F.I.Sh.
+        <input id="contractClient">
+      </label>
+      <label>Telefon
+        <input id="contractPhone">
+      </label>
+      <label>Manzil
+        <input id="contractAddress">
+      </label>
+      <label>Uy raqami
+        <input id="contractHouse">
+      </label>
+      <label>Xonalar soni
+        <input id="contractRooms">
+      </label>
+      <label>Qavati
+        <input id="contractFloor">
+      </label>
+      <label>Yer hajmi
+        <input id="contractLand">
+      </label>
+      <label>Balcon
+        <input id="contractBalcony">
+      </label>
+      <label>Narxi
+        <input id="contractPrice">
+      </label>
+      <label>Mobil 2
+        <input id="contractPhone2">
+      </label>
+      <label>Taklif
+        <input id="contractOffer">
+      </label>
+      <label>Xizmat haqi (so'm)
+        <input id="contractFee">
+      </label>
+      <label style="grid-column:1/-1">Ma'lumot / talab
+        <textarea id="contractInfo"></textarea>
+      </label>
+    </div>
+
+    <div class="contract-buttons">
+      <button style="background:#111;color:#fff" onclick="renderContract()">Ko'rishni yangilash</button>
+      <button style="background:#16a34a;color:#fff" onclick="window.print()">🖨 Chop etish / PDF</button>
+      <button style="background:#2563eb;color:#fff" onclick="saveContractDraft()">💾 Shartnoma ma'lumotlarini saqlash</button>
+    </div>
+
+    <div id="contractPreview" class="contract-preview"></div>
+  </div>
+</div>
 
 </body>
 </html>
