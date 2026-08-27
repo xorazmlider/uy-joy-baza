@@ -1002,7 +1002,6 @@ function openStaff(){
       ${input('staff_phone','Telefon','+998...',1)}
       ${input('staff_login','Login','Masalan: sardor',1)}
       ${input('staff_password','Parol','Kamida 6 ta belgi',1)}
-      ${input('staff_email','Email (ixtiyoriy)','Keyin ham qo‘shish mumkin',0)}
       <div><label class="muted">Rol</label><select id="f_staff_role" class="field">${staffRoleOptions('Agent')}</select></div>
       <div><label class="muted">Menejer</label><select id="f_staff_manager" class="field">${staffManagerOptions('')}</select></div>
       <div><label class="muted">Holati</label><select id="f_staff_active" class="field"><option value="true">🟢 Faol</option><option value="false">🔴 Faol emas</option></select></div>
@@ -1055,7 +1054,6 @@ function editStaff(id){
       ${input('staff_name','Ism familiya','',1)}
       ${input('staff_phone','Telefon','',1)}
       ${input('staff_login','Login (o‘zgartirmang)','',1)}
-      ${input('staff_password','Yangi parol (ixtiyoriy)','Bo‘sh qoldirsangiz o‘zgarmaydi',0)}
       ${input('staff_email','Email (Admin keyin qo‘shishi/o‘zgartirishi mumkin)','',0)}
       <div><label class="muted">Rol</label><select id="f_staff_role" class="field">${staffRoleOptions(x.role||'Agent')}</select></div>
       <div><label class="muted">Menejer</label><select id="f_staff_manager" class="field">${staffManagerOptions(x.manager_id)}</select></div>
@@ -1078,15 +1076,12 @@ async function saveStaff(id){
   if(!requirePage('staff'))return;
   if(currentRole()!=='Admin'){alert('Xodim ma’lumotlarini faqat Admin tahrirlaydi.');return;}
   const x=db.staff.find(a=>Number(a.id)===Number(id));if(!x)return;
-  const name=val('staff_name'),phone=val('staff_phone'),newPassword=String(val('staff_password')||'');
+  const name=val('staff_name'),phone=val('staff_phone');
   if(!name||!phone){alert('Ism va telefonni kiriting.');return;}
   const managerVal=val('staff_manager');
   const row={name,phone,email:val('staff_email')||null,role:val('staff_role')||'Agent',manager_id:managerVal?Number(managerVal):null,is_active:val('staff_active')!=='false'};
   const {data,error}=await client.from('staff').update(row).eq('id',id).select().single();
   if(error)return alert('Xodimni yangilashda xatolik: '+error.message);
-  if(newPassword){
-    alert('Email/parolni yangilash uchun ushbu xodimning Auth akkauntini ham yangilash kerak. Hozir email maydoni CRM bazasida yangilandi.');
-  }
   const idx=db.staff.findIndex(a=>Number(a.id)===Number(id));if(idx>=0)db.staff[idx]=data;
   closeModal();go('staff');
 }
