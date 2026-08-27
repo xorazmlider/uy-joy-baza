@@ -363,7 +363,7 @@ async function saveTask(){
 }
 function tasksPage(){
   const arr=[...(db.tasks||[])].sort((a,b)=>String(a.due_at||'').localeCompare(String(b.due_at||'')));
-  return header('Eslatmalar','Qayta qo‘ng‘iroq, uchrashuv va vazifalar','+ Eslatma','openTask')+
+  return header('Eslatmalar','Qayta qo‘ng‘iroq, uchrashuv va vazifalar','+ Eslatma','openTask()')+
     `<div class="panel"><div class="tablewrap"><table class="table">
     <tr><th>Vazifa</th><th>Muddat</th><th>Holat</th><th>Izoh</th><th>Amal</th></tr>
     ${arr.map(x=>`<tr><td><b>${esc(x.title)}</b></td><td>${esc(formatDateTime(x.due_at))}</td><td><span class="badge">${esc(x.status||'Kutilmoqda')}</span></td><td>${esc(x.note||'—')}</td><td>
@@ -398,7 +398,7 @@ function dealCommission(d){
   return d.commission_type==='percent'?p*c/100:c;
 }
 function dealsPage(){
-  return header('Bitimlar','Sotuv jarayonini bosqichma-bosqich boshqaring','+ Bitim','openDeal')+
+  return header('Bitimlar','Sotuv jarayonini bosqichma-bosqich boshqaring','+ Bitim','openDeal()')+
   `<div class="panel"><div class="tablewrap"><table class="table">
   <tr><th>Xaridor</th><th>Uy</th><th>Narx</th><th>Komissiya</th><th>Bosqich</th><th>Amal</th></tr>
   ${(db.deals||[]).map(d=>{const b=db.buyers.find(x=>Number(x.id)===Number(d.buyer_id));const h=db.homes.find(x=>Number(x.id)===Number(d.home_id));return `<tr>
