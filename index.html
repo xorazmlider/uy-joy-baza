@@ -228,7 +228,7 @@ function dashboard(){
     <div class="stat" onclick="go('sold')" style="cursor:pointer"><div class="num">${db.homes.filter(x=>x.status==='Sotildi').length}</div><div class="label">Sotilgan uylar</div></div>
   </div>
   <div class="panel" id="adminStats"><h3>📊 Sayt statistikasi</h3><div class="muted">Yuklanmoqda...</div></div>
-  <div class="panel"><h3>🎯 Tezkor moslashtirish</h3><p class="sub">Xaridor va uy parametrlarini solishtiring.</p>${db.buyers.slice(0,5).map(b=>`<div class="match"><b>${esc(b.name)}</b> — ${esc(b.city)}, ${esc(b.area)}, ${b.rooms} xona, ${b.m2} m², ${money(b.budget)} gacha<br><button class="small primary" onclick="showBuyerMatches(${b.id})">Mos uylarni ko‘rsatish</button></div>`).join('')||'<div class="empty">Hali xaridor yo‘q.</div>'}</div>`;
+  <div class="panel"><h3>🎯 Tezkor moslashtirish</h3><p class="sub">Xaridor va uy parametrlarini solishtiring.</p>${db.buyers.slice(0,5).map(b=>`<div class="match"><b>${esc(b.name)}</b> — ${esc(b.city)}, ${esc(b.area)}, ${b.rooms} xona, ${b.m2} m², ${money(b.budget)} gacha<br><b>🏠 ${findHomes(b).length} ta mos uy</b><br><button class="small primary" onclick="showBuyerMatches(${b.id})">Mos uylarni ko‘rsatish</button></div>`).join('')||'<div class="empty">Hali xaridor yo‘q.</div>'}</div>`;
   setTimeout(loadAdminStats,0);
   return html;
 }
@@ -261,7 +261,11 @@ function getImageUrls(note){
 function homeCards(a){return `<div class="grid">${a.map(x=>{
   const imgs=getImageUrls(x.note);
   const cover=imgs[0] ? `<img src="${esc(imgs[0])}" style="width:100%;height:155px;object-fit:cover" onerror="this.style.display='none';this.parentElement.innerHTML='🏠'">` : '🏠';
-  return `<div class="card"><div class="pic">${cover}</div><div class="cardbody"><div class="price">${money(x.price)}</div><b>${esc(x.title)}</b><div class="muted">📍 ${esc(x.city)} • ${esc(x.area)}</div><div class="muted">🏠 ${x.rooms} xona • 📐 ${x.m2} m² • ${esc(x.finish)}</div><div class="muted">👤 ${esc(x.seller)} • ${esc(x.phone)}</div>${imgs.length?`<div class="muted">📷 ${imgs.length} ta rasm</div>`:''}<div class="actions"><button class="small primary" onclick="showHomeMatches(${x.id})">🎯 Mos xaridorlar</button><button class="small" onclick="showHomeInquiries(${x.id})">📞 Murojaatlar (${db.inquiries.filter(q=>Number(q.home_id)===Number(x.id)).length})</button><button class="small" onclick="editHome(${x.id})">Tahrir</button></div>
+  return `<div class="card"><div class="pic">${cover}</div><div class="cardbody"><div class="price">${money(x.price)}</div><b>${esc(x.title)}</b><div class="muted">📍 ${esc(x.city)} • ${esc(x.area)}</div><div class="muted">🏠 ${x.rooms} xona • 📐 ${x.m2} m² • ${esc(x.finish)}</div><div class="muted">👤 ${esc(x.seller)} • ${esc(x.phone)}</div>${imgs.length?`<div class="muted">📷 ${imgs.length} ta rasm</div>`:''}<div class="actions">
+<button class="small primary" onclick="showHomeMatches(${x.id})">🎯 Mos xaridorlar (${findBuyers(x).length})</button>
+<button class="small" onclick="showHomeInquiries(${x.id})">📞 Murojaatlar (${db.inquiries.filter(q=>Number(q.home_id)===Number(x.id)).length})</button>
+<button class="small" onclick="editHome(${x.id})">Tahrir</button>
+</div>
       <div class="inquiry-panel">
         <div class="inquiry-head"><b>📞 Shu uyni so‘ragan mijozlar</b><button class="small primary" onclick="openHomeInquiry(${x.id})">+ Mijoz qo‘shish</button></div>
         <div class="inquiry-list">${renderHomeInquiries(x.id)}</div>
@@ -397,7 +401,22 @@ function matches(){return header('Moslashtirish','Xaridor ↔ uy parametrlarini 
 function findHomes(b){return db.homes.filter(h=>h.status!=='Sotildi'&&(h.city===b.city)&&(!b.area||h.area.toLowerCase().includes(b.area.toLowerCase())||b.area.toLowerCase().includes(h.area.toLowerCase()))&&(Number(h.rooms)===Number(b.rooms))&&(Number(h.m2)>=Number(b.m2)*.85&&Number(h.m2)<=Number(b.m2)*1.2)&&(moneyCurrency(h.price)===moneyCurrency(b.budget)&&moneyAmount(h.price)<=moneyAmount(b.budget))&&(!b.finish||h.finish===b.finish))}
 function findBuyers(h){return db.buyers.filter(b=>b.city===h.city&&Number(b.rooms)===Number(h.rooms)&&Number(b.m2)>=Number(h.m2)*.85&&Number(b.m2)<=Number(h.m2)*1.2&&moneyCurrency(b.budget)===moneyCurrency(h.price)&&moneyAmount(b.budget)>=moneyAmount(h.price)&&(!b.finish||b.finish===h.finish))}
 function showBuyerMatches(id){let b=db.buyers.find(x=>x.id===id),m=findHomes(b);if(!b)return;modal(`<h2>🎯 ${esc(b.name)} uchun mos uylar</h2><p>${esc(b.city)} • ${esc(b.area)} • ${b.rooms} xona • ${b.m2} m² • ${money(b.budget)} gacha</p>${m.map(x=>`<div class="match"><b>${esc(x.title)}</b><br>${esc(x.city)} • ${esc(x.area)} • ${x.rooms} xona • ${x.m2} m²<br><b>${money(x.price)}</b> • 📞 ${esc(x.phone)}<br><button class="small primary" onclick="showHome(${x.id})">Uy tafsiloti</button></div>`).join('')||'<div class="empty">Aniq mos uy topilmadi.</div>'}<button class="btn light" onclick="closeModal()">Yopish</button>`)}
-function showHomeMatches(id){let h=db.homes.find(x=>x.id===id),m=findBuyers(h);if(!h)return;modal(`<h2>🎯 ${esc(h.title)} uchun mos xaridorlar</h2><p>${esc(h.city)} • ${esc(h.area)} • ${h.rooms} xona • ${h.m2} m² • ${money(h.price)}</p>${m.map(x=>`<div class="match"><b>${esc(x.name)}</b><br>${esc(x.city)} • ${esc(x.area)} • ${x.rooms} xona • ${x.m2} m²<br>Budjet: ${money(x.budget)} gacha • 📞 ${esc(x.phone)}<br><span class="muted">${esc(x.note)}</span></div>`).join('')||'<div class="empty">Mos xaridor topilmadi.</div>'}<button class="btn light" onclick="closeModal()">Yopish</button>`)}
+function showHomeMatches(id){
+  let h=db.homes.find(x=>x.id===id),m=findBuyers(h);
+  if(!h)return;
+  modal(`<h2>🎯 ${esc(h.title)} uchun mos xaridorlar</h2>
+    <p>${esc(h.city)} • ${esc(h.area)} • ${h.rooms} xona • ${h.m2} m² • ${money(h.price)}</p>
+    <p><b>${m.length} ta mos mijoz topildi.</b></p>
+    ${m.map(x=>`<div class="match">
+      <b>👤 ${esc(x.name)}</b><br>
+      ${esc(x.city)} • ${esc(x.area)} • ${x.rooms} xona • ${x.m2} m²<br>
+      Budjet: ${money(x.budget)} gacha<br>
+      📞 ${esc(x.phone)}
+      ${x.note?`<br><span class="muted">📝 ${esc(x.note)}</span>`:''}
+      <br><a class="small primary" href="tel:${esc(x.phone||'')}">📞 Qo‘ng‘iroq qilib taklif qilish</a>
+    </div>`).join('')||'<div class="empty">Hozircha mos xaridor topilmadi.</div>'}
+    <button class="btn light" onclick="closeModal()">Yopish</button>`)
+}
 function showHome(id){
   let x=db.homes.find(a=>a.id===id);if(!x)return;
   const imgs=getImageUrls(x.note);
