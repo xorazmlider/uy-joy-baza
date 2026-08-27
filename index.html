@@ -696,6 +696,18 @@ function contractHtml(){
 
   const appendix='';
 
+  const qrText=[
+    'Xorazm Uylar CRM',
+    'Shartnoma №: '+(v('contract_no')||''),
+    'Sana: '+(v('contract_date')||''),
+    'Mijoz: '+(v('contract_customer')||''),
+    'Telefon: '+(v('contract_customer_phone')||''),
+    'Manzil: '+(v('contract_address')||''),
+    'Uy: '+(v('contract_house')||h?.title||''),
+    'Narx: '+(v('contract_price')||(h?priceInputValue(h.price):priceInputValue(b?.budget))||'')
+  ].join('\\n');
+  const qrUrl=makeQR(qrText);
+
   return `<!doctype html><html lang="uz"><head><meta charset="utf-8">
   <title>Xorazm Uylar CRM — Shartnoma</title>
   <style>
@@ -768,12 +780,12 @@ function contractHtml(){
       <div>
         <b>«БАЖАРУВЧИ»</b><br>
         ЯТТ Худайберганов Алишер Сапарбаевич<br><br>
-        <div class="qrbox" id="qrExec"></div>
+        <div class="qrbox"><img src="${qrUrl}" alt="QR"></div>
       </div>
       <div>
         <b>«БУЮРТМАЧИ»</b><br>
         Ф.И.Ш ${customer}<br><br>
-        <div class="qrbox" id="qrCustomer"></div>
+        <div class="qrbox"><img src="${qrUrl}" alt="QR"></div>
       </div>
     </div>
   </section>
@@ -793,67 +805,9 @@ function previewContract(){
   w.document.write(html);
   w.document.close();
 
-  setTimeout(()=>{
-    const no=v('contract_no')||'';
-    const date=v('contract_date')||'';
-    const customer=v('contract_customer')||'';
-    const phone=v('contract_customer_phone')||'';
-    const address=v('contract_address')||'';
-    const house=v('contract_house')||'';
-    const price=v('contract_price')||'';
-
-    const qrText=[
-      'Xorazm Uylar CRM',
-      'Shartnoma №: '+no,
-      'Sana: '+date,
-      'Mijoz: '+customer,
-      'Telefon: '+phone,
-      'Manzil: '+address,
-      'Uy: '+house,
-      'Narx: '+price
-    ].join('\\n');
-
-    const qr=makeQR(qrText);
-    const q1=w.document.getElementById('qrExec');
-    const q2=w.document.getElementById('qrCustomer');
-
-    const i1=new Image();
-    const i2=new Image();
-    i1.alt='QR';
-    i2.alt='QR';
-    i1.width=88; i1.height=88;
-    i2.width=88; i2.height=88;
-
-    let loaded=0;
-    let printed=false;
-
-    function doPrint(){
-      if(printed)return;
-      printed=true;
-      setTimeout(()=>w.print(),300);
-    }
-
-    function oneLoaded(){
-      loaded++;
-      if(loaded>=2) doPrint();
-    }
-
-    i1.onload=oneLoaded;
-    i2.onload=oneLoaded;
-    i1.onerror=oneLoaded;
-    i2.onerror=oneLoaded;
-
-    i1.src=qr;
-    i2.src=qr;
-
-    if(q1)q1.innerHTML='';
-    if(q2)q2.innerHTML='';
-    if(q1)q1.appendChild(i1);
-    if(q2)q2.appendChild(i2);
-
-    // QR server javob bermasa ham chop etish avtomatik davom etadi.
-    setTimeout(doPrint,5000);
-  },250);
+  // Muhim: print aynan tugma bosilgan paytdagi user action ichida chaqiriladi.
+  // Shu sababli Ctrl+P bosish talab qilinmaydi.
+  w.print();
 }
 
 function crmMeta(note,key){
