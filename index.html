@@ -109,10 +109,25 @@ async function loginCRM(event){
   if(!email||!password){err.textContent='Email va parolni kiriting.';return;}
   btn.disabled=true;btn.textContent='Tekshirilmoqda...';
   try{
-    const {error}=await client.auth.signInWithPassword({email,password});
+    if(!window.supabase || !client){
+      throw new Error('Supabase kutubxonasi yuklanmadi. Internet aloqasini tekshiring.');
+    }
+    const {data,error}=await client.auth.signInWithPassword({email,password});
     if(error) throw error;
+    if(!data || !data.session) throw new Error('Sessiya yaratilmadi.');
+    await showCRM();
   }catch(e){
-    err.textContent='Login yoki parol noto‘g‘ri.';
+    console.error('CRM login:',e);
+    const msg=String(e?.message||e||'Noma’lum xatolik');
+    if(/invalid login credentials/i.test(msg)){
+      err.textContent='Login yoki parol noto‘g‘ri.';
+    }else if(/email not confirmed/i.test(msg)){
+      err.textContent='Bu email Supabase’da tasdiqlanmagan.';
+    }else if(/failed to fetch|network/i.test(msg)){
+      err.textContent='Internet yoki Supabase ulanishida xatolik.';
+    }else{
+      err.textContent='Kirishda xatolik: '+msg;
+    }
   }finally{
     btn.disabled=false;btn.textContent='Kirish';
   }
