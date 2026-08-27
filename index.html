@@ -518,7 +518,6 @@ function openContractForSellerHome(homeId){
     set('contract_rooms',h.rooms||'');
     set('contract_price',priceInputValue(h.price));
     set('contract_city',h.city||'Urganch sh.');
-    set('contract_repair',h.finish||'');
     set('contract_info',visibleNote(h.note));
   },50);
 }
@@ -616,17 +615,6 @@ function openContract(homeId=null, contractType='sell', buyerId=null){
     ${input('contract_mob1','Mobi 1',isBuy?(b?.phone||'+998...'):(phone||'+998...'),0)}
     ${input('contract_mob2','Mobi 2','+998...',0)}
     ${input('contract_offer','Taklif','',0,true)}
-    ${input('contract_land_total','Umumiy yer maydoni','',0)}
-    ${input('contract_material','Nimadan qurilgan','',0)}
-    ${input('contract_built','Qurilgan vaqti','',0)}
-    ${input('contract_height','Xona balandligi','',0)}
-    ${input('contract_repair','Remont',h?.finish||'',0)}
-    ${input('contract_school','Maktab','',0)}
-    ${input('contract_kindergarten','Bog‘cha','',0)}
-    ${input('contract_route','Marshrut','',0)}
-    ${input('contract_hospital','Shifoxona','',0)}
-    ${input('contract_prepay','Oldindan to‘lov','',0)}
-    ${input('contract_sale_fee','Sotilgandan keyingi xizmat to‘lovi','',0)}
   </div><br>
   <div class="muted">💡 ${isBuy?'Xaridor ma’lumotlari avtomatik kiritildi.':'Sotuvchi va uy ma’lumotlari avtomatik kiritildi.'} Kerak bo‘lsa qo‘shimcha maydonlarni to‘ldiring.</div><br>
   <button class="btn" onclick="previewContract()">📄 Ko‘rish / Chop etish</button>
@@ -662,7 +650,6 @@ function openContract(homeId=null, contractType='sell', buyerId=null){
         set('contract_floor',homeFloor(h)||'');
         set('contract_price',priceInputValue(h.price));
         set('contract_city',h.city||'Urganch sh.');
-        set('contract_repair',h.finish||'');
         set('contract_info',visibleNote(h.note));
       }
     }
@@ -765,7 +752,6 @@ function contractHtml(){
     <p>4.1. Буюртма имзолангандан кейин кучга киради ва бажарилмагунча муддати тугамайди.</p>
     <p>4.2. Буюртма тамонлар тарафда розилиги асосида ёзма равишда ўзгартирилади ёки бекор қилинади.</p>
     <p>4.3. Буюртма п.к № 2.3. бажармаган холда «БУЮРТМАЧИ» буюртмани п.к. 4.3. асосида хизматни тўлиқ тўлаши мумкин.</p>
-    <p><b>${contractEsc(v('contract_sale_fee'))} сўм</b></p>
     <p>4.4. АГАРДА «БАЖАРУВЧИ» ХИЗМАТИДАН «БУЮРТМАЧИ» ФОЙДАЛАНМАСА, ХИЗМАТ ХАҚИ ТЎЛАНМАЙДИ.</p>
     <p>4.5. ${feeClause}</p>
 
@@ -1348,3 +1334,4 @@ if(isPublicForm){
 }
 </script>
 </body></html>
+
