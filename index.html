@@ -106,7 +106,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 </div>
     <div class="login-sub">Yopiq ichki baza. Kirish uchun login va parol kerak.</div>
     <form onsubmit="loginCRM(event)">
-      <input id="loginLogin" class="login-field" type="text" autocomplete="username" placeholder="Login" required>
+      <input id="loginLogin" class="login-field" type="text" autocomplete="username" placeholder="Login yoki Email" required>
       <input id="loginPassword" class="login-field" type="password" autocomplete="current-password" placeholder="Parol" required>
       <button id="loginBtn" class="login-btn" type="submit">Kirish</button>
       <div id="loginError" class="login-error"></div>
@@ -198,29 +198,70 @@ const localDb=JSON.parse(localStorage.getItem(KEY)||'null');
 
 async function loginCRM(event){
   event?.preventDefault();
-  const login=String(document.getElementById('loginLogin')?.value||'').trim().toLowerCase();
+
+  const loginValue=String(document.getElementById('loginLogin')?.value||'').trim().toLowerCase();
   const password=document.getElementById('loginPassword').value;
   const btn=document.getElementById('loginBtn');
   const err=document.getElementById('loginError');
+
   err.textContent='';
-  if(!login||!password){err.textContent='Login va parolni kiriting.';return;}
-  btn.disabled=true;btn.textContent='Tekshirilmoqda...';
+  if(!loginValue||!password){
+    err.textContent='Login va parolni kiriting.';
+    return;
+  }
+
+  btn.disabled=true;
+  btn.textContent='Tekshirilmoqda...';
+
   try{
-    const {data:staffList,error:staffErr}=await client.from('staff').select('auth_email,is_active').eq('login',login).limit(1);
-    if(staffErr)throw staffErr;
-    if(!staffList?.length){throw new Error('LOGIN_NOT_FOUND');}
-    if(staffList[0].is_active===false)throw new Error('INACTIVE');
-    const authEmail=String(staffList[0].auth_email||'').trim().toLowerCase();
-    if(!authEmail)throw new Error('AUTH_EMAIL_MISSING');
-    const {error}=await client.auth.signInWithPassword({email:authEmail,password});
+    let authEmail='';
+    // Admin emaili o‘zgarishsiz. Xodim loginida @ yozish shart emas.
+    if(loginValue.includes('@')){
+      authEmail=loginValue;
+    }else{
+      authEmail=loginValue+'@crm.xorazmuylar.uz';
+    }
+    // Xodim Auth akkaunti create-staff tomonidan shu email bilan yaratiladi.
+    // Shuning uchun login vaqtida staff SELECT/RLS ga bog‘lanmaymiz.
+    // Masalan: test -> test@crm.xorazmuylar.uz
+    // Masalan: anvar22 -> anvar22@crm.xorazmuylar.uz
+    // Parol Supabase Auth orqali tekshiriladi.
+    // Adminning haqiqiy email bilan kirishi saqlanadi.
+    // Xodimning faol holati CRM ichida rolni yuklash bosqichida nazorat qilinadi.
+    // LOGIN_NOT_FOUND bu yerda ishlatilmaydi.
+    // AUTH_EMAIL_MISSING bu yerda ishlatilmaydi.
+    // --------------------------------------------
+    // Login emaili tayyor.
+
+    const {data,error}=await client.auth.signInWithPassword({
+      email:authEmail,
+      password
+    });
+
     if(error)throw error;
+    if(!data?.session)throw new Error('SESSION_NOT_CREATED');
+
+    await showCRM();
+
   }catch(e){
-    console.error(e);
-    if(e.message==='INACTIVE')err.textContent='Bu xodim faol emas. Admin bilan bog‘laning.';
-    else if(e.message==='AUTH_EMAIL_MISSING')err.textContent='Xodim akkaunti to‘liq sozlanmagan.';
-    else err.textContent='Login yoki parol noto‘g‘ri.';
+    console.error('CRM login:',e);
+
+    if(e.message==='INACTIVE'){
+      err.textContent='Bu xodim faol emas. Admin bilan bog‘laning.';
+    }else if(e.message==='AUTH_EMAIL_MISSING'){
+      err.textContent='Xodim akkaunti to‘liq sozlanmagan.';
+    }else if(/invalid login credentials/i.test(String(e.message||''))){
+      err.textContent='Login yoki parol noto‘g‘ri.';
+    }else if(/email not confirmed/i.test(String(e.message||''))){
+      err.textContent='Bu email Supabase’da tasdiqlanmagan.';
+    }else if(/failed to fetch|network/i.test(String(e.message||''))){
+      err.textContent='Internet yoki Supabase ulanishida xatolik.';
+    }else{
+      err.textContent='Kirishda xatolik: '+String(e.message||e);
+    }
   }finally{
-    btn.disabled=false;btn.textContent='Kirish';
+    btn.disabled=false;
+    btn.textContent='Kirish';
   }
 }
 
@@ -972,11 +1013,9 @@ function staffRows(a){
     <td>${esc(staffManagerName(x.manager_id))}</td>
     <td>${x.is_active===false?'🔴 Faol emas':'🟢 Faol'}</td>
     <td>
-      ${String(x.role||'').toLowerCase()==='admin'
-        ? `<button class="small" onclick="editStaff(${x.id})">Tahrir</button><span class="muted" style="font-size:12px">🔒 Admin — o‘chirilmaydi</span>`
-        : `<button class="small" onclick="editStaff(${x.id})">Tahrir</button>
-           <button class="small" onclick="toggleStaff(${x.id},${x.is_active===false?'true':'false'})">${x.is_active===false?'Faollashtirish':'O‘chirish'}</button>
-           <button class="small" onclick="deleteStaff(${x.id})">🗑</button>`}
+      <button class="small" onclick="editStaff(${x.id})">Tahrir</button>
+      ${String(x.role||'').toLowerCase()==='admin'?'<span class="muted">🔒 Admin</span>':`<button class="small" onclick="toggleStaff(${x.id},${x.is_active===false?'true':'false'})">${x.is_active===false?'Faollashtirish':'O‘chirish'}</button>`}
+      ${String(x.role||'').toLowerCase()==='admin'?'':`<button class="small" onclick="deleteStaff(${x.id})">🗑</button>`}
     </td>
   </tr>`).join('')||'<tr><td colspan="6" class="empty">Hali xodim qo‘shilmagan.</td></tr>'}
   </table></div>`;
@@ -1096,10 +1135,7 @@ async function toggleStaff(id,active){
   if(!requirePage('staff'))return;
   if(currentRole()!=='Admin'){alert('Xodim holatini faqat Admin o‘zgartiradi.');return;}
   const x=db.staff.find(a=>Number(a.id)===Number(id));if(!x)return;
-  if(String(x.role||'').toLowerCase()==='admin'){
-    alert('Admin akkauntini faol emas holatga o‘tkazish mumkin emas.');
-    return;
-  }
+  if(String(x.role||'').toLowerCase()==='admin'){alert('Admin akkauntini o‘zgartirish mumkin emas.');return;}
   const newState=active===true||active==='true';
   const {data,error}=await client.from('staff').update({is_active:newState}).eq('id',id).select().single();
   if(error)return alert('Holatni o‘zgartirishda xatolik: '+error.message);
@@ -1107,12 +1143,9 @@ async function toggleStaff(id,active){
 }
 async function deleteStaff(id){
   if(!requirePage('staff'))return;
-  if(currentRole()!=='Admin'){alert('Xodimni faqat Admin boshqaradi.');return;}
+  if(currentRole()!=='Admin'){alert('Xodimni faqat Admin o‘chira oladi.');return;}
   const x=db.staff.find(a=>Number(a.id)===Number(id));if(!x)return;
-  if(String(x.role||'').toLowerCase()==='admin'){
-    alert('Admin akkauntini o‘chirish mumkin emas.');
-    return;
-  }
+  if(String(x.role||'').toLowerCase()==='admin'){alert('Admin akkauntini o‘chirish mumkin emas.');return;}
   if(!confirm(`${x.name} xodimini o‘chirishni tasdiqlaysizmi?`))return;
   const {error}=await client.from('staff').delete().eq('id',id);
   if(error)return alert('O‘chirishda xatolik: '+error.message);
@@ -1978,4 +2011,13 @@ if(isPublicForm){
 }
 </script>
 </body></html>
+
+
+
+
+
+
+
+
+
 
