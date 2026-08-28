@@ -122,7 +122,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 <div id="currentUserBadge" style="margin-top:20px;padding:10px;border:1px solid #334155;border-radius:10px;color:#e2e8f0;font-size:12px"></div><div style="margin-top:12px;color:#94a3b8;font-size:12px">Online versiya • ma'lumotlar Supabase bazasida saqlanadi</div></aside>
 <main class="main"><div id="page"></div></main>
 </div>
-<div class="mobile-nav"><button onclick="go('dashboard')">📊<br>Bosh</button><button onclick="go('homes')">🏠<br>Uylar</button><button onclick="go('buyers')">👤<br>Xaridor</button><button onclick="go('sellers')">🤝<br>Sotuvchi</button><button onclick="go('matches')">🎯<br>Mos</button><button onclick="go('deals')">💰<br>Bitim</button><button onclick="go('tasks')">⏰<br>Eslatma</button><button onclick="go('reports')">📈<br>Hisobot</button><button onclick="go('documents')">📁<br>Hujjat</button><button onclick="go('sold')">✅<br>Sotilgan</button><button class="nav" onclick="logoutCRM()" style="color:#1683d8;">🚪 Chiqish</button></div>
+<div class="mobile-nav"><button onclick="go('dashboard')">📊<br>Bosh</button><button onclick="go('homes')">🏠<br>Uylar</button><button onclick="go('buyers')">👤<br>Xaridor</button><button onclick="go('sellers')">🤝<br>Sotuvchi</button><button onclick="go('matches')">🎯<br>Mos</button><button onclick="go('deals')">💰<br>Bitim</button><button onclick="go('tasks')">⏰<br>Eslatma</button><button class="mobile-page-reports" onclick="go('reports')">📈<br>Hisobot</button><button onclick="go('documents')">📁<br>Hujjat</button><button onclick="go('sold')">✅<br>Sotilgan</button><button class="nav" onclick="logoutCRM()" style="color:#1683d8;">🚪 Chiqish</button></div>
 <div id="modal" class="modal"><div class="box" id="modalBox"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -150,6 +150,11 @@ function normalizeRole(role){
 }
 function currentRole(){return normalizeRole(currentStaff?.role||'');}
 function canPage(page){return !!currentStaff && (ROLE_PAGES[currentRole()]||[]).includes(page);}
+function applyRoleInterface(){
+  document.querySelectorAll('.mobile-page-reports').forEach(el=>{
+    el.style.display=canPage('reports')?'':'none';
+  });
+}
 
 // ===== UY-LAR UCHUN ROL HUQUQLARI =====
 // Admin: barcha uylar ustidan to'liq huquq.
@@ -1471,6 +1476,7 @@ function visibleNote(note){
     .replace(/\[CRM_BUYER\][\s\S]*?\[\/CRM_BUYER\]/g,'')
     .replace(/\[PROPERTY_IMAGES\][\s\S]*?\[\/PROPERTY_IMAGES\]/g,'')
     .replace(/\[CRM_OWNER\][\s\S]*?\[\/CRM_OWNER\]/g,'')
+    .replace(/\[CRM_SELLER_OWNER\][\s\S]*?\[\/CRM_SELLER_OWNER\]/g,'')
     .trim();
 }
 function buyerReq(b){
