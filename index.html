@@ -996,13 +996,13 @@ function staffManagerOptions(selected=''){
 function openStaff(){
   if(!requirePage('staff'))return;
   modal(`<h2>👥 Xodim qo‘shish</h2>
-    <p class="muted">Xodim saytga <b>Login + Parol</b> bilan kiradi. Emailni hozir kiritish shart emas — Admin keyin tahrirlashi mumkin.</p>
+    <p class="muted">Xodim saytga <b>Login + Parol</b> bilan kiradi. Emailni hozir kiritish shart emas — Admin keyin Tahrir orqali qo‘shishi mumkin.</p>
     <div class="formgrid">
       ${input('staff_name','Ism familiya','Masalan: Sardor Bekchanov',1)}
       ${input('staff_phone','Telefon','+998...',1)}
       ${input('staff_login','Login','Masalan: sardor',1)}
       ${input('staff_password','Parol','Kamida 6 ta belgi',1)}
-      <div><label class="muted">Rol</label><select id="f_staff_role" class="field">${staffRoleOptions('Agent')}</select></div>
+            <div><label class="muted">Rol</label><select id="f_staff_role" class="field">${staffRoleOptions('Agent')}</select></div>
       <div><label class="muted">Menejer</label><select id="f_staff_manager" class="field">${staffManagerOptions('')}</select></div>
       <div><label class="muted">Holati</label><select id="f_staff_active" class="field"><option value="true">🟢 Faol</option><option value="false">🔴 Faol emas</option></select></div>
     </div><br>
@@ -1018,33 +1018,34 @@ async function addStaff(){
   if(login.length<3){alert('Login kamida 3 ta belgidan iborat bo‘lsin.');return;}
   if(password.length<6){alert('Parol kamida 6 ta belgidan iborat bo‘lsin.');return;}
   if(currentRole()!=='Admin'){alert('Xodim akkauntini faqat Admin yaratadi.');return;}
-  const authEmail=login+'@login.xorazmlider.uz';
   const {data:exists,error:existsErr}=await client.from('staff').select('id').eq('login',login).limit(1);
   if(existsErr)return alert('Loginni tekshirishda xatolik: '+existsErr.message);
   if(exists?.length){alert('Bu login band. Boshqa login tanlang.');return;}
   const {data:sessionData}=await client.auth.getSession();
   const adminSession=sessionData?.session||null;
   if(!adminSession){alert('Admin sessiyasi topilmadi. Qayta kiring.');return;}
-  const {data:authData,error:authError}=await client.auth.signUp({
-    email:authEmail,
-    password,
-    options:{data:{full_name:name}}
-  });
-  if(authError)return alert('Login akkauntini yaratishda xatolik: '+authError.message);
-  if(!authData?.user){return alert('Akkaunt yaratilmagan.');}
-  if(!authData.session){
-    await client.auth.setSession({access_token:adminSession.access_token,refresh_token:adminSession.refresh_token});
-    return alert('Xodim yaratildi, lekin Supabase Email Confirmation yoqilgan. Authentication → Providers → Email → Confirm email ni o‘chirib, qayta urinib ko‘ring.');
-  }
-  await client.auth.setSession({access_token:adminSession.access_token,refresh_token:adminSession.refresh_token});
   const managerVal=val('staff_manager');
-  const row={name,phone,email:val('staff_email')||null,login,auth_email:authEmail,role:val('staff_role')||'Agent',manager_id:managerVal?Number(managerVal):null,is_active:val('staff_active')!=='false'};
-  const {data,error}=await client.from('staff').insert(row).select().single();
-  if(error){
-    await client.auth.setSession({access_token:adminSession.access_token,refresh_token:adminSession.refresh_token});
-    return alert('Xodim bazaga saqlanmadi: '+error.message);
+  const payload={
+    name,phone,login,password,
+    role:val('staff_role')||'Agent',
+    manager_id:managerVal?Number(managerVal):null,
+    is_active:val('staff_active')!=='false'
+  };
+  try{
+    const r=await fetch(SUPABASE_URL+'/functions/v1/swift-staff',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+adminSession.access_token},
+      body:JSON.stringify(payload)
+    });
+    const out=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(out.error||out.message||('HTTP '+r.status));
+    if(!out.staff)throw new Error('Xodim bazaga qaytmadi.');
+    db.staff.unshift(out.staff);closeModal();go('staff');
+    alert('Xodim muvaffaqiyatli yaratildi. Endi u Login + Parol bilan kiradi.');
+  }catch(e){
+    console.error(e);
+    alert('Xodim yaratishda xatolik: '+(e.message||e));
   }
-  db.staff.unshift(data);closeModal();go('staff');
 }
 function editStaff(id){
   if(!requirePage('staff'))return;
@@ -1054,6 +1055,7 @@ function editStaff(id){
       ${input('staff_name','Ism familiya','',1)}
       ${input('staff_phone','Telefon','',1)}
       ${input('staff_login','Login (o‘zgartirmang)','',1)}
+      ${input('staff_password','Yangi parol (ixtiyoriy)','Bo‘sh qoldirsangiz o‘zgarmaydi',0)}
       ${input('staff_email','Email (Admin keyin qo‘shishi/o‘zgartirishi mumkin)','',0)}
       <div><label class="muted">Rol</label><select id="f_staff_role" class="field">${staffRoleOptions(x.role||'Agent')}</select></div>
       <div><label class="muted">Menejer</label><select id="f_staff_manager" class="field">${staffManagerOptions(x.manager_id)}</select></div>
@@ -1076,12 +1078,15 @@ async function saveStaff(id){
   if(!requirePage('staff'))return;
   if(currentRole()!=='Admin'){alert('Xodim ma’lumotlarini faqat Admin tahrirlaydi.');return;}
   const x=db.staff.find(a=>Number(a.id)===Number(id));if(!x)return;
-  const name=val('staff_name'),phone=val('staff_phone');
+  const name=val('staff_name'),phone=val('staff_phone'),newPassword=String(val('staff_password')||'');
   if(!name||!phone){alert('Ism va telefonni kiriting.');return;}
   const managerVal=val('staff_manager');
   const row={name,phone,email:val('staff_email')||null,role:val('staff_role')||'Agent',manager_id:managerVal?Number(managerVal):null,is_active:val('staff_active')!=='false'};
   const {data,error}=await client.from('staff').update(row).eq('id',id).select().single();
   if(error)return alert('Xodimni yangilashda xatolik: '+error.message);
+  if(newPassword){
+    alert('Email/parolni yangilash uchun ushbu xodimning Auth akkauntini ham yangilash kerak. Hozir email maydoni CRM bazasida yangilandi.');
+  }
   const idx=db.staff.findIndex(a=>Number(a.id)===Number(id));if(idx>=0)db.staff[idx]=data;
   closeModal();go('staff');
 }
