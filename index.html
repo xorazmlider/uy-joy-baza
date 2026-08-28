@@ -929,7 +929,7 @@ function buyerRows(a){
         <button class="small" onclick="showClientHistory(${x.id})">🕘 Tarix</button>
         <button class="small" onclick="openContractForBuyer(${x.id})">📄 Olib berish shartnomasi</button>
         <button class="small" onclick="editBuyer(${x.id})">Tahrir</button>
-        ${currentRole()==='Admin'||currentRole()==='Menejer'?`<button class="small" onclick="del('buyers',${x.id})">×</button>`:''}
+        ${currentRole()==='Admin'?`<button class="small" onclick="del('buyers',${x.id})">×</button>`:''}
       </td>
     </tr>`).join('')}
   </table></div>`;
@@ -1793,6 +1793,12 @@ async function markHomeActive(id){
 }
 
 async function del(type,id){
+  if(type==='buyers' && currentRole()!=='Admin'){
+    return alert('Sizda xaridorni o‘chirish huquqi yo‘q.');
+  }
+  if(type==='sellers' && currentRole()!=='Admin'){
+    return alert('Sizda sotuvchini o‘chirish huquqi yo‘q.');
+  }
   if(!confirm('O‘chirishni tasdiqlaysizmi?'))return;
   const {error}=await client.from(type).delete().eq('id',id);
   if(error)return alert('O‘chirishda xatolik: '+error.message);
