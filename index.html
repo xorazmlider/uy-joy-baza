@@ -216,34 +216,16 @@ async function loginCRM(event){
   try{
     let authEmail='';
 
-    // Admin haqiqiy email bilan kiradi.
+    // Admin: haqiqiy email bilan kiradi.
     // Masalan: alishops.uz@gmail.com
     if(loginValue.includes('@')){
       authEmail=loginValue;
     }else{
-      // Xodim oddiy login bilan kiradi.
-      // Masalan: anvar22
-      const {data:staffList,error:staffErr}=await client
-        .from('staff')
-        .select('auth_email,is_active')
-        .eq('login',loginValue)
-        .limit(1);
-
-      if(staffErr)throw staffErr;
-
-      if(!staffList?.length){
-        throw new Error('LOGIN_NOT_FOUND');
-      }
-
-      if(staffList[0].is_active===false){
-        throw new Error('INACTIVE');
-      }
-
-      authEmail=String(staffList[0].auth_email||'').trim().toLowerCase();
-
-      if(!authEmail){
-        throw new Error('AUTH_EMAIL_MISSING');
-      }
+      // Xodim: oddiy login bilan kiradi.
+      // create-staff funksiyasi xodim Auth emailini
+      // login@crm.xorazmuylar.uz shaklida yaratadi.
+      // Bu yerda staff jadvalidan SELECT qilish shart emas.
+      authEmail=loginValue+'@crm.xorazmuylar.uz';
     }
 
     const {data,error}=await client.auth.signInWithPassword({
@@ -254,19 +236,16 @@ async function loginCRM(event){
     if(error)throw error;
     if(!data?.session)throw new Error('SESSION_NOT_CREATED');
 
+    // Auth muvaffaqiyatli bo‘lgach, staff yozuvi va roli tekshiriladi.
     await showCRM();
 
   }catch(e){
     console.error('CRM login:',e);
 
-    if(e.message==='INACTIVE'){
-      err.textContent='Bu xodim faol emas. Admin bilan bog‘laning.';
-    }else if(e.message==='AUTH_EMAIL_MISSING'){
-      err.textContent='Xodim akkaunti to‘liq sozlanmagan.';
-    }else if(/invalid login credentials/i.test(String(e.message||''))){
+    if(/invalid login credentials/i.test(String(e.message||''))){
       err.textContent='Login yoki parol noto‘g‘ri.';
     }else if(/email not confirmed/i.test(String(e.message||''))){
-      err.textContent='Bu email Supabase’da tasdiqlanmagan.';
+      err.textContent='Xodim akkaunti tasdiqlanmagan.';
     }else if(/failed to fetch|network/i.test(String(e.message||''))){
       err.textContent='Internet yoki Supabase ulanishida xatolik.';
     }else{
