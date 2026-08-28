@@ -119,7 +119,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 <div class="app">
 <aside class="side"><div class="brand">🏠 Xorazm Uylar CRM</div>
 <button type="button" class="nav active" data-page="dashboard" onclick="go('dashboard');return false;">📊 Bosh sahifa</button><button type="button" class="nav" data-page="homes" onclick="go('homes');return false;">🏠 Uylar</button><button type="button" class="nav" data-page="buyers" onclick="go('buyers');return false;">👤 Xaridorlar</button><button type="button" class="nav" data-page="sellers" onclick="go('sellers');return false;">🤝 Sotuvchilar</button><button type="button" class="nav" data-page="staff" onclick="go('staff');return false;">👥 Xodimlar</button><button type="button" class="nav" data-page="matches" onclick="go('matches');return false;">🎯 Moslashtirish</button><button type="button" class="nav" data-page="deals" onclick="go('deals');return false;">💰 Bitimlar</button><button type="button" class="nav" data-page="tasks" onclick="go('tasks');return false;">⏰ Eslatmalar</button><button type="button" class="nav" data-page="reports" onclick="go('reports');return false;">📈 Hisobot</button><button type="button" class="nav" data-page="documents" onclick="go('documents');return false;">📁 Hujjatlar</button><button type="button" class="nav" data-page="sold" onclick="go('sold');return false;">✅ Sotilgan</button><button type="button" class="nav" onclick="logoutCRM();return false;">🚪 Chiqish</button>
-<div style="margin-top:30px;color:#94a3b8;font-size:12px">Online versiya • ma'lumotlar Supabase bazasida saqlanadi</div></aside>
+<div id="roleInfo" style="margin-top:30px;color:#94a3b8;font-size:12px"></div><div style="margin-top:10px;color:#94a3b8;font-size:12px">Online versiya • ma'lumotlar Supabase bazasida saqlanadi</div></aside>
 <main class="main"><div id="page"></div></main>
 </div>
 <div class="mobile-nav"><button onclick="go('dashboard')">📊<br>Bosh</button><button onclick="go('homes')">🏠<br>Uylar</button><button onclick="go('buyers')">👤<br>Xaridor</button><button onclick="go('sellers')">🤝<br>Sotuvchi</button><button onclick="go('matches')">🎯<br>Mos</button><button onclick="go('deals')">💰<br>Bitim</button><button onclick="go('tasks')">⏰<br>Eslatma</button><button onclick="go('reports')">📈<br>Hisobot</button><button onclick="go('documents')">📁<br>Hujjat</button><button onclick="go('sold')">✅<br>Sotilgan</button><button class="nav" onclick="logoutCRM()" style="color:#1683d8;">🚪 Chiqish</button></div>
@@ -133,6 +133,31 @@ const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
 });
 const KEY='xucrm_v2';
 let db={homes:[],buyers:[],sellers:[],inquiries:[],tasks:[],deals:[],activities:[],documents:[],staff:[]};
+let currentUser=null;
+let currentRole='';
+
+function isAdminUser(){return String(currentRole||'').toLowerCase()==='admin';}
+function canManageStaff(){return isAdminUser();}
+function canDeleteHomes(){return isAdminUser();}
+function canEditHomes(){return true;}
+
+async function loadCurrentRole(){
+  const {data,error}=await client.auth.getUser();
+  if(error) throw error;
+  currentUser=data.user||null;
+  const email=String(currentUser?.email||'').trim().toLowerCase();
+  const row=(db.staff||[]).find(x=>{
+    const e1=String(x.auth_email||'').trim().toLowerCase();
+    const e2=String(x.email||'').trim().toLowerCase();
+    return email && (e1===email || e2===email);
+  });
+  currentRole=String(row?.role||'').trim();
+  if(email==='alishops.uz@gmail.com') currentRole='Admin';
+  if(email!=='alishops.uz@gmail.com' && (!row || row.is_active===false)){
+    await client.auth.signOut();
+    throw new Error('Xodim faol emas.');
+  }
+}
 
 const localDb=JSON.parse(localStorage.getItem(KEY)||'null');
 
@@ -148,6 +173,18 @@ async function loginCRM(event){
   try{
     const {error}=await client.auth.signInWithPassword({email,password});
     if(error) throw error;
+    // Kirishdan oldin xodimning faol holatini tekshiramiz.
+    const {data:userData,error:userError}=await client.auth.getUser();
+    if(userError) throw userError;
+    const uEmail=String(userData?.user?.email||'').trim().toLowerCase();
+    if(uEmail!=='alishops.uz@gmail.com'){
+      const {data:staffRow,error:staffError}=await client.from('staff').select('id,name,role,is_active,email,auth_email').or(`email.eq.${uEmail},auth_email.eq.${uEmail}`).maybeSingle();
+      if(staffError) throw staffError;
+      if(!staffRow || staffRow.is_active===false){
+        await client.auth.signOut();
+        throw new Error('Bu xodimning CRM kirishi yopilgan. Admin bilan bog‘laning.');
+      }
+    }
   }catch(e){
     err.textContent='Login yoki parol noto‘g‘ri.';
   }finally{
@@ -161,6 +198,7 @@ async function logoutCRM(){
     alert('Chiqishda xatolik: '+(error.message||error));
     return;
   }
+  currentUser=null;currentRole='';
   showLogin();
 }
 
@@ -188,6 +226,7 @@ async function showCRM(){
     document.querySelector('.app').style.display='flex';
     document.querySelector('.mobile-nav').style.display='';
     await refresh();
+    applyPermissionsUI();
   }catch(e){
     console.error(e);
     showLogin();
@@ -224,6 +263,7 @@ async function loadDb(){
   }
 
   db={homes:h.data||[],buyers:b.data||[],sellers:s.data||[],inquiries:i.data||[],tasks:[],deals:[],activities:[],documents:[],staff:st.data||[]};
+  await loadCurrentRole();
 
   // Professional modules are optional: if their tables are not created yet,
   // the main CRM still works normally.
@@ -286,6 +326,12 @@ function priceInputValue(n){
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function go(p){document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render(p)}
 function header(t,sub,btn,fn){return `<div class="top"><div><div class="title">${t}</div><div class="sub">${sub}</div></div>${btn?`<button class="btn" onclick="${fn}">${btn}</button>`:''}</div>`}
+
+function applyPermissionsUI(){
+  const roleInfo=document.getElementById('roleInfo'); if(roleInfo) roleInfo.textContent='Kirish: '+(currentRole||'Xodim');
+  const staffNavs=document.querySelectorAll('[data-page=\"staff\"]');
+  staffNavs.forEach(n=>n.style.display=canManageStaff()?'':'none');
+}
 function render(p='dashboard'){
   let h='';
   if(p==='dashboard')h=dashboard();
@@ -302,6 +348,7 @@ function render(p='dashboard'){
   if(p==='sold')h=soldHomes();
   document.getElementById('page').innerHTML=h;
   bindProButtons();
+  applyPermissionsUI();
 }
 function dashboard(){
   const active=db.homes.filter(x=>x.status!=='Sotildi');
@@ -534,7 +581,7 @@ function documentsPage(){
 }
 function homes(){
   return header('Uylar','Faol sotiladigan uylar bazasi','+ Uy qo‘shish','openHome()')+
-  `<div class="panel"><div class="toolbar"><input class="search" placeholder="Uy, hudud, manzil yoki narx..." oninput="filterHomes(this.value)"><button class="btn light" onclick="clearData('homes')">Tozalash</button></div><div id="homeList">${homeCards(db.homes.filter(x=>x.status!=='Sotildi'))}</div></div>`;
+  `<div class="panel"><div class="toolbar"><input class="search" placeholder="Uy, hudud, manzil yoki narx..." oninput="filterHomes(this.value)">${canDeleteHomes()?'<button class="btn light" onclick="clearData(\'homes\')">Tozalash</button>':''}</div><div id="homeList">${homeCards(db.homes.filter(x=>x.status!=='Sotildi'))}</div></div>`;
 }
 function getImageUrls(note){
   const m=String(note||'').match(/\[PROPERTY_IMAGES\]([\s\S]*?)\[\/PROPERTY_IMAGES\]/);
@@ -867,6 +914,7 @@ async function saveHomeSeller(sellerId){
 
 
 function staff(){
+  if(!canManageStaff()) return header('Xodimlar','Bu bo‘lim faqat Admin uchun.');
   return header('Xodimlar','Agent, rieltor va menejerlar bazasi','+ Xodim qo‘shish','openStaff()')+
   `<div class="panel">
     <div class="toolbar">
@@ -896,11 +944,10 @@ function staffRows(a){
     <td>${esc(x.phone||'—')}</td><td>${staffRoleLabel(x.role)}</td>
     <td>${esc(staffManagerName(x.manager_id))}</td>
     <td>${x.is_active===false?'🔴 Faol emas':'🟢 Faol'}</td>
-    <td>
+    <td>${canManageStaff()?`
       <button class="small" onclick="editStaff(${x.id})">Tahrir</button>
       <button class="small" onclick="toggleStaff(${x.id},${x.is_active===false?'true':'false'})">${x.is_active===false?'Faollashtirish':'O‘chirish'}</button>
-      <button class="small" onclick="deleteStaff(${x.id})">🗑</button>
-    </td>
+      <button class="small" onclick="deleteStaff(${x.id})">🚫 Ishdan bo‘shatish</button>`:''}</td>
   </tr>`).join('')||'<tr><td colspan="6" class="empty">Hali xodim qo‘shilmagan.</td></tr>'}
   </table></div>`;
 }
@@ -919,6 +966,7 @@ function staffManagerOptions(selected=''){
     managers.map(x=>`<option value="${x.id}" ${String(selected||'')===String(x.id)?'selected':''}>${esc(x.name)} — ${staffRoleLabel(x.role)}</option>`).join('');
 }
 function openStaff(){
+  if(!canManageStaff()){alert('Bu amal faqat Admin uchun.');return;}
   modal(`<h2>👥 Xodim qo‘shish</h2>
     <div class="formgrid">
       ${input('staff_name','Ism familiya','Masalan: Sardor Bekchanov',1)}
@@ -932,6 +980,7 @@ function openStaff(){
     <button class="btn light" onclick="closeModal()">Bekor</button>`);
 }
 async function addStaff(){
+  if(!canManageStaff()){alert('Bu amal faqat Admin uchun.');return;}
   const name=val('staff_name'),phone=val('staff_phone');
   if(!name||!phone){alert('Ism va telefonni kiriting.');return;}
   const managerVal=val('staff_manager');
@@ -941,6 +990,7 @@ async function addStaff(){
   db.staff.unshift(data);closeModal();go('staff');
 }
 function editStaff(id){
+  if(!canManageStaff()){alert('Bu amal faqat Admin uchun.');return;}
   const x=db.staff.find(a=>Number(a.id)===Number(id));if(!x)return;
   modal(`<h2>✏️ Xodimni tahrirlash</h2>
     <div class="formgrid">
@@ -963,6 +1013,7 @@ function editStaff(id){
   },20);
 }
 async function saveStaff(id){
+  if(!canManageStaff()){alert('Bu amal faqat Admin uchun.');return;}
   const name=val('staff_name'),phone=val('staff_phone');
   if(!name||!phone){alert('Ism va telefonni kiriting.');return;}
   const managerVal=val('staff_manager');
@@ -973,6 +1024,7 @@ async function saveStaff(id){
   closeModal();go('staff');
 }
 async function toggleStaff(id,active){
+  if(!canManageStaff()){alert('Bu amal faqat Admin uchun.');return;}
   const x=db.staff.find(a=>Number(a.id)===Number(id));if(!x)return;
   const newState=active===true||active==='true';
   const {data,error}=await client.from('staff').update({is_active:newState}).eq('id',id).select().single();
@@ -980,11 +1032,14 @@ async function toggleStaff(id,active){
   Object.assign(x,data);render('staff');
 }
 async function deleteStaff(id){
+  if(!canManageStaff()){alert('Bu amal faqat Admin uchun.');return;}
   const x=db.staff.find(a=>Number(a.id)===Number(id));if(!x)return;
-  if(!confirm(`${x.name} xodimini o‘chirishni tasdiqlaysizmi?`))return;
-  const {error}=await client.from('staff').delete().eq('id',id);
-  if(error)return alert('O‘chirishda xatolik: '+error.message);
-  db.staff=db.staff.filter(a=>Number(a.id)!==Number(id));render('staff');
+  if(String(x.role||'').toLowerCase()==='admin'){alert('Adminni o‘chirish mumkin emas.');return;}
+  if(!confirm(`${x.name} xodimini ishdan bo‘shatamizmi? Uning qo‘shgan uylari va mijozlari bazada saqlanadi.`))return;
+  const {data,error}=await client.from('staff').update({is_active:false}).eq('id',id).select().single();
+  if(error)return alert('Xodimni o‘chirishda xatolik: '+error.message);
+  Object.assign(x,data);
+  render('staff');
 }
 
 function matches(){return header('Moslashtirish','Xaridor ↔ uy parametrlarini avtomatik solishtirish','+ Xaridor','openBuyer()')+
@@ -1438,7 +1493,7 @@ async function editHome(id){
     if(preview && existing.length) preview.innerHTML=existing.map(u=>`<img src="${esc(u)}" onerror="this.style.display='none'">`).join('');
     const btn=document.querySelector('#modalBox .btn');
     if(btn){
-      btn.insertAdjacentHTML('afterend',` <button type="button" class="btn light" onclick="deleteHomeFromEdit(${id})">🗑️ O‘chirish</button> <button type="button" class="btn" onclick="${x.status==='Sotildi'?`markHomeActive(${id})`:`markHomeSold(${id})`}">${x.status==='Sotildi'?'↩️ Faolga qaytarish':'✅ Sotildi'}</button>`);
+      btn.insertAdjacentHTML('afterend',`${canDeleteHomes()?` <button type="button" class="btn light" onclick="deleteHomeFromEdit(${id})">🗑️ O‘chirish</button>`:''} <button type="button" class="btn" onclick="${x.status==='Sotildi'?`markHomeActive(${id})`:`markHomeSold(${id})`}">${x.status==='Sotildi'?'↩️ Faolga qaytarish':'✅ Sotildi'}</button>`);
     }
     const cancelBtn=Array.from(document.querySelectorAll('#modalBox button')).find(b=>b.textContent.trim()==='Bekor');
     if(cancelBtn) cancelBtn.insertAdjacentHTML('beforebegin',' ');
@@ -1476,6 +1531,7 @@ async function editBuyer(id){
   },30);
 }
 async function deleteHomeFromEdit(id){
+  if(!canDeleteHomes()){alert('Uylarni o‘chirish huquqi faqat Adminda.');return;}
   if(!confirm('Bu uyni butunlay o‘chirishni tasdiqlaysizmi?'))return;
   const {error}=await client.from('homes').delete().eq('id',id);
   if(error)return alert('O‘chirishda xatolik: '+error.message);
@@ -1502,6 +1558,7 @@ async function markHomeActive(id){
 }
 
 async function del(type,id){
+  if(type==='homes' && !canDeleteHomes()){alert('Uylarni o‘chirish huquqi faqat Adminda.');return;}
   if(!confirm('O‘chirishni tasdiqlaysizmi?'))return;
   const {error}=await client.from(type).delete().eq('id',id);
   if(error)return alert('O‘chirishda xatolik: '+error.message);
@@ -1509,6 +1566,7 @@ async function del(type,id){
   render(type==='homes'?'homes':type);
 }
 async function clearData(type){
+  if(type==='homes' && !canDeleteHomes()){alert('Uylarni o‘chirish huquqi faqat Adminda.');return;}
   if(!confirm('Bu bo‘limdagi barcha ma’lumotlarni o‘chirishni tasdiqlaysizmi?'))return;
   const {error}=await client.from(type).delete().neq('id',0);
   if(error)return alert('Tozalashda xatolik: '+error.message);
