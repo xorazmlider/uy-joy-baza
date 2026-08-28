@@ -240,9 +240,10 @@
     </p>
 
     <input
-      type="email"
+      type="text"
       id="email"
-      placeholder="Email"
+      autocomplete="username"
+      placeholder="Login yoki email"
     >
 
     <input
@@ -1457,9 +1458,9 @@ function saveContractDraft(){
     <div class="staff-form">
       <label>Ism familiya<input id="staffName" placeholder="Masalan: Anvar Karimov"></label>
       <label>Telefon<input id="staffPhone" placeholder="+998..."></label>
-      <label>Login<input id="staffLogin" placeholder="anvar22"></label>
-      <label id="staffPasswordLabel">Parol<input id="staffPassword" type="password" placeholder="Parol"></label>
-      <label>Email (ixtiyoriy)<input id="staffEmail" type="email" placeholder="Keyin ham qo‘shish mumkin"></label>
+      <label>🔑 Login<input id="staffLogin" autocomplete="username" placeholder="Masalan: anvar22"></label>
+      <label id="staffPasswordLabel">🔐 Parol<input id="staffPassword" type="password" autocomplete="new-password" placeholder="Kamida 6 ta belgi"></label>
+      <label>📧 Email (ixtiyoriy)<input id="staffEmail" type="email" placeholder="Keyin ham qo‘shish mumkin"></label>
       <label>Rol
         <select id="staffRole">
           <option value="Agent">Agent</option>
