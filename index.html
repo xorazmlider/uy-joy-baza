@@ -206,12 +206,12 @@ async function loginCRM(event){
   if(!login||!password){err.textContent='Login va parolni kiriting.';return;}
   btn.disabled=true;btn.textContent='Tekshirilmoqda...';
   try{
-    const {data:staffList,error:staffErr}=await client.from('staff').select('auth_email,is_active').eq('login',login).limit(1);
-    if(staffErr)throw staffErr;
-    if(!staffList?.length){throw new Error('LOGIN_NOT_FOUND');}
-    if(staffList[0].is_active===false)throw new Error('INACTIVE');
-    const authEmail=String(staffList[0].auth_email||'').trim().toLowerCase();
-    if(!authEmail)throw new Error('AUTH_EMAIL_MISSING');
+    // Login uchun staff jadvalidan oldin SELECT qilish shart emas.
+    // Bu RLS sababli login ishlamay qolishining oldini oladi.
+    // swift-staff Auth accountni aynan shu ichki email bilan yaratadi.
+    const safeLogin=login.replace(/[^a-z0-9._-]/g,'');
+    if(!safeLogin || safeLogin.length<3)throw new Error('LOGIN_NOT_FOUND');
+    const authEmail=`${safeLogin}@crm.xorazmuylar.uz`;
     const {error}=await client.auth.signInWithPassword({email:authEmail,password});
     if(error)throw error;
   }catch(e){
