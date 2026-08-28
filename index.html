@@ -169,24 +169,6 @@ function canChangeHomeStatus(h){
   if(!h)return false;
   return currentRole()==='Admin'||currentRole()==='Menejer'||(currentRole()==='Rieltor'&&homeOwnedByCurrentStaff(h));
 }
-
-// ===== XARIDORLAR UCHUN ROL HUQUQLARI =====
-// Admin/Menejer: barcha xaridorlarni ko'radi va boshqaradi.
-// Rieltor: faqat o'zi qo'shgan xaridorlarni ko'radi va tahrirlaydi. O'chira olmaydi.
-// Agent: mavjud tizimdagi umumiy ko'rish/tahrirlash huquqini saqlaydi.
-function buyerOwnedByCurrentStaff(b){
-  if(!b||!currentStaff)return false;
-  return String(b.owner_staff_id||'')===String(currentStaff.id||'');
-}
-function canEditBuyer(b){
-  if(!b)return false;
-  if(currentRole()==='Admin'||currentRole()==='Menejer')return true;
-  if(currentRole()==='Rieltor')return buyerOwnedByCurrentStaff(b);
-  return currentRole()==='Agent';
-}
-function canDeleteBuyer(b){
-  return currentRole()==='Admin'||currentRole()==='Menejer';
-}
 function ownerMeta(h){return crmMeta(h?.note,'CRM_OWNER');}
 function homeOwnedByCurrentStaff(h){
   if(!h||!currentStaff)return false;
@@ -382,7 +364,10 @@ async function loadDb(){
   if(cloudEmpty && hasLocal){
     const clean=(x)=>{const y={...x};delete y.id;delete y.created_at;return y};
     if(localDb.homes?.length) await client.from('homes').insert(localDb.homes.map(clean));
-    if(localDb.buyers?.length) await client.from('buyers').insert(localDb.buyers.map(clean));
+    if(localDb.buyers?.length){
+      const migratedBuyers=localDb.buyers.map(x=>({...clean(x),owner_staff_id:currentStaff?.id||null}));
+      await client.from('buyers').insert(migratedBuyers);
+    }
     if(localDb.sellers?.length) await client.from('sellers').insert(localDb.sellers.map(clean));
     localStorage.removeItem(KEY);
     return loadDb();
@@ -819,8 +804,7 @@ async function saveHomeInquiry(homeId){
         budget:Number(h.price)||Number(b.budget)||0,
         finish:h.finish||b.finish||'',
         type:b.type||'',
-        note:(val('inquiry_note')||b.note||'')+'\\n\\n[CRM_BUYER]\\nhome_id='+homeId+'\\n[/CRM_BUYER]',
-        owner_staff_id:b.owner_staff_id||currentStaff?.id||null
+        note:(val('inquiry_note')||b.note||'')+'\\n\\n[CRM_BUYER]\\nhome_id='+homeId+'\\n[/CRM_BUYER]'
       };
       const {data:updated,error:updateError}=await client.from('buyers').update(buyerUpdate).eq('id',b.id).select().single();
       if(updateError)throw updateError;
@@ -839,7 +823,8 @@ async function saveHomeInquiry(homeId){
         budget:Number(h.price)||0,
         finish:h.finish||'',
         type:'',
-        note:(buyerNote?buyerNote+'\\n\\n':'')+buyerMeta
+        note:(buyerNote?buyerNote+'\\n\\n':'')+buyerMeta,
+        owner_staff_id: currentStaff?.id || null
       };
       const {data:buyerData,error:buyerError}=await client.from('buyers').insert(buyerRow).select().single();
       if(buyerError)throw buyerError;
@@ -900,10 +885,13 @@ async function deleteHomeInquiry(id){
 }
 
 function buyers(){
+  const visibleBuyers = currentRole()==='Rieltor'
+    ? db.buyers.filter(x=>Number(x.owner_staff_id)===Number(currentStaff?.id))
+    : db.buyers;
   return header('Xaridorlar','Sizga uy qidirayotgan mijozlar','+ Xaridor qo‘shish','openBuyer()')+
   `<div class="panel">
     <div class="toolbar"><input class="search" placeholder="Ism, telefon, hudud..." oninput="filterBuyers(this.value)"></div>
-    <div id="buyerList">${buyerRows(db.buyers)}</div>
+    <div id="buyerList">${buyerRows(visibleBuyers)}</div>
   </div>`;
 }
 function buyerRows(a){
@@ -918,15 +906,19 @@ function buyerRows(a){
         <button class="small primary" onclick="showBuyerMatches(${x.id})">🎯 Mos uylar</button>
         <button class="small" onclick="showClientHistory(${x.id})">🕘 Tarix</button>
         <button class="small" onclick="openContractForBuyer(${x.id})">📄 Olib berish shartnomasi</button>
-        ${canEditBuyer(x)?`<button class="small" onclick="editBuyer(${x.id})">Tahrir</button>`:''}
-        ${canDeleteBuyer(x)?`<button class="small" onclick="del('buyers',${x.id})">×</button>`:''}
+        <button class="small" onclick="editBuyer(${x.id})">Tahrir</button>
+        <button class="small" onclick="del('buyers',${x.id})">×</button>
       </td>
     </tr>`).join('')}
   </table></div>`;
 }
 function filterBuyers(q){
   q=q.toLowerCase();
-  document.getElementById('buyerList').innerHTML=buyerRows(db.buyers.filter(x=>JSON.stringify(x).toLowerCase().includes(q)))
+  const base=currentRole()==='Rieltor'
+    ? db.buyers.filter(x=>Number(x.owner_staff_id)===Number(currentStaff?.id))
+    : db.buyers;
+  document.getElementById('buyerList').innerHTML=
+    buyerRows(base.filter(x=>JSON.stringify(x).toLowerCase().includes(q)));
 }
 
 function openContractForBuyer(buyerId){
@@ -1604,7 +1596,19 @@ async function addBuyer(){
   if(!rmin||!rmax||rmax<rmin){alert('Xona minimum va maksimumini to‘g‘ri kiriting.');return;}
   let note=val('note');
   note=(note?note+'\n\n':'')+'[CRM_BUYER]\nrooms_min='+rmin+'\nrooms_max='+rmax+'\nfloor_min='+Number(val('floor_min')||0)+'\nfloor_max='+Number(val('floor_max')||0)+'\n[/CRM_BUYER]';
-  const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:rmax,m2:Number(val('m2')||0),budget:parseMoneyInput(val('budget')),finish:val('finish'),type:val('type'),note,owner_staff_id:currentStaff?.id||null};
+  const row={
+    name:val('name'),
+    phone:val('phone'),
+    city:val('city'),
+    area:val('area'),
+    rooms:rmax,
+    m2:Number(val('m2')||0),
+    budget:parseMoneyInput(val('budget')),
+    finish:val('finish'),
+    type:val('type'),
+    note,
+    owner_staff_id: currentStaff?.id || null
+  };
   const {data,error}=await client.from('buyers').insert(row).select().single();
   if(error)return alert('Saqlashda xatolik: '+error.message);
   db.buyers.unshift(data);closeModal();go('buyers');
@@ -1697,13 +1701,12 @@ async function editHome(id){
 }
 async function editBuyer(id){
   let x=db.buyers.find(a=>a.id===id);if(!x)return;
-  if(!canEditBuyer(x)){alert('Bu xaridorni tahrirlash huquqi sizda yo‘q.');return;}
   openBuyer();
   setTimeout(()=>{['name','phone','city','area','m2','finish','type'].forEach(k=>document.getElementById('f_'+k).value=x[k]??''); const rq=buyerReq(x); document.getElementById('f_rooms_min').value=rq.rmin||''; document.getElementById('f_rooms_max').value=rq.rmax||''; document.getElementById('f_floor_min').value=rq.fmin||''; document.getElementById('f_floor_max').value=rq.fmax||''; document.getElementById('f_note').value=visibleNote(x.note);
      document.getElementById('f_budget').value=priceInputValue(x.budget);
     const btn=document.querySelector('#modalBox .btn');
     btn.onclick=async()=>{
-      const rmin=Math.max(0,Number(val('rooms_min')||0)), rmax=Math.max(0,Number(val('rooms_max')||0)); if(!rmin||!rmax||rmax<rmin){alert('Xona minimum va maksimumini to‘g‘ri kiriting.');return;} let editBuyerNote=val('note'); editBuyerNote=(editBuyerNote?editBuyerNote+'\n\n':'')+'[CRM_BUYER]\nrooms_min='+rmin+'\nrooms_max='+rmax+'\nfloor_min='+Number(val('floor_min')||0)+'\nfloor_max='+Number(val('floor_max')||0)+'\n[/CRM_BUYER]'; const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:rmax,m2:Number(val('m2')||0),budget:parseMoneyInput(val('budget')),finish:val('finish'),type:val('type'),note:editBuyerNote,owner_staff_id:x.owner_staff_id||currentStaff?.id||null};
+      const rmin=Math.max(0,Number(val('rooms_min')||0)), rmax=Math.max(0,Number(val('rooms_max')||0)); if(!rmin||!rmax||rmax<rmin){alert('Xona minimum va maksimumini to‘g‘ri kiriting.');return;} let editBuyerNote=val('note'); editBuyerNote=(editBuyerNote?editBuyerNote+'\n\n':'')+'[CRM_BUYER]\nrooms_min='+rmin+'\nrooms_max='+rmax+'\nfloor_min='+Number(val('floor_min')||0)+'\nfloor_max='+Number(val('floor_max')||0)+'\n[/CRM_BUYER]'; const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:rmax,m2:Number(val('m2')||0),budget:parseMoneyInput(val('budget')),finish:val('finish'),type:val('type'),note:editBuyerNote};
       const {data,error}=await client.from('buyers').update(row).eq('id',id).select().single();
       if(error)return alert('Tahrirlashda xatolik: '+error.message);
       Object.assign(x,data);closeModal();go('buyers');
