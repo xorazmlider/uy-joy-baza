@@ -137,7 +137,7 @@ let currentStaff=null;
 const ROLE_PAGES={
   Admin:['dashboard','homes','buyers','sellers','staff','matches','deals','tasks','reports','documents','contracts','sold'],
   Menejer:['dashboard','homes','buyers','sellers','matches','deals','tasks','reports','documents','contracts','sold'],
-  Rieltor:['dashboard','homes','buyers','sellers','matches','deals','tasks','reports','documents','contracts','sold'],
+  Rieltor:['dashboard','homes','buyers','sellers','matches','deals','tasks','documents','contracts','sold'],
   Agent:['dashboard','homes','buyers','sellers','matches','deals','tasks','reports','documents','contracts','sold']
 };
 
@@ -185,6 +185,23 @@ function homesVisibleForCurrentUser(list){
   if(currentRole()==='Rieltor')return list.filter(homeOwnedByCurrentStaff);
   return [];
 }
+function sellerOwnerMeta(s){return crmMeta(s?.note,'CRM_SELLER_OWNER');}
+function sellerOwnedByCurrentStaff(s){
+  if(!s||!currentStaff)return false;
+  const m=sellerOwnerMeta(s);
+  const sid=String(m.staff_id||'');
+  const login=String(m.login||'').toLowerCase();
+  const email=String(m.email||'').toLowerCase();
+  return (sid && String(currentStaff.id)===sid) ||
+         (login && String(currentStaff.login||'').toLowerCase()===login) ||
+         (email && String(currentStaff.email||currentUser?.email||'').toLowerCase()===email);
+}
+function sellersVisibleForCurrentUser(list){
+  if(currentRole()==='Admin'||currentRole()==='Menejer'||currentRole()==='Agent')return list;
+  if(currentRole()==='Rieltor')return list.filter(sellerOwnedByCurrentStaff);
+  return [];
+}
+function canDeleteSeller(){return currentRole()==='Admin';}
 function requireHomeAdd(){if(canAddHome())return true;alert("Sizning rolingizda uy qo'shish huquqi yo'q.");return false;}
 function requireHomeEdit(h){if(canEditHome(h))return true;alert("Siz bu uyni tahrirlash huquqiga ega emassiz.");return false;}
 function requireHomeDelete(){if(canDeleteHome())return true;alert("Uylarni faqat Admin o'chira oladi.");return false;}
@@ -474,7 +491,7 @@ function dashboard(){
   <div class="stats">
     <div class="stat" onclick="go('homes')" style="cursor:pointer"><div class="num">${active.length}</div><div class="label">Faol uylar</div></div>
     <div class="stat" onclick="go('buyers')" style="cursor:pointer"><div class="num">${db.buyers.length}</div><div class="label">Xaridorlar</div></div>
-    <div class="stat" onclick="go('sellers')" style="cursor:pointer"><div class="num">${db.sellers.length}</div><div class="label">Sotuvchilar</div></div>
+    <div class="stat" onclick="go('sellers')" style="cursor:pointer"><div class="num">${sellersVisibleForCurrentUser(db.sellers).length}</div><div class="label">Sotuvchilar</div></div>
     ${canPage('staff')?`<div class="stat" onclick="go('staff')" style="cursor:pointer"><div class="num">${db.staff.length}</div><div class="label">Xodimlar</div></div>`:''}
     <div class="stat" onclick="go('sold')" style="cursor:pointer"><div class="num">${sold.length}</div><div class="label">Sotilgan uylar</div></div>
   </div>
@@ -974,11 +991,12 @@ function openContractForSellerHome(homeId){
 }
 
 function sellers(){
+  const visibleSellers=sellersVisibleForCurrentUser(db.sellers);
   return header('Sotuvchilar','Uy egalari va realtorlar bazasi','+ Sotuvchi qo‘shish','openSeller()')+
   `<div class="panel">
     <div class="tablewrap"><table class="table">
       <tr><th>Ism</th><th>Telefon</th><th>Uylari</th><th>Izoh</th><th>Amallar</th></tr>
-      ${db.sellers.map(x=>{
+      ${visibleSellers.map(x=>{
         const linkedHomes=db.homes.filter(h=>
           String(h.seller||'').trim().toLowerCase()===String(x.name||'').trim().toLowerCase() ||
           (x.phone && h.phone && String(h.phone).replace(/\D/g,'')===String(x.phone).replace(/\D/g,''))
@@ -1000,14 +1018,13 @@ function sellers(){
             </div>
           </td>
           <td style="white-space:nowrap">
-            <button class="small" onclick="del('sellers',${x.id})">O‘chirish</button>
+            ${canDeleteSeller()?`<button class="small" onclick="del('sellers',${x.id})">O‘chirish</button>`:''}
           </td>
         </tr>`;
       }).join('')}
     </table></div>
   </div>`;
 }
-
 function assignHomeToSeller(sellerId){
   const s=db.sellers.find(x=>Number(x.id)===Number(sellerId));
   if(!s)return;
@@ -1622,7 +1639,9 @@ async function addSeller(){
   if(files.length>10){alert('Ko‘pi bilan 10 ta rasm yuborish mumkin.');return;}
 
   try{
-    const sellerRow={name,phone,note:val('note')||'Uy egasi'};
+    let sellerNote=val('note')||'Uy egasi';
+    sellerNote+=(sellerNote?'\n\n':'')+'[CRM_SELLER_OWNER]\nstaff_id='+String(currentStaff?.id||'')+'\nlogin='+String(currentStaff?.login||'')+'\nemail='+String(currentStaff?.email||currentUser?.email||'')+'\n[/CRM_SELLER_OWNER]';
+    const sellerRow={name,phone,note:sellerNote,owner_staff_id:currentStaff?.id||null};
     const sellerRes=await client.from('sellers').insert(sellerRow).select().single();
     if(sellerRes.error)throw sellerRes.error;
 
