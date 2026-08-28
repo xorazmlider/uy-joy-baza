@@ -995,6 +995,31 @@ function openContractForSellerHome(homeId){
   },50);
 }
 
+function openSellerContractChooser(sellerId){
+  const seller=db.sellers.find(s=>Number(s.id)===Number(sellerId));
+  if(!seller)return;
+  const linkedHomes=db.homes.filter(h=>
+    String(h.seller||'').trim().toLowerCase()===String(seller.name||'').trim().toLowerCase() ||
+    (seller.phone && h.phone && String(h.phone).replace(/\D/g,'')===String(seller.phone).replace(/\D/g,''))
+  );
+  if(!linkedHomes.length){
+    alert('Bu sotuvchiga biriktirilgan uy topilmadi.');
+    return;
+  }
+  const opts=linkedHomes.map(h=>
+    `<button class="btn primary" style="width:100%;margin:6px 0;text-align:left"
+      onclick="openContractForSellerHome(${h.id});closeModal()">
+      🏠 ${esc(h.title)} — ${money(h.price)}
+      <span class="muted"> • ${esc(h.city||'')} • ${h.rooms||0} xona • ${h.m2||0} m²</span>
+    </button>`
+  ).join('');
+  modal(`<div class="modal-head"><b>📄 Sotish shartnomasi</b><button class="icon" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div style="margin-bottom:10px"><b>${esc(seller.name)}</b> uchun uy tanlang:</div>
+      ${opts}
+    </div>`);
+}
+
 function sellers(){
   const visibleSellers=sellersVisibleForCurrentUser(db.sellers);
   return header('Sotuvchilar','Uy egalari va realtorlar bazasi','+ Sotuvchi qo‘shish','openSeller()')+
@@ -1019,7 +1044,9 @@ function sellers(){
           <td>
             <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
               <span>${esc(visibleNote(x.note))}</span>
-              ${linkedHomes.map(h=>`<button class="small primary" onclick="openContractForSellerHome(${h.id})">📄 Sotish shartnomasi</button>`).join('')}
+              ${linkedHomes.length
+                ? `<button class="small primary" onclick="openSellerContractChooser(${x.id})">📄 Sotish shartnomasi</button>`
+                : ''}
             </div>
           </td>
           <td style="white-space:nowrap">
