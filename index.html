@@ -150,6 +150,46 @@ function normalizeRole(role){
 }
 function currentRole(){return normalizeRole(currentStaff?.role||'');}
 function canPage(page){return !!currentStaff && (ROLE_PAGES[currentRole()]||[]).includes(page);}
+
+// ===== UY-LAR UCHUN ROL HUQUQLARI =====
+// Admin: barcha uylar ustidan to'liq huquq.
+// Menejer: barcha uylarni qo'shish/tahrirlash, lekin o'chirish yo'q.
+// Rieltor: faqat o'zi kiritgan uylarni ko'rish/tahrirlash/sotilgan qilish, o'chirish yo'q.
+// Agent: uylarni faqat ko'rish; qo'shish, tahrirlash va o'chirish yo'q.
+function isRole(r){return currentRole()===r;}
+function canAddHome(){return ['Admin','Menejer','Rieltor'].includes(currentRole());}
+function canDeleteHome(){return currentRole()==='Admin';}
+function canEditHome(h){
+  if(!h)return false;
+  if(currentRole()==='Admin'||currentRole()==='Menejer')return true;
+  if(currentRole()==='Rieltor')return homeOwnedByCurrentStaff(h);
+  return false;
+}
+function canChangeHomeStatus(h){
+  if(!h)return false;
+  return currentRole()==='Admin'||currentRole()==='Menejer'||(currentRole()==='Rieltor'&&homeOwnedByCurrentStaff(h));
+}
+function ownerMeta(h){return crmMeta(h?.note,'CRM_OWNER');}
+function homeOwnedByCurrentStaff(h){
+  if(!h||!currentStaff)return false;
+  const m=ownerMeta(h);
+  const sid=String(m.staff_id||'');
+  const login=String(m.login||'').toLowerCase();
+  const email=String(m.email||'').toLowerCase();
+  return (sid && String(currentStaff.id)===sid) ||
+         (login && String(currentStaff.login||'').toLowerCase()===login) ||
+         (email && String(currentStaff.email||currentUser?.email||'').toLowerCase()===email);
+}
+function homesVisibleForCurrentUser(list){
+  if(currentRole()==='Admin'||currentRole()==='Menejer'||currentRole()==='Agent')return list;
+  if(currentRole()==='Rieltor')return list.filter(homeOwnedByCurrentStaff);
+  return [];
+}
+function requireHomeAdd(){if(canAddHome())return true;alert("Sizning rolingizda uy qo'shish huquqi yo'q.");return false;}
+function requireHomeEdit(h){if(canEditHome(h))return true;alert("Siz bu uyni tahrirlash huquqiga ega emassiz.");return false;}
+function requireHomeDelete(){if(canDeleteHome())return true;alert("Uylarni faqat Admin o'chira oladi.");return false;}
+function requireHomeStatus(h){if(canChangeHomeStatus(h))return true;alert("Bu uy statusini o'zgartirish huquqi sizda yo'q.");return false;}
+
 function requirePage(page){
   if(canPage(page))return true;
   alert('Bu bo‘lim sizning rolingiz uchun yopiq.');
@@ -412,8 +452,9 @@ function render(p='dashboard'){
   bindProButtons();
 }
 function dashboard(){
-  const active=db.homes.filter(x=>x.status!=='Sotildi');
-  const sold=db.homes.filter(x=>x.status==='Sotildi');
+  const visibleHomes=homesVisibleForCurrentUser(db.homes);
+  const active=visibleHomes.filter(x=>x.status!=='Sotildi');
+  const sold=visibleHomes.filter(x=>x.status==='Sotildi');
   const today=new Date().toISOString().slice(0,10);
   const due=(db.tasks||[]).filter(x=>x.status!=='Bajarildi' && String(x.due_at||'').slice(0,10)<=today).length;
   const pending=(db.inquiries||[]).filter(x=>!x.status||x.status==='Yangi').length;
@@ -423,7 +464,7 @@ function dashboard(){
   return header('Xorazm Uylar CRM','Professional ko‘chmas mulk boshqaruvi',canPage('dashboard')?'📲 Instagram ariza linki':null,'openInstagramLink()')+
   `<div style="margin-bottom:15px;display:flex;gap:8px;flex-wrap:wrap">
     ${canPage('buyers')?'<button class="btn" onclick="openBuyer()">+ Yangi mijoz</button>':''}
-    ${canPage('homes')?'<button class="btn light" onclick="openHome()">+ Yangi uy</button>':''}
+    ${canAddHome()?'<button class="btn light" onclick="openHome()">+ Yangi uy</button>':''}
     ${canPage('tasks')?'<button class="btn light" onclick="openTask()">⏰ Eslatma</button>':''}
     ${canPage('deals')?'<button class="btn light" onclick="openDeal()">💰 Bitim</button>':''}
   </div>
@@ -648,8 +689,9 @@ function documentsPage(){
   </table></div></div>`;
 }
 function homes(){
-  return header('Uylar','Faol sotiladigan uylar bazasi','+ Uy qo‘shish','openHome()')+
-  `<div class="panel"><div class="toolbar"><input class="search" placeholder="Uy, hudud, manzil yoki narx..." oninput="filterHomes(this.value)"><button class="btn light" onclick="clearData('homes')">Tozalash</button></div><div id="homeList">${homeCards(db.homes.filter(x=>x.status!=='Sotildi'))}</div></div>`;
+  const visible=homesVisibleForCurrentUser(db.homes.filter(x=>x.status!=='Sotildi'));
+  return header('Uylar','Faol sotiladigan uylar bazasi',canAddHome()?'+ Uy qo‘shish':null,canAddHome()?'openHome()':null)+
+  `<div class="panel"><div class="toolbar"><input class="search" placeholder="Uy, hudud, manzil yoki narx..." oninput="filterHomes(this.value)">${canDeleteHome()?'<button class="btn light" onclick="clearData(&quot;homes&quot;)">Tozalash</button>':''}</div><div id="homeList">${homeCards(visible)}</div></div>`;
 }
 function getImageUrls(note){
   const m=String(note||'').match(/\[PROPERTY_IMAGES\]([\s\S]*?)\[\/PROPERTY_IMAGES\]/);
@@ -663,13 +705,13 @@ function homeCards(a){return `<div class="grid">${a.map(x=>{
 <button class="small primary" onclick="showHomeMatches(${x.id})">🎯 Mos xaridorlar (${findBuyers(x).length})</button>
 <button class="small" onclick="showHomeInquiries(${x.id})">📞 Murojaatlar (${db.inquiries.filter(q=>Number(q.home_id)===Number(x.id)).length})</button>
 <button class="small" onclick="openDocuments(${x.id})">📁 Hujjatlar (${(db.documents||[]).filter(d=>Number(d.home_id)===Number(x.id)).length})</button>
-<button class="small" onclick="editHome(${x.id})">Tahrir</button>
+${canEditHome(x)?`<button class="small" onclick="editHome(${x.id})">Tahrir</button>`:''}
 </div>
       </div></div>`;
 }).join('')||'<div class="empty">Uylar topilmadi.</div></div>'}`}
-function filterHomes(q){q=q.toLowerCase();document.getElementById('homeList').innerHTML=homeCards(db.homes.filter(x=>x.status!=='Sotildi'&&JSON.stringify(x).toLowerCase().includes(q)))}
+function filterHomes(q){q=String(q||'').toLowerCase();const visible=homesVisibleForCurrentUser(db.homes.filter(x=>x.status!=='Sotildi'&&JSON.stringify(x).toLowerCase().includes(q)));document.getElementById('homeList').innerHTML=homeCards(visible)}
 function soldHomes(){
-  const sold=db.homes.filter(x=>x.status==='Sotildi');
+  const sold=homesVisibleForCurrentUser(db.homes.filter(x=>x.status==='Sotildi'));
   return header('Sotilgan uylar','Sotilgan uylar arxivi')+
     `<div class="panel"><div id="soldHomeList">${homeCards(sold)}</div></div>`;
 }
@@ -1400,6 +1442,7 @@ function visibleNote(note){
     .replace(/\[CRM_HOME\][\s\S]*?\[\/CRM_HOME\]/g,'')
     .replace(/\[CRM_BUYER\][\s\S]*?\[\/CRM_BUYER\]/g,'')
     .replace(/\[PROPERTY_IMAGES\][\s\S]*?\[\/PROPERTY_IMAGES\]/g,'')
+    .replace(/\[CRM_OWNER\][\s\S]*?\[\/CRM_OWNER\]/g,'')
     .trim();
 }
 function buyerReq(b){
@@ -1478,7 +1521,7 @@ function showHome(id){
   const cleanNote=String(x.note||'').replace(/\n?\n?\[PROPERTY_IMAGES\][\s\S]*?\[\/PROPERTY_IMAGES\]/g,'').trim();
   modal(`<h2>${esc(x.title)}</h2>${gallery}<div class="match"><b>${money(x.price)}</b><br>📍 ${esc(x.city)}, ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}<br>👤 ${esc(x.seller)} • 📞 ${esc(x.phone)}${cleanNote?`<br>${esc(cleanNote)}`:''}</div><button class="btn light" onclick="closeModal()">Yopish</button>`);
 }
-function openHome(){modal(`<h2>🏠 Uy qo‘shish</h2><div class="formgrid">${input('title','Uy nomi','Masalan: 2 xonali pod klyuch uy',1)}${selectField('type','🏠 Uy turi',[{value:'Kvartira',label:'Kvartira'},{value:'Hovli uy',label:'Hovli uy'}],true)}${input('city','Shahar/tuman','Urganch',1)}${input('area','Hudud/mavze','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Maydon m²','60',1)}${input('floor','Qavat','1',0)}${input('price','Narx (so‘m yoki dollar)','680000000 yoki $170000',1)}${input('finish','Ta’mir holati','Pod klyuch',1)}${input('seller','Sotuvchi ismi','Sardor',1)}${input('phone','Telefon','+998...',1)}<div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>${input('note','Izoh','Stadion yonida',1,true)}</div><br><button class="btn" onclick="addHome()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
+function openHome(){if(!requireHomeAdd())return;modal(`<h2>🏠 Uy qo‘shish</h2><div class="formgrid">${input('title','Uy nomi','Masalan: 2 xonali pod klyuch uy',1)}${selectField('type','🏠 Uy turi',[{value:'Kvartira',label:'Kvartira'},{value:'Hovli uy',label:'Hovli uy'}],true)}${input('city','Shahar/tuman','Urganch',1)}${input('area','Hudud/mavze','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Maydon m²','60',1)}${input('floor','Qavat','1',0)}${input('price','Narx (so‘m yoki dollar)','680000000 yoki $170000',1)}${input('finish','Ta’mir holati','Pod klyuch',1)}${input('seller','Sotuvchi ismi','Sardor',1)}${input('phone','Telefon','+998...',1)}<div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>${input('note','Izoh','Stadion yonida',1,true)}</div><br><button class="btn" onclick="addHome()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
 function openBuyer(){modal(`<h2>👤 Xaridor qo‘shish</h2><div class="formgrid">${input('name','Mijoz ismi','Mijoz 1',1)}${input('phone','Telefon','+998...',1)}${input('city','Shahar/tuman','Urganch',0)}${input('area','Kerakli hudud','Stadion',0)}${input('rooms_min','Xona — minimum','2',1)}${input('rooms_max','Xona — maksimum','5',1)}${input('floor_min','Qavat — minimum','1',0)}${input('floor_max','Qavat — maksimum','2',0)}${input('m2','Kerakli maydon m²','60',0)}${input('budget','Maksimal budjet (so‘m yoki dollar)','700000000 yoki $170000',1)}${input('finish','Ta’mir talabi (ixtiyoriy)','Pod klyuch',0)}${selectField('type','🏠 Uy turi',[{value:'',label:'Farqi yo‘q'},{value:'Kvartira',label:'Kvartira'},{value:'Hovli uy',label:'Hovli uy'}])}${input('note','Izoh','Stadion yaqinidan kerak',0,true)}</div><br><div class="muted">🎯 Moslashtirish: narx + xona + qavat + uy turi. Xona va qavat min/max oralig‘ida tekshiriladi. “Farqi yo‘q” tanlansa, ikkala tur ham mos keladi.</div><br><button class="btn" onclick="addBuyer()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
 function openSeller(){modal(`<h2>🤝 Sotuvchi qo‘shish</h2><div class="formgrid">
 ${input('name','Ism','Sardor',1)}
@@ -1519,6 +1562,7 @@ function previewHomeImages(event){
 }
 
 async function addHome(){
+  if(!requireHomeAdd())return;
   const imageInput=document.getElementById('f_images');
   const files=[...(imageInput?.files||[])];
   if(files.length>10){alert('Ko‘pi bilan 10 ta rasm tanlang.');return;}
@@ -1528,6 +1572,7 @@ async function addHome(){
     let note=val('note');
     const floor=Number(val('floor')||0);
     note=(note?note+'\n\n':'')+'[CRM_HOME]\nfloor='+floor+'\n[/CRM_HOME]';
+    note+=(note?'\n\n':'')+'[CRM_OWNER]\nstaff_id='+String(currentStaff?.id||'')+'\nlogin='+String(currentStaff?.login||'')+'\nemail='+String(currentStaff?.email||currentUser?.email||'')+'\n[/CRM_OWNER]';
     if(imageUrls.length) note=(note+'\n')+'[PROPERTY_IMAGES]\n'+imageUrls.join('\n')+'\n[/PROPERTY_IMAGES]';
     const row={title:val('title'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),price:parseMoneyInput(val('price')),finish:val('finish'),seller:val('seller'),phone:val('phone'),status:'Faol',type:val('type'),note};
     const {data,error}=await client.from('homes').insert(row).select().single();
@@ -1562,6 +1607,7 @@ async function addSeller(){
     if(files.length) imageUrls=await uploadPropertyImages(files,title);
 
     let note=val('note');
+    note+=(note?'\n\n':'')+'[CRM_OWNER]\nstaff_id='+String(currentStaff?.id||'')+'\nlogin='+String(currentStaff?.login||'')+'\nemail='+String(currentStaff?.email||currentUser?.email||'')+'\n[/CRM_OWNER]';
     if(imageUrls.length){
       note=(note?note+'\n\n':'')+'[PROPERTY_IMAGES]\n'+imageUrls.join('\n')+'\n[/PROPERTY_IMAGES]';
     }
@@ -1595,6 +1641,7 @@ async function addSeller(){
 
 async function editHome(id){
   let x=db.homes.find(a=>a.id===id);if(!x)return;
+  if(!requireHomeEdit(x))return;
   openHome();
   setTimeout(()=>{
     ['title','city','area','rooms','m2','finish','seller','phone','type'].forEach(k=>document.getElementById('f_'+k).value=x[k]??''); document.getElementById('f_note').value=visibleNote(x.note); document.getElementById('f_floor').value=homeFloor(x);
@@ -1618,6 +1665,8 @@ async function editHome(id){
         let note=val('note').replace(/\n?\n?\[PROPERTY_IMAGES\][\s\S]*?\[\/PROPERTY_IMAGES\]/g,'').trim();
         note=visibleNote(note);
         note=(note?'\n\n':'')+'[CRM_HOME]\nfloor='+Number(val('floor')||0)+'\n[/CRM_HOME]';
+        const oldOwner=ownerMeta(x);
+        note+='\n\n[CRM_OWNER]\nstaff_id='+String(oldOwner.staff_id||currentStaff?.id||'')+'\nlogin='+String(oldOwner.login||currentStaff?.login||'')+'\nemail='+String(oldOwner.email||currentStaff?.email||currentUser?.email||'')+'\n[/CRM_OWNER]';
         if(imageUrls.length) note=(note?'\n\n':'')+'[PROPERTY_IMAGES]\n'+imageUrls.join('\n')+'\n[/PROPERTY_IMAGES]';
         const row={title:val('title'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),price:parseMoneyInput(val('price')),finish:val('finish'),seller:val('seller'),phone:val('phone'),type:val('type'),note};
         const {data,error}=await client.from('homes').update(row).eq('id',id).select().single();
@@ -1642,6 +1691,7 @@ async function editBuyer(id){
   },30);
 }
 async function deleteHomeFromEdit(id){
+  if(!requireHomeDelete())return;
   if(!confirm('Bu uyni butunlay o‘chirishni tasdiqlaysizmi?'))return;
   const {error}=await client.from('homes').delete().eq('id',id);
   if(error)return alert('O‘chirishda xatolik: '+error.message);
@@ -1675,6 +1725,7 @@ async function del(type,id){
   render(type==='homes'?'homes':type);
 }
 async function clearData(type){
+  if(type==='homes'&&!canDeleteHome()){alert('Uylar bazasini faqat Admin tozalashi mumkin.');return;}
   if(!confirm('Bu bo‘limdagi barcha ma’lumotlarni o‘chirishni tasdiqlaysizmi?'))return;
   const {error}=await client.from(type).delete().neq('id',0);
   if(error)return alert('Tozalashda xatolik: '+error.message);
