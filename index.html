@@ -426,6 +426,27 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 .public-service-page{min-height:100vh}
 .public-service-page .public-form{display:block}
 
+
+@media(min-width:801px){
+  .public-main-nav{position:relative}
+  .public-nav-popover{
+    top:70px;
+    transition:opacity .16s ease,transform .16s ease;
+  }
+  .public-nav-popover.show{
+    display:block;
+    animation:navDrop .16s ease both;
+  }
+  @keyframes navDrop{
+    from{opacity:0;transform:translateY(-7px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+  .public-nav-popover::before{
+    content:"";position:absolute;top:-12px;left:0;right:0;height:12px;
+  }
+  .homes-popover{right:30%}
+}
+
 </style>
   <link rel="apple-touch-icon" href="logo-tel.PNG">
 <link rel="icon" type="image/png" href="logo-tel.PNG">
@@ -2376,6 +2397,16 @@ async function publicHome(){
       </div>
     </header>
 
+    <div id="homesPopover" class="public-nav-popover homes-popover">
+      <h3>Uylar</h3>
+      <div class="public-contact-row">
+        <span>🏠</span><a href="#" onclick="openAllHomes();return false;">Barcha uylar</a>
+      </div>
+      <div class="public-contact-row">
+        <span>🔎</span><a href="#" onclick="openAllHomes();return false;">Filtr bilan qidirish</a>
+      </div>
+    </div>
+
     <div id="servicesPopover" class="public-nav-popover">
       <h3>Xizmatlar</h3>
       <div class="public-contact-row">
@@ -2529,6 +2560,7 @@ async function publicHome(){
     <div id="publicSuccess" class="public-success"></div>
   </div>`;
 
+  setupPublicNavHover();
   trackSiteVisit();
   await loadPublicHomes();
 }
@@ -2552,7 +2584,7 @@ function toggleContactMenu(){
   if(e)e.classList.toggle('show');
 }
 function closeNavPopovers(keep=''){
-  ['servicesPopover','contactPopover'].forEach(id=>{
+  ['homesPopover','servicesPopover','contactPopover'].forEach(id=>{
     if((keep==='services' && id==='servicesPopover') || (keep==='contact' && id==='contactPopover'))return;
     document.getElementById(id)?.classList.remove('show');
   });
@@ -2642,6 +2674,47 @@ function filterAllHomes(){
   if(box)box.innerHTML=publicHomeCards(a);
 }
 
+
+
+function setupPublicNavHover(){
+  const nav=document.querySelector('.public-main-nav');
+  if(!nav)return;
+  const links=Array.from(nav.querySelectorAll(':scope > a'));
+  const homesLink=links.find(a=>a.textContent.trim()==='Uylar');
+  const servicesLink=links.find(a=>a.textContent.trim()==='Xizmatlar');
+  const contactsLink=links.find(a=>a.textContent.trim()==='Kontaktlar');
+
+  const bind=(link,id,keep)=>{
+    if(!link)return;
+    link.addEventListener('mouseenter',()=>{
+      closeNavPopovers(keep);
+      document.getElementById(id)?.classList.add('show');
+    });
+  };
+  bind(homesLink,'homesPopover','homes');
+  bind(servicesLink,'servicesPopover','services');
+  bind(contactsLink,'contactPopover','contact');
+
+  ['homesPopover','servicesPopover','contactPopover'].forEach(id=>{
+    const pop=document.getElementById(id);
+    if(!pop)return;
+    pop.addEventListener('mouseenter',()=>{
+      pop.classList.add('show');
+    });
+    pop.addEventListener('mouseleave',()=>{
+      pop.classList.remove('show');
+    });
+  });
+
+  nav.addEventListener('mouseleave',e=>{
+    if(!e.relatedTarget || !e.relatedTarget.closest('.public-nav-popover')) {
+      setTimeout(()=>{
+        if(!document.querySelector('.public-nav-popover:hover'))
+          closeNavPopovers();
+      },80);
+    }
+  });
+}
 
 function openPublicService(type){
   closePublicDrops();
