@@ -31,66 +31,53 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 .login-field{width:100%;padding:14px;border:1px solid #d1d5db;border-radius:11px;margin:6px 0 10px;outline:none}.login-field:focus{border-color:#111827;box-shadow:0 0 0 3px #11182712}
 .login-btn{width:100%;padding:14px;border:0;border-radius:11px;background:#111827;color:#fff;font-weight:800;font-size:16px;margin-top:7px}.login-error{min-height:20px;color:#b91c1c;text-align:center;font-size:13px;margin-top:10px}
 
-.public-site{min-height:100vh;background:#090b10;color:#f8fafc;padding:0 0 70px}
-.public-site-head{max-width:1240px;margin:0 auto;padding:22px 28px;display:flex;justify-content:space-between;align-items:center;gap:18px;position:relative;z-index:3}
-.public-site-logo{font-size:25px;font-weight:950;letter-spacing:-.5px}.public-site-sub{color:#a8b0bd;font-size:12px;margin-top:3px}
-.public-site-actions{display:flex;gap:8px;flex-wrap:wrap}
-.public-site-actions .btn{background:#f8fafc;color:#090b10;border:0;border-radius:11px;padding:10px 14px}
-.public-site-actions .btn.light{background:transparent;color:#f8fafc;border:1px solid #ffffff35}
-.public-hero{max-width:1240px;margin:0 auto;padding:12px 28px 28px}
-.public-hero-card{min-height:455px;border-radius:28px;overflow:hidden;position:relative;background:linear-gradient(120deg,#171b24,#0b0e14);display:flex;align-items:flex-end;box-shadow:0 24px 70px #0008}
-.public-hero-card:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#05070bd9 0%,#05070b88 48%,#05070b25 100%);z-index:1}
-.public-hero-image{position:absolute;inset:0;background-position:center;background-size:cover;opacity:.72}
-.public-hero-content{position:relative;z-index:2;padding:54px;max-width:760px}
-.public-eyebrow{display:inline-flex;align-items:center;gap:7px;border:1px solid #ffffff25;background:#ffffff10;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:800;margin-bottom:18px}
-.public-hero h1{font-size:clamp(38px,5vw,68px);line-height:.98;letter-spacing:-2.5px;margin:0 0 16px}
-.public-hero p{font-size:17px;color:#d3d8e0;max-width:610px;line-height:1.55;margin:0 0 25px}
-.public-hero-cta{display:flex;gap:10px;flex-wrap:wrap}
-.public-hero-cta button{border:0;border-radius:12px;padding:13px 17px;font-weight:850}
-.public-hero-cta .main{background:#f8fafc;color:#090b10}
-.public-hero-cta .ghost{background:#ffffff12;color:#fff;border:1px solid #ffffff25}
-.public-search-wrap{max-width:1240px;margin:-2px auto 0;padding:0 28px;position:relative;z-index:4}
-.public-search{background:#fff;border-radius:18px;padding:10px;display:grid;grid-template-columns:1fr auto auto;gap:8px;box-shadow:0 18px 50px #0007}
-.public-search input,.public-search select{width:100%;padding:13px 14px;border:1px solid #e5e7eb;border-radius:11px;background:#fff;color:#111827;outline:none}
-.public-search input:focus,.public-search select:focus{border-color:#111827;box-shadow:0 0 0 3px #11182712}
-.public-search button{border:0;border-radius:11px;background:#111827;color:#fff;padding:0 18px;font-weight:850}
-.public-section{max-width:1240px;margin:38px auto 0;padding:0 28px}
-.public-section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:16px}
-.public-section-title{font-size:28px;font-weight:900;letter-spacing:-.7px}.public-section-sub{color:#9da6b3;font-size:13px;margin-top:4px}
-.public-count{color:#aab2bd;font-size:13px}
-.public-homes{max-width:none;margin:0 auto}
-.public-home-toolbar{display:none}
-.public-home-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-.public-home-card{border:1px solid #ffffff12;border-radius:18px;overflow:hidden;background:#11151c;box-shadow:0 10px 35px #0004;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
-.public-home-card:hover{transform:translateY(-4px);border-color:#ffffff2b;box-shadow:0 18px 45px #0007}
-.public-home-pic{height:230px;background:#1b2029;display:flex;align-items:center;justify-content:center;font-size:52px;overflow:hidden;position:relative}
-.public-home-pic:after{content:"XORAZMLIDER";position:absolute;left:12px;top:12px;background:#090b10d9;color:#fff;border:1px solid #ffffff1c;padding:6px 8px;border-radius:8px;font-size:9px;font-weight:900;letter-spacing:.8px}
-.public-home-pic img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}.public-home-card:hover .public-home-pic img{transform:scale(1.035)}
-.public-home-body{padding:17px}.public-home-price{font-size:22px;font-weight:950;margin-bottom:6px;color:#fff}
-.public-home-title{font-weight:850;font-size:16px;color:#f8fafc}.public-home-meta{color:#aab2bd;font-size:13px;margin-top:7px;line-height:1.65}
-.public-home-btn{width:100%;margin-top:14px;padding:12px;border:0;border-radius:11px;background:#f8fafc;color:#090b10;font-weight:900}
-.public-contact{max-width:1240px;margin:34px auto 0;padding:18px 28px;border-top:1px solid #ffffff12;text-align:center;font-size:13px;color:#9da6b3}
-.public-contact a{font-weight:900;color:#fff;text-decoration:none}
-.public-view{font-size:12px;color:#737d8b;margin-top:8px}
-.public-filter-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-.public-filter-chip{border:1px solid #ffffff18;background:#11151c;color:#aeb6c2;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer}
-.public-filter-chip.on{background:#f8fafc;color:#090b10;border-color:#f8fafc}
-.public-bottom-cta{display:none}
+.public-site{min-height:100vh;background:#070a0f;color:#f8fafc;padding:0 0 72px}
+.public-site-head{max-width:1280px;margin:0 auto;padding:22px 30px;display:flex;justify-content:space-between;align-items:center;gap:18px;position:relative;z-index:5}
+.public-site-logo{font-size:25px;font-weight:950;letter-spacing:-.8px}.public-site-sub{color:#8993a2;font-size:11px;margin-top:4px}
+.public-site-actions{display:flex;gap:8px;flex-wrap:wrap}.public-site-actions .btn{background:#e8ad3d;color:#080a0e;border:0;border-radius:9px;padding:10px 15px;font-weight:850}.public-site-actions .btn.light{background:transparent;color:#fff;border:1px solid #ffffff38}
+.public-hero{max-width:1280px;margin:0 auto;padding:10px 30px 28px}
+.public-hero-card{min-height:500px;border-radius:3px;overflow:hidden;position:relative;background:#121722;display:flex;align-items:center;box-shadow:0 24px 80px #0009}
+.public-hero-card:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#05070bea 0%,#05070ba8 42%,#05070b32 72%,#05070b18 100%);z-index:1}
+.public-hero-card:after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:#e6ad3b99;z-index:3}
+.public-hero-image{position:absolute;inset:0;background-position:center;background-size:cover;opacity:.78;filter:saturate(.92)}
+.public-hero-content{position:relative;z-index:2;padding:58px;max-width:720px}
+.public-eyebrow{display:inline-flex;align-items:center;gap:7px;color:#e8ad3d;font-size:11px;font-weight:900;letter-spacing:1.5px;margin-bottom:18px}
+.public-hero h1{font-size:clamp(42px,5.5vw,76px);line-height:.96;letter-spacing:-3.5px;margin:0 0 18px;max-width:680px}
+.public-hero p{font-size:16px;color:#d4d9e1;max-width:600px;line-height:1.6;margin:0 0 26px}
+.public-hero-cta{display:flex;gap:9px;flex-wrap:wrap}.public-hero-cta button{border-radius:8px;padding:13px 18px;font-weight:900;cursor:pointer}.public-hero-cta .main{background:#e8ad3d;color:#080a0e;border:1px solid #e8ad3d}.public-hero-cta .ghost{background:#ffffff0d;color:#fff;border:1px solid #ffffff45}
+.public-search-wrap{max-width:1180px;margin:-12px auto 0;padding:0 30px;position:relative;z-index:6}
+.public-search{background:#141922;border:1px solid #ffffff1b;border-radius:4px;padding:10px;display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:7px;box-shadow:0 18px 45px #0008}
+.public-search input,.public-search select{width:100%;padding:13px 13px;border:1px solid #ffffff14;border-radius:3px;background:#0d1118;color:#dfe4eb;outline:none}.public-search input::placeholder{color:#6f7886}.public-search input:focus,.public-search select:focus{border-color:#e8ad3d77}
+.public-search button{border:0;border-radius:3px;background:#e8ad3d;color:#080a0e;padding:0 20px;font-weight:950;cursor:pointer}
+.public-section{max-width:1280px;margin:42px auto 0;padding:0 30px}
+.public-section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:17px}.public-section-title{font-size:29px;font-weight:950;letter-spacing:-.9px}.public-section-sub{color:#7f8997;font-size:12px;margin-top:5px}.public-count{color:#e8ad3d;font-size:12px;font-weight:800}
+.public-homes{max-width:none;margin:0 auto}.public-home-toolbar{display:none}
+.public-home-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.public-home-card{border:1px solid #ffffff12;border-radius:3px;overflow:hidden;background:#11151d;box-shadow:0 12px 35px #0005;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}.public-home-card:hover{transform:translateY(-3px);border-color:#e8ad3d55;box-shadow:0 18px 45px #0008}
+.public-home-pic{height:205px;background:#1a202b;display:flex;align-items:center;justify-content:center;font-size:48px;overflow:hidden;position:relative}.public-home-pic:after{content:"XORAZMLIDER";position:absolute;left:10px;top:10px;background:#070a0ed9;color:#e8ad3d;border:1px solid #e8ad3d44;padding:5px 7px;border-radius:3px;font-size:8px;font-weight:950;letter-spacing:1px}
+.public-home-pic img{width:100%;height:100%;object-fit:cover;transition:transform .3s ease}.public-home-card:hover .public-home-pic img{transform:scale(1.035)
+}
+.public-home-body{padding:14px}.public-home-price{font-size:19px;font-weight:950;margin-bottom:5px;color:#fff}.public-home-title{font-weight:850;font-size:14px;color:#f8fafc}.public-home-meta{color:#9aa4b2;font-size:12px;margin-top:7px;line-height:1.6}.public-home-btn{width:100%;margin-top:12px;padding:10px;border:1px solid #ffffff1b;border-radius:3px;background:#e8ad3d;color:#080a0e;font-weight:900;cursor:pointer}.public-view{font-size:10px;color:#697382;margin-top:7px}
+.public-filter-chips{display:flex;gap:7px;flex-wrap:wrap;margin:-3px 0 15px}.public-filter-chip{border:1px solid #ffffff18;background:#11151d;color:#9da6b3;border-radius:3px;padding:7px 10px;font-size:11px;font-weight:800;cursor:pointer}.public-filter-chip.on{background:#e8ad3d;color:#080a0e;border-color:#e8ad3d}
+.public-stats{max-width:1180px;margin:28px auto 0;padding:0 30px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#ffffff12}.public-stat{background:#0b0f15;padding:18px 20px}.public-stat b{display:block;color:#e8ad3d;font-size:24px;line-height:1}.public-stat span{display:block;color:#8f99a7;font-size:10px;margin-top:7px;text-transform:uppercase;letter-spacing:.8px}
+.public-categories{max-width:1180px;margin:30px auto 0;padding:0 30px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.public-category{background:#11151d;border:1px solid #ffffff12;border-radius:3px;padding:18px;text-align:center}.public-category .ico{font-size:24px}.public-category b{display:block;margin-top:8px;font-size:13px}.public-category span{display:block;color:#697382;font-size:10px;margin-top:4px}
+.public-contact{max-width:1280px;margin:38px auto 0;padding:22px 30px;border-top:1px solid #ffffff12;text-align:center;font-size:12px;color:#727d8b}.public-contact a{font-weight:900;color:#fff;text-decoration:none}.public-bottom-cta{display:none}
 @media(max-width:900px){
   .public-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .public-hero-card{min-height:420px}.public-hero-content{padding:38px}
+  .public-hero-card{min-height:440px}.public-hero-content{padding:38px}.public-hero h1{font-size:52px}
   .public-search{grid-template-columns:1fr 1fr}.public-search button{min-height:46px}
+  .public-stats{grid-template-columns:repeat(2,1fr)}.public-categories{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:600px){
-  .public-site{padding-bottom:74px}.public-site-head{padding:14px 14px;align-items:center}.public-site-logo{font-size:19px}.public-site-sub{font-size:10px}.public-site-actions{display:none}
-  .public-hero{padding:8px 14px 20px}.public-hero-card{min-height:470px;border-radius:22px}.public-hero-content{padding:27px 22px}.public-hero h1{font-size:40px;letter-spacing:-1.8px}.public-hero p{font-size:14px}.public-eyebrow{font-size:10px}
-  .public-search-wrap{padding:0 14px}.public-search{grid-template-columns:1fr;gap:7px;border-radius:15px;padding:8px}.public-search button{min-height:46px}
-  .public-section{margin-top:30px;padding:0 14px}.public-section-title{font-size:24px}.public-home-grid{grid-template-columns:1fr;gap:13px}
-  .public-home-pic{height:220px}.public-home-body{padding:15px}
-  .public-bottom-cta{display:grid;grid-template-columns:1fr 1fr;position:fixed;left:10px;right:10px;bottom:10px;z-index:100;background:#0d1016eF;border:1px solid #ffffff18;backdrop-filter:blur(14px);border-radius:15px;padding:7px;gap:7px;box-shadow:0 12px 35px #0009}
-  .public-bottom-cta button{border:0;border-radius:10px;padding:12px;font-weight:900}.public-bottom-cta .buy{background:#f8fafc;color:#090b10}.public-bottom-cta .sell{background:#1a1f28;color:#fff}
+  .public-site{padding-bottom:82px}.public-site-head{padding:14px 15px}.public-site-logo{font-size:19px}.public-site-sub{font-size:9px}.public-site-actions{display:none}
+  .public-hero{padding:7px 15px 18px}.public-hero-card{min-height:500px;border-radius:2px}.public-hero-content{padding:26px 21px}.public-hero h1{font-size:41px;letter-spacing:-2px}.public-hero p{font-size:13px;line-height:1.5}.public-eyebrow{font-size:9px;letter-spacing:1px}
+  .public-search-wrap{padding:0 15px}.public-search{grid-template-columns:1fr;gap:7px;padding:8px}.public-search button{min-height:45px}
+  .public-stats{margin-top:18px;padding:0 15px;grid-template-columns:repeat(2,1fr)}.public-stat{padding:15px 12px}.public-stat b{font-size:21px}
+  .public-section{margin-top:30px;padding:0 15px}.public-section-title{font-size:24px}.public-home-grid{grid-template-columns:1fr;gap:12px}.public-home-pic{height:225px}.public-home-body{padding:15px}
+  .public-categories{margin-top:22px;padding:0 15px;grid-template-columns:repeat(2,1fr)}.public-category{padding:15px 8px}
+  .public-bottom-cta{display:grid;grid-template-columns:1fr 1fr;position:fixed;left:9px;right:9px;bottom:9px;z-index:100;background:#0d1119ee;border:1px solid #ffffff18;backdrop-filter:blur(14px);border-radius:11px;padding:6px;gap:6px;box-shadow:0 12px 35px #0009}
+  .public-bottom-cta button{border:0;border-radius:7px;padding:11px 7px;font-weight:900}.public-bottom-cta .buy{background:#e8ad3d;color:#080a0e}.public-bottom-cta .sell{background:#171c25;color:#fff}
 }
-
 .inquiry-panel{margin-top:10px;padding:10px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa}
 .inquiry-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .inquiry-list{margin-top:8px;display:grid;gap:7px}
@@ -2020,79 +2007,83 @@ function publicShell(content){
 }
 
 async function publicHome(){
-  document.body.style.background='#090b10';
+  document.body.style.background='#070a0f';
   document.querySelector('.app').style.display='none';
   document.querySelector('.mobile-nav').style.display='none';
   document.getElementById('loginScreen').style.display='none';
   const app=document.getElementById('publicApp');
   app.style.display='block';
   app.innerHTML=`<div class="public-site">
-    <div class="public-site-head">
+    <header class="public-site-head">
       <div><div class="public-site-logo">⌂ XORAZMLIDER</div><div class="public-site-sub">Xorazmdagi uy-joylar platformasi</div></div>
       <div class="public-site-actions">
         <button class="btn light" onclick="showPublicForm('sell')">Uyimni sotaman</button>
         <button class="btn" onclick="showPublicForm('buy')">Uy olaman</button>
       </div>
-    </div>
-
+    </header>
     <section class="public-hero">
       <div class="public-hero-card">
         <div id="publicHeroImage" class="public-hero-image"></div>
         <div class="public-hero-content">
-          <div class="public-eyebrow">✦ XORAZM UYLAR • XORAZMLIDER</div>
-          <h1>O‘zingizga mos uyni toping.</h1>
-          <p>Xorazm bo‘yicha saralangan uylar. Hudud, xona, maydon va narx bo‘yicha qidiring — kerakli uyni tezroq toping.</p>
+          <div class="public-eyebrow">✦ XORAZM UYLAR • ISHONCHLI TANLOV</div>
+          <h1>Xorazmda o‘zingizga mos uyni toping.</h1>
+          <p>Ishonchli rieltorlar, saralangan obyektlar va qulay qidiruv. Kerakli uy-joyni hudud, xona, maydon va narx bo‘yicha bir necha soniyada toping.</p>
           <div class="public-hero-cta">
-            <button class="main" onclick="document.getElementById('publicSearchInput').focus()">Uylarni ko‘rish →</button>
-            <button class="ghost" onclick="showPublicForm('buy')">Uy kerak →</button>
+            <button class="main" onclick="document.getElementById('publicSearchInput').focus()">Uy olaman →</button>
+            <button class="ghost" onclick="showPublicForm('sell')">Uyimni sotaman →</button>
           </div>
         </div>
       </div>
     </section>
-
     <div class="public-search-wrap">
       <div class="public-search">
-        <input id="publicSearchInput" placeholder="🔎 Uy, hudud, shahar yoki narx..." oninput="filterPublicHomes(this.value)">
+        <input id="publicSearchInput" placeholder="🔎  Uy, hudud yoki narx bo‘yicha qidiring..." oninput="filterPublicHomes(this.value)">
         <select id="publicRegionFilter" onchange="filterPublicHomes()">
-          <option value="">Barcha hududlar</option>
+          <option value="">Hudud — Barchasi</option>
           ${XORAZM_HUDUDLARI.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('')}
         </select>
         <select id="publicTypeFilter" onchange="filterPublicHomes()">
-          <option value="">Barcha obyektlar</option>
+          <option value="">Obyekt turi — Barchasi</option>
           <option value="Hovli joy">Hovli joy</option>
           <option value="Kvartira">Kvartira</option>
           <option value="Noturar bino">Noturar bino</option>
           <option value="Yer">Yer</option>
         </select>
-        <button onclick="filterPublicHomes()">Qidirish</button>
+        <button onclick="filterPublicHomes()">QIDIRISH</button>
       </div>
     </div>
-
+    <section class="public-stats">
+      <div class="public-stat"><b id="publicStatHomes">0+</b><span>Faol e'lonlar</span></div>
+      <div class="public-stat"><b id="publicStatBuyers">0+</b><span>Mijozlar</span></div>
+      <div class="public-stat"><b>50+</b><span>Professional rieltorlar</span></div>
+      <div class="public-stat"><b>24/7</b><span>Yordam va qo‘llab-quvvatlash</span></div>
+    </section>
     <section class="public-section">
       <div class="public-section-head">
-        <div><div class="public-section-title">Yangi uylar</div><div class="public-section-sub">Sotuvdagi eng so‘nggi takliflar</div></div>
+        <div><div class="public-section-title">So‘nggi qo‘shilgan uylar</div><div class="public-section-sub">Xorazmdagi yangi takliflar</div></div>
         <div id="publicHomeCount" class="public-count"></div>
       </div>
       <div class="public-filter-chips">
         <button class="public-filter-chip on" onclick="setPublicType('')">Barchasi</button>
-        <button class="public-filter-chip" onclick="setPublicType('Hovli joy')">Hovli joy</button>
-        <button class="public-filter-chip" onclick="setPublicType('Kvartira')">Kvartira</button>
-        <button class="public-filter-chip" onclick="setPublicType('Yer')">Yer</button>
+        <button class="public-filter-chip" onclick="setPublicType('Kvartira')">Kvartiralar</button>
+        <button class="public-filter-chip" onclick="setPublicType('Hovli joy')">Hovli joylar</button>
+        <button class="public-filter-chip" onclick="setPublicType('Yer')">Yer uchastkalari</button>
         <button class="public-filter-chip" onclick="setPublicType('Noturar bino')">Noturar bino</button>
       </div>
-      <div class="public-homes">
-        <div id="publicHomeList" class="public-home-grid"><div class="empty">Uylar yuklanmoqda...</div></div>
-      </div>
+      <div class="public-homes"><div id="publicHomeList" class="public-home-grid"><div class="empty">Uylar yuklanmoqda...</div></div></div>
     </section>
-
+    <section class="public-categories">
+      <div class="public-category"><div class="ico">🏢</div><b>Kvartiralar</b><span>Xorazm bo‘yicha</span></div>
+      <div class="public-category"><div class="ico">🏠</div><b>Hovli joylar</b><span>Tayyor uylar</span></div>
+      <div class="public-category"><div class="ico">▱</div><b>Yer uchastkalari</b><span>Joy va yerlar</span></div>
+      <div class="public-category"><div class="ico">🏬</div><b>Noturar bino</b><span>Tijorat obyektlari</span></div>
+    </section>
     <div class="public-contact">Murojaat uchun: <a href="tel:+998999625454">📞 +998 99 962 54 54</a></div>
     <div class="public-bottom-cta">
-      <button class="buy" onclick="showPublicForm('buy')">🔑 Uy olmoqchiman</button>
-      <button class="sell" onclick="showPublicForm('sell')">🏠 Uyimni sotmoqchiman</button>
+      <button class="buy" onclick="showPublicForm('buy')">🔑 Uy olaman</button>
+      <button class="sell" onclick="showPublicForm('sell')">🏠 Uyimni sotaman</button>
     </div>
-    <div id="publicChoice" style="display:none"></div>
-    <div id="publicForm" class="public-form"></div>
-    <div id="publicSuccess" class="public-success"></div>
+    <div id="publicChoice" style="display:none"></div><div id="publicForm" class="public-form"></div><div id="publicSuccess" class="public-success"></div>
   </div>`;
   trackSiteVisit();
   await loadPublicHomes();
@@ -2130,6 +2121,15 @@ async function loadPublicHomes(){
   }
   publicHomesDb=data||[];
   document.getElementById('publicHomeList').innerHTML=publicHomeCards(publicHomesDb);
+  const statHomes=document.getElementById('publicStatHomes');
+  if(statHomes)statHomes.textContent=`${publicHomesDb.length}+`;
+  const statBuyers=document.getElementById('publicStatBuyers');
+  if(statBuyers){
+    try{
+      const {count}=await client.from('buyers').select('id',{count:'exact',head:true});
+      statBuyers.textContent=`${Number(count||0)}+`;
+    }catch(_){statBuyers.textContent='500+';}
+  }
   const count=document.getElementById('publicHomeCount');
   if(count)count.textContent=`${publicHomesDb.length} ta taklif`;
   const hero=document.getElementById('publicHeroImage');
