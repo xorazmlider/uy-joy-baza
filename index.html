@@ -2,7 +2,7 @@
 <html lang="uz">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Xorazm Uylar CRM PRO v4</title>
+<title>Xorazm Uylar — XORAZMLIDER</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f6f8;color:#17202a}
 button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:flex;min-height:100vh;position:relative;z-index:1}.side{width:245px;z-index:50;background:#111827;color:#fff;padding:20px;position:fixed;inset:0 auto 0 0}.brand{font-size:21px;font-weight:800;margin-bottom:25px}.nav{display:block;width:100%;text-align:left;background:transparent;color:#cbd5e1;border:0;border-radius:10px;padding:12px;margin:5px 0}.nav.active,.nav:hover{background:#253047;color:#fff}.main{margin-left:245px;width:calc(100% - 245px);padding:25px;max-width:1500px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.title{font-size:27px;font-weight:800}.sub{color:#6b7280}.btn{border:0;border-radius:10px;background:#111827;color:#fff;padding:11px 15px;font-weight:700}.btn.light{background:#fff;color:#111827;border:1px solid #ddd}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}.stat{background:#fff;border-radius:15px;padding:18px;border:1px solid #eee}.num{font-size:27px;font-weight:800}.label{color:#6b7280;font-size:13px}.panel{background:#fff;border:1px solid #eee;border-radius:16px;padding:18px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}.search{flex:1;min-width:220px;padding:12px;border:1px solid #ddd;border-radius:10px}.filters{display:flex;gap:8px;flex-wrap:wrap}.chip{padding:9px 12px;border:1px solid #ddd;border-radius:20px;background:#fff}.chip.on{background:#111827;color:#fff}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}.card{border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;background:#fff}.pic{height:155px;background:#d8dde4;display:flex;align-items:center;justify-content:center;font-size:48px}.cardbody{padding:13px}.price{font-size:18px;font-weight:800}.muted{font-size:13px;color:#6b7280}.actions{display:flex;gap:7px;margin-top:12px}.small{padding:8px 10px;border-radius:8px;border:1px solid #ddd;background:#fff}.primary{background:#111827;color:#fff;border-color:#111827}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:12px 8px;border-bottom:1px solid #eee;text-align:left;font-size:14px}.empty{text-align:center;color:#777;padding:35px}.modal{display:none;position:fixed;inset:0;background:#0008;z-index:20;align-items:center;justify-content:center;padding:15px}.box{background:#fff;border-radius:18px;width:min(720px,100%);max-height:92vh;overflow:auto;padding:20px}.box h2{margin-top:0}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{padding:11px;border:1px solid #ddd;border-radius:10px;width:100%}.full{grid-column:1/-1}.match{border-left:4px solid #111827;padding:12px;background:#f7f8fa;border-radius:8px;margin:8px 0}.danger{color:#b91c1c}.mobile-nav{display:none}
@@ -455,6 +455,45 @@ function priceInputValue(n){
   const v=Number(n);
   return v<0 ? '$'+Math.round(Math.abs(v)) : String(v);
 }
+
+function homeCode(id){
+  const n=Number(id);
+  return Number.isFinite(n)&&n>0 ? 'XU-'+String(Math.trunc(n)).padStart(6,'0') : 'XU-—';
+}
+function homeCodeForHome(h){return h?homeCode(h.id):'XU-—'}
+function kpiPlans(note){
+  const m=String(note||'').match(/\[CRM_KPI_PLANS\]([\s\S]*?)\[\/CRM_KPI_PLANS\]/);
+  if(!m)return {};
+  try{return JSON.parse(m[1].trim()||'{}')||{}}catch(e){return {}}
+}
+function setKpiPlans(note,plans){
+  const clean=String(note||'').replace(/\n?\n?\[CRM_KPI_PLANS\][\s\S]*?\[\/CRM_KPI_PLANS\]/g,'').trim();
+  return (clean?clean+'\n\n':'')+'[CRM_KPI_PLANS]\n'+JSON.stringify(plans||{})+'\n[/CRM_KPI_PLANS]';
+}
+function monthKey(date){return String(date||new Date().toISOString()).slice(0,7)}
+function monthLabel(key){
+  const [y,m]=String(key||'').split('-');
+  const names=['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
+  return y&&m?`${names[Number(m)-1]||m} ${y}`:key;
+}
+function ownerStaffIdFromHome(h){const m=ownerMeta(h);return String(m.staff_id||'')}
+function ownerStaffIdFromNote(note,key='CRM_OWNER'){const m=crmMeta(note,key);return String(m.staff_id||'')}
+function kpiFact(staffId,key){
+  const sid=String(staffId);
+  if(key==='homes')return db.homes.filter(h=>ownerStaffIdFromHome(h)===sid).filter(h=>monthKey(h.created_at)===monthKey(kpiCurrentMonth)).length;
+  if(key==='buyers')return db.buyers.filter(b=>String(b.owner_staff_id||'')===sid).filter(b=>monthKey(b.created_at)===monthKey(kpiCurrentMonth)).length;
+  if(key==='deals')return (db.deals||[]).filter(d=>String(ownerStaffIdFromNote(d.note,'CRM_DEAL_OWNER'))===sid&&d.stage==='Sotildi'&&monthKey(d.created_at)===monthKey(kpiCurrentMonth)).length;
+  if(key==='tasks')return (db.tasks||[]).filter(t=>String(ownerStaffIdFromNote(t.note,'CRM_TASK_OWNER'))===sid&&t.status==='Bajarildi'&&monthKey(t.created_at)===monthKey(kpiCurrentMonth)).length;
+  return 0;
+}
+let kpiCurrentMonth=monthKey(new Date());
+function kpiSummary(staff){
+  const plans=kpiPlans(staff?.note)[kpiCurrentMonth]||{};
+  const rows=[['homes','Yangi uylar'],['buyers','Yangi mijozlar'],['deals','Sotuvlar'],['tasks','Bajarilgan vazifalar']];
+  let sum=0,count=0;
+  const out=rows.map(([key,label])=>{const plan=Math.max(0,Number(plans[key]||0));const fact=kpiFact(staff.id,key);const pct=plan?Math.round(fact/plan*100):0;if(plan){sum+=Math.min(pct,100);count++;}return {key,label,plan,fact,pct};});
+  return {rows:out,pct:count?Math.round(sum/count):0};
+}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function go(p){if(!requirePage(p))return;document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.page===p));document.querySelectorAll('.mobile-nav [data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render(p)}
 function header(t,sub,btn,fn){return `<div class="top"><div><div class="title">${t}</div><div class="sub">${sub}</div></div>${btn?`<button class="btn" onclick="${fn}">${btn}</button>`:''}</div>`}
@@ -486,7 +525,7 @@ function dashboard(){
   const stageCounts={};
   (db.deals||[]).forEach(d=>stageCounts[d.stage||'Yangi']=(stageCounts[d.stage||'Yangi']||0)+1);
 
-  return header('Xorazm Uylar CRM','Professional ko‘chmas mulk boshqaruvi',canPage('dashboard')?'📲 Instagram ariza linki':null,'openInstagramLink()')+
+  return header('Xorazm Uylar — XORAZMLIDER','Professional ko‘chmas mulk boshqaruvi',canPage('dashboard')?'📲 Instagram ariza linki':null,'openInstagramLink()')+
   `<div style="margin-bottom:15px;display:flex;gap:8px;flex-wrap:wrap">
     ${canPage('buyers')?'<button class="btn" onclick="openBuyer()">+ Yangi mijoz</button>':''}
     ${canAddHome()?'<button class="btn light" onclick="openHome()">+ Yangi uy</button>':''}
@@ -589,7 +628,7 @@ function openTask(){
 }
 async function saveTask(){
   const title=val('task_title').trim();if(!title)return alert('Vazifa nomini kiriting.');
-  const row={title,due_at:val('task_due')||null,note:val('task_note')||'',status:'Kutilmoqda'};
+  let taskNote=val('task_note')||''; taskNote=(taskNote?taskNote+'\n\n':'')+'[CRM_TASK_OWNER]\nstaff_id='+String(currentStaff?.id||'')+'\n[/CRM_TASK_OWNER]'; const row={title,due_at:val('task_due')||null,note:taskNote,status:'Kutilmoqda'};
   await proInsert('crm_tasks','tasks',row);closeModal();go('tasks');
 }
 function tasksPage(){
@@ -624,7 +663,7 @@ async function saveDeal(){
   const buyerId=val('deal_buyer'); const homeId=val('deal_home');
   if(!buyerId||!homeId)return alert('Xaridor va uyni tanlang.');
   if(!Number.isFinite(price)||price===0)return alert('Bitim narxini kiriting.');
-  const row={buyer_id:Number(buyerId),home_id:Number(homeId),price,commission,commission_type:val('deal_commission_type'),stage:val('deal_stage'),note:val('deal_note')||''};
+  let dealNote=val('deal_note')||''; dealNote=(dealNote?dealNote+'\n\n':'')+'[CRM_DEAL_OWNER]\nstaff_id='+String(currentStaff?.id||'')+'\n[/CRM_DEAL_OWNER]'; const row={buyer_id:Number(buyerId),home_id:Number(homeId),price,commission,commission_type:val('deal_commission_type'),stage:val('deal_stage'),note:dealNote};
   await proInsert('crm_deals','deals',row);closeModal();go('deals');
 }
 function dealCommission(d){
@@ -649,17 +688,43 @@ function reportsPage(){
   const revenue=(db.deals||[]).filter(d=>d.stage==='Sotildi').reduce((s,d)=>s+dealCommission(d),0);
   const totalValue=(db.deals||[]).filter(d=>d.stage==='Sotildi').reduce((s,d)=>s+Math.abs(Number(d.price)||0),0);
   const byCity={};db.homes.forEach(h=>byCity[h.city||'Noma’lum']=(byCity[h.city||'Noma’lum']||0)+1);
-  return header('Hisobot','Sotuv, inventar va daromad ko‘rsatkichlari')+
-  `<div class="stats">
+  const staffRows=(db.staff||[]).filter(s=>['Rieltor','Menejer'].includes(normalizeRole(s.role)));
+  const kpiCards=staffRows.map(s=>{const k=kpiSummary(s);return `<div class="match"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><b>👤 ${esc(s.name||'—')}</b><b>${k.pct}%</b></div>${k.rows.map(r=>`<div class="muted" style="margin-top:4px">${r.label}: <b>${r.fact}</b> / ${r.plan||'—'} ${r.plan?`(${r.pct}%)`:''}</div>`).join('')}</div>`}).join('')||'<div class="muted">KPI rejasi hali berilmagan.</div>';
+  return header('Hisobot','Sotuv, inventar, daromad va xodim KPI ko‘rsatkichlari')+
+  `<div class="toolbar"><label class="muted" style="padding-top:10px">KPI oyi</label><input id="kpiMonth" class="field" type="month" value="${kpiCurrentMonth}" onchange="kpiCurrentMonth=this.value;go('reports')"></div>
+  <div class="stats">
     <div class="stat"><div class="kpi">${active}</div><div class="label">Faol uylar</div></div>
     <div class="stat"><div class="kpi">${sold}</div><div class="label">Sotilgan uylar</div></div>
     <div class="stat"><div class="kpi">${money(totalValue)}</div><div class="label">Sotilgan uylar qiymati</div></div>
     <div class="stat"><div class="kpi">${money(revenue)}</div><div class="label">Komissiya daromadi</div></div>
   </div>
+  <div class="panel" style="margin-bottom:14px"><h3>🎯 ${esc(monthLabel(kpiCurrentMonth))} — Rieltor KPI</h3>${kpiCards}</div>
   <div class="pro-grid">
-    <div class="panel"><h3>📍 Hududlar</h3>${Object.entries(byCity).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="match"><b>${esc(k)}</b> — ${v} ta uy</div>`).join('')||'<div class="empty">Ma’lumot yo‘q.</div>'}</div>
+    <div class="panel"><h3>📍 Hududlar</h3>${Object.entries(byCity).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="match"><b>${esc(k)}</b> — ${v} ta obyekt</div>`).join('')||'<div class="empty">Ma’lumot yo‘q.</div>'}</div>
     <div class="panel"><h3>💰 Bitim bosqichlari</h3>${['Yangi','Ko‘rish','Muzokara','Shartnoma','Sotildi','Bekor qilindi'].map(st=>`<div class="match"><b>${st}</b> — ${(db.deals||[]).filter(d=>d.stage===st).length} ta</div>`).join('')}</div>
   </div>`;
+}
+
+function openKpiPlan(staffId){
+  if(currentRole()!=='Admin'){alert('Rieltor KPI rejasini faqat Admin belgilaydi.');return;}
+  const s=db.staff.find(x=>Number(x.id)===Number(staffId));if(!s)return;
+  const key=kpiCurrentMonth, old=kpiPlans(s.note)[key]||{};
+  modal(`<h2>🎯 ${esc(s.name)} — KPI rejasi</h2><p class="muted">${esc(monthLabel(key))} uchun reja belgilang. Fakt CRMdagi yangi yozuvlardan avtomatik hisoblanadi.</p><div class="formgrid">
+    ${input('kpi_homes','Yangi uylar','20',1)}
+    ${input('kpi_buyers','Yangi mijozlar','30',1)}
+    ${input('kpi_deals','Sotuvlar','3',1)}
+    ${input('kpi_tasks','Bajarilgan vazifalar','20',1)}
+  </div><br><button class="btn" onclick="saveKpiPlan(${s.id})">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`);
+  setTimeout(()=>{document.getElementById('f_kpi_homes').value=old.homes??'';document.getElementById('f_kpi_buyers').value=old.buyers??'';document.getElementById('f_kpi_deals').value=old.deals??'';document.getElementById('f_kpi_tasks').value=old.tasks??'';},20);
+}
+async function saveKpiPlan(staffId){
+  if(currentRole()!=='Admin')return;
+  const s=db.staff.find(x=>Number(x.id)===Number(staffId));if(!s)return;
+  const plans=kpiPlans(s.note);plans[kpiCurrentMonth]={homes:Math.max(0,Number(val('kpi_homes')||0)),buyers:Math.max(0,Number(val('kpi_buyers')||0)),deals:Math.max(0,Number(val('kpi_deals')||0)),tasks:Math.max(0,Number(val('kpi_tasks')||0))};
+  const note=setKpiPlans(s.note,plans);
+  const {data,error}=await client.from('staff').update({note}).eq('id',staffId).select().single();
+  if(error)return alert('KPI rejasini saqlashda xatolik: '+error.message);
+  Object.assign(s,data);closeModal();go('staff');
 }
 async function addActivity(row){
   await proInsert('crm_activities','activities',{...row,type:row.type||'Izoh',note:row.note||''});
@@ -726,7 +791,7 @@ function homeCards(a){return `<div class="grid">${a.map(x=>{
   const imgs=getImageUrls(x.note);
   const cover=imgs[0] ? `<img src="${esc(imgs[0])}" style="width:100%;height:155px;object-fit:cover" onerror="this.style.display='none';this.parentElement.innerHTML='🏠'">` : '🏠';
   const floor=homeFloor(x);
-  return `<div class="card"><div class="pic">${cover}</div><div class="cardbody"><div class="price">${money(x.price)}</div><b>${esc(x.title)}</b><div class="muted">📍 ${esc(x.city)} • ${esc(x.area)}</div><div class="muted">🏠 ${x.rooms} xona • 📐 ${x.m2} m² • ${floor?`🏢 ${floor}-qavat • `:''}${esc(x.finish)}</div><div class="muted">👤 ${esc(x.seller)} • ${esc(x.phone)}</div>${imgs.length?`<div class="muted">📷 ${imgs.length} ta rasm</div>`:''}<div class="actions">
+  return `<div class="card"><div class="pic">${cover}</div><div class="cardbody"><div class="price">${money(x.price)}</div><b>${esc(x.title)}</b><div class="muted">📍 ${esc(x.city)} • ${esc(x.area)}</div><div class="muted">🏷️ ${esc(x.type||'—')} • ${x.rooms?`🚪 ${x.rooms} xona • `:''}${x.m2?`📐 ${x.m2} m² • `:''}${floor?`🏢 ${floor}-qavat • `:''}${esc(x.finish||'')}</div><div class="muted">👤 ${esc(x.seller)} • ${esc(x.phone)}</div>${imgs.length?`<div class="muted">📷 ${imgs.length} ta rasm</div>`:''}<div class="actions">
 <button class="small primary" onclick="showHomeMatches(${x.id})">🎯 Mos xaridorlar (${findBuyers(x).length})</button>
 <button class="small" onclick="showHomeInquiries(${x.id})">📞 Murojaatlar (${db.inquiries.filter(q=>Number(q.home_id)===Number(x.id)).length})</button>
 <button class="small" onclick="openDocuments(${x.id})">📁 Hujjatlar (${(db.documents||[]).filter(d=>Number(d.home_id)===Number(x.id)).length})</button>
@@ -1115,7 +1180,7 @@ function staffRows(a){
     <td>${esc(staffManagerName(x.manager_id))}</td>
     <td>${x.is_active===false?'🔴 Faol emas':'🟢 Faol'}</td>
     <td>
-      <button class="small" onclick="editStaff(${x.id})">Tahrir</button>
+      <button class="small" onclick="editStaff(${x.id})">Tahrir</button> ${currentRole()==='Admin'&&normalizeRole(x.role)==='Rieltor'?`<button class="small primary" onclick="openKpiPlan(${x.id})">🎯 KPI</button>`:''}
       ${String(x.role||'').toLowerCase()==='admin'?'<span class="muted">🔒 Admin</span>':`<button class="small" onclick="toggleStaff(${x.id},${x.is_active===false?'true':'false'})">${x.is_active===false?'Faollashtirish':'O‘chirish'}</button>`}
       ${String(x.role||'').toLowerCase()==='admin'?'':`<button class="small" onclick="deleteStaff(${x.id})">🗑</button>`}
     </td>
@@ -1275,7 +1340,7 @@ function openContract(homeId=null, contractType='sell', buyerId=null){
   <input type="hidden" id="f_contract_buyer" value="${b?b.id:''}">
   <div class="formgrid">
     <input type="hidden" id="f_contract_home" value="${h?.id||''}">
-    ${input('contract_no','Shartnoma №','001',1)}
+    <div><label class="muted">Shartnoma №</label><input id="f_contract_no" class="field" value="${esc(h?homeCodeForHome(h):'')}" ${h?'readonly':''} placeholder="Uy kodi avtomatik" ${h?'':'required'}></div>
     ${input('contract_date','Sana',new Date().toISOString().slice(0,10),1)}
     ${input('contract_city','Shahar','Urganch sh.',1)}
     ${input('contract_customer',isBuy?'Xaridor F.I.Sh.':'Sotuvchi F.I.Sh.',isBuy?(b?.name||'F.I.Sh.'):(owner||'F.I.Sh.'),1)}
@@ -1317,6 +1382,7 @@ function openContract(homeId=null, contractType='sell', buyerId=null){
       const set=(k,v)=>{const e=document.getElementById('f_'+k);if(e)e.value=v??''};
       set('contract_type',isBuy?'buy':'sell');
       set('contract_home',String(h.id));
+      set('contract_no',homeCodeForHome(h));
       if(!isBuy){
         set('contract_customer',h.seller||'');
         set('contract_customer_phone',h.phone||'');
@@ -1338,7 +1404,7 @@ function fillContractHome(){
   const set=(k,v)=>{const e=document.getElementById('f_'+k);if(e)e.value=v??''};
   set('contract_customer',h.seller||''); set('contract_customer_phone',h.phone||''); set('contract_address',[h.city,h.area].filter(Boolean).join(', '));
   set('contract_rooms',h.rooms||''); set('contract_floor',homeFloor(h)||''); set('contract_price',priceInputValue(h.price)); set('contract_info',visibleNote(h.note));
-  set('contract_city',h.city||'Urganch sh.');
+  set('contract_city',h.city||'Urganch sh.'); set('contract_no',homeCodeForHome(h));
 }
 function contractEsc(v){return esc(v||'—')}
 function contractHtml(){
@@ -1347,7 +1413,7 @@ function contractHtml(){
   const sell=type==='sell';
   const h=db.homes.find(x=>Number(x.id)===Number(v('contract_home')));
   const b=db.buyers.find(x=>Number(x.id)===Number(v('contract_buyer')));
-  const no=contractEsc(v('contract_no')||'_____');
+  const no=contractEsc(v('contract_no')||(h?homeCodeForHome(h):'_____'));
   const date=contractEsc(v('contract_date')||new Date().toISOString().slice(0,10));
   const customer=contractEsc(v('contract_customer')||b?.name||h?.seller||'');
   const title=sell
@@ -1375,7 +1441,7 @@ function contractHtml(){
 
   const qrText=[
     'Xorazm Uylar CRM',
-    'Shartnoma №: '+(v('contract_no')||''),
+    'Shartnoma №: '+(v('contract_no')||(h?homeCodeForHome(h):'')),
     'Sana: '+(v('contract_date')||''),
     'Mijoz: '+(v('contract_customer')||''),
     'Telefon: '+(v('contract_customer_phone')||''),
@@ -1582,19 +1648,19 @@ function showHome(id){
   const cleanNote=String(x.note||'').replace(/\n?\n?\[PROPERTY_IMAGES\][\s\S]*?\[\/PROPERTY_IMAGES\]/g,'').trim();
   modal(`<h2>${esc(x.title)}</h2>${gallery}<div class="match"><b>${money(x.price)}</b><br>📍 ${esc(x.city)}, ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}<br>👤 ${esc(x.seller)} • 📞 ${esc(x.phone)}${cleanNote?`<br>${esc(cleanNote)}`:''}</div><button class="btn light" onclick="closeModal()">Yopish</button>`);
 }
-function openHome(){if(!requireHomeAdd())return;modal(`<h2>🏠 Uy qo‘shish</h2><div class="formgrid">${input('title','Uy nomi','Masalan: 2 xonali pod klyuch uy',1)}${selectField('type','🏠 Uy turi',[{value:'Kvartira',label:'Kvartira'},{value:'Hovli uy',label:'Hovli uy'}],true)}${input('city','Shahar/tuman','Urganch',1)}${input('area','Hudud/mavze','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Maydon m²','60',1)}${input('floor','Qavat','1',0)}${input('price','Narx (so‘m yoki dollar)','680000000 yoki $170000',1)}${input('finish','Ta’mir holati','Pod klyuch',1)}${input('seller','Sotuvchi ismi','Sardor',1)}${input('phone','Telefon','+998...',1)}<div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>${input('note','Izoh','Stadion yonida',1,true)}</div><br><button class="btn" onclick="addHome()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
-function openBuyer(){modal(`<h2>👤 Xaridor qo‘shish</h2><div class="formgrid">${input('name','Mijoz ismi','Mijoz 1',1)}${input('phone','Telefon','+998...',1)}${input('city','Shahar/tuman','Urganch',0)}${input('area','Kerakli hudud','Stadion',0)}${input('rooms_min','Xona — minimum','2',1)}${input('rooms_max','Xona — maksimum','5',1)}${input('floor_min','Qavat — minimum','1',0)}${input('floor_max','Qavat — maksimum','2',0)}${input('m2','Kerakli maydon m²','60',0)}${input('budget','Maksimal budjet (so‘m yoki dollar)','700000000 yoki $170000',1)}${input('finish','Ta’mir talabi (ixtiyoriy)','Pod klyuch',0)}${selectField('type','🏠 Uy turi',[{value:'',label:'Farqi yo‘q'},{value:'Kvartira',label:'Kvartira'},{value:'Hovli uy',label:'Hovli uy'}])}${input('note','Izoh','Stadion yaqinidan kerak',0,true)}</div><br><div class="muted">🎯 Moslashtirish: narx + xona + qavat + uy turi. Xona va qavat min/max oralig‘ida tekshiriladi. “Farqi yo‘q” tanlansa, ikkala tur ham mos keladi.</div><br><button class="btn" onclick="addBuyer()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
+function openHome(){if(!requireHomeAdd())return;modal(`<h2>🏠 Obyekt qo‘shish</h2><div class="formgrid">${input('title','Obyekt nomi','Masalan: 2 xonali pod klyuch uy',1)}${selectField('type','🏷️ Obyekt turi',[{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}],true)}${input('city','Shahar/tuman','Urganch',1)}${input('area','Hudud/mavze','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Maydon m²','60',1)}${input('floor','Qavat','1',0)}${input('price','Narx (so‘m yoki dollar)','680000000 yoki $170000',1)}${input('finish','Ta’mir holati','Pod klyuch',1)}${input('seller','Sotuvchi ismi','Sardor',1)}${input('phone','Telefon','+998...',1)}<div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>${input('note','Izoh','Stadion yonida',1,true)}</div><br><button class="btn" onclick="addHome()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
+function openBuyer(){modal(`<h2>👤 Xaridor qo‘shish</h2><div class="formgrid">${input('name','Mijoz ismi','Mijoz 1',1)}${input('phone','Telefon','+998...',1)}${input('city','Shahar/tuman','Urganch',0)}${input('area','Kerakli hudud','Stadion',0)}${input('rooms_min','Xona — minimum','2',1)}${input('rooms_max','Xona — maksimum','5',1)}${input('floor_min','Qavat — minimum','1',0)}${input('floor_max','Qavat — maksimum','2',0)}${input('m2','Kerakli maydon m²','60',0)}${input('budget','Maksimal budjet (so‘m yoki dollar)','700000000 yoki $170000',1)}${input('finish','Ta’mir talabi (ixtiyoriy)','Pod klyuch',0)}${selectField('type','🏷️ Obyekt turi',[{value:'',label:'Farqi yo‘q'},{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}])}${input('note','Izoh','Stadion yaqinidan kerak',0,true)}</div><br><div class="muted">🎯 Moslashtirish: narx + xona + qavat + uy turi. Xona va qavat min/max oralig‘ida tekshiriladi. “Farqi yo‘q” tanlansa, barcha obyekt turlari mos keladi.</div><br><button class="btn" onclick="addBuyer()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
 function openSeller(){modal(`<h2>🤝 Sotuvchi qo‘shish</h2><div class="formgrid">
 ${input('name','Ism','Sardor',1)}
 ${input('phone','Telefon','+998...',1)}
-${input('title','Uy nomi','Masalan: 5 xonali hovli',1)}
+${input('title','Obyekt nomi','Masalan: 5 xonali hovli',1)}
 ${input('city','Shahar/tuman','Urganch',1)}
 ${input('area','Hudud/mavze','Stadion',1)}
 ${input('rooms','Xona soni','5',1)}
 ${input('m2','Maydon m²','200',1)}
 ${input('price','Narx (so‘m yoki dollar)','700000000 yoki $170000',1)}
 ${input('finish','Ta’mir holati','Remontli',1)}
-${selectField('type','🏠 Uy turi',[{value:'Kvartira',label:'Kvartira'},{value:'Hovli uy',label:'Hovli uy'}],true)}
+${selectField('type','🏷️ Obyekt turi',[{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}],true)}
 <div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>
 ${input('note','Izoh','Uy haqida qo‘shimcha ma’lumot',0,true)}
 </div><br><div class="muted">💡 Sotuvchi va uning uyi bir vaqtda bazaga saqlanadi. Uy avtomatik ravishda shu sotuvchiga bog‘lanadi.</div><br><button class="btn" onclick="addSeller()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`) }
@@ -1826,7 +1892,7 @@ async function publicHome(){
   app.style.display='block';
   app.innerHTML=`<div class="public-site">
     <div class="public-site-head">
-      <div><div class="public-site-logo">🏠 Xorazm Uylar</div><div class="public-site-sub">Sotuvdagi uylar</div></div>
+      <div><div class="public-site-logo">🏠 Xorazm Uylar — XORAZMLIDER</div><div class="public-site-sub">Sotuvdagi uylar</div></div>
       <div class="public-site-actions">
         <button class="btn light" onclick="showPublicForm('sell')">🏠 Uyimni sotmoqchiman</button>
         <button class="btn" onclick="showPublicForm('buy')">🔑 Uy olmoqchiman</button>
@@ -1935,7 +2001,7 @@ function showPublicForm(type){
         ${publicInput('m2','Maydon m²','200','number')}
         ${publicInput('price','Narx (so‘m yoki dollar)','700000000 yoki $170000')}
         ${publicInput('finish','Ta’mir holati','Remontli')}
-        ${publicInput('type','Uy turi','Hovli')}
+        ${publicSelect('type','Obyekt turi',[{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}])}
         <div class="public-field public-full"><label>📷 Uy rasmlari</label>
           <input id="pf_images" type="file" accept="image/*" multiple onchange="previewPropertyImages(event)">
           <div class="image-help">Telefoningizdan bir nechta rasm tanlashingiz mumkin. Har bir rasm 50 MB gacha.</div>
@@ -1960,7 +2026,7 @@ function showPublicForm(type){
         ${publicInput('m2','Kerakli maydon m²','80','number')}
         ${publicInput('budget','Budjet (so‘m yoki dollar)','800000000 yoki $170000')}
         ${publicInput('finish','Ta’mir talabi','Remontli')}
-        ${publicInput('type','Uy turi','Hovli')}
+        ${publicSelect('type','Obyekt turi',[{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}])}
         <div class="public-field public-full"><label>Qo‘shimcha talab</label><textarea id="pf_note" placeholder="Masalan: maktab yaqinidan kerak"></textarea></div>
       </div>
       <button class="public-submit" onclick="submitPublicBuy()">Yuborish</button>
@@ -1970,7 +2036,11 @@ function showPublicForm(type){
 }
 
 function publicInput(id,label,ph,type='text'){
-  return `<div class="public-field"><label>${label}</label><input id="pf_${id}" type="${type}" placeholder="${ph}"></div>`;
+  return `<div class="public-field"><label>${label} *</label><input id="pf_${id}" type="${type}" placeholder="${ph}" required></div>`;
+}
+
+function publicSelect(id,label,options,required=true){
+  return `<div class="public-field"><label>${label}${required?' *':''}</label><select id="pf_${id}" ${required?'required':''}>${options.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('')}</select></div>`;
 }
 
 function pf(id){
@@ -2015,7 +2085,8 @@ async function uploadPropertyImages(files, title){
 
 async function submitPublicSell(){
   const name=pf('seller_name'), phone=pf('seller_phone'), title=pf('title');
-  if(!name||!phone||!title){alert('Iltimos, ism, telefon va uy nomini kiriting.');return;}
+  const required=[name,phone,title,pf('city'),pf('area'),pf('rooms'),pf('m2'),pf('price'),pf('finish'),pf('type')];
+  if(required.some(v=>!v)){alert('Iltimos, barcha majburiy maydonlarni to‘ldiring.');return;}
 
   const imageInput=document.getElementById('pf_images');
   const files=[...(imageInput?.files||[])];
@@ -2065,7 +2136,8 @@ async function submitPublicSell(){
 
 async function submitPublicBuy(){
   const name=pf('name'), phone=pf('phone');
-  if(!name||!phone){alert('Iltimos, ism va telefon raqamingizni kiriting.');return;}
+  const required=[name,phone,pf('city'),pf('area'),pf('rooms'),pf('m2'),pf('budget'),pf('finish'),pf('type')];
+  if(required.some(v=>!v)){alert('Iltimos, barcha majburiy maydonlarni to‘ldiring.');return;}
 
   const row={
     name,
