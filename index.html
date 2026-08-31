@@ -437,8 +437,28 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 .public-service-page .public-hero,
 .public-service-page .public-section,
 .public-service-page .public-footer{display:none!important}
-.public-service-page{min-height:100vh}
-.public-service-page .public-form{display:block}
+.public-service-page{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  padding:90px 18px 35px;
+  overflow:auto;
+}
+.public-service-page .public-site-head{
+  position:absolute;
+  top:0;left:0;right:0;
+}
+.public-service-page #publicForm{
+  display:block;
+  width:min(720px,100%);
+  margin:0 auto;
+}
+.public-service-page #publicSuccess{
+  width:min(720px,100%);
+  margin:0 auto;
+}
 
 
 @media(min-width:801px){
@@ -2690,7 +2710,8 @@ function publicHomesPage(){
   loadAllHomes();
 }
 async function loadAllHomes(){
-  const {data,error}=await client.from('public_homes').select('*').eq('status','Faol').order('created_at',{ascending:false});
+  // Ommaviy uylar ro'yxati umumiy CRM `homes` jadvalidan olinadi.
+  const {data,error}=await client.from('homes').select('*').eq('status','Faol').order('created_at',{ascending:false});
   if(error){
     document.getElementById('allHomesList').innerHTML='<div class="empty">Uylarni yuklashda xatolik.</div>';
     return;
@@ -2802,7 +2823,7 @@ async function loadPublicStats(){
   const realtorsEl=document.getElementById('publicStatRealtors');
 
   try{
-    const r=await client.from('public_homes').select('id').eq('status','Faol');
+    const r=await client.from('homes').select('id').eq('status','Faol');
     if(!r.error && homesEl) homesEl.textContent=Number((r.data||[]).length).toLocaleString('uz-UZ')+'+';
   }catch(e){ console.warn('Public homes count:',e); }
 
@@ -2877,7 +2898,8 @@ function publicHomeCards(a){
   }).join('')||'<div class="empty">Hozircha sotuvda uylar yo‘q.</div>';
 }
 async function loadPublicHomes(){
-  const {data,error}=await client.from('public_homes').select('*').eq('status','Faol').order('created_at',{ascending:false});
+  // Bosh sahifadagi e'lonlar ham umumiy CRM `homes` jadvalidan olinadi.
+  const {data,error}=await client.from('homes').select('*').eq('status','Faol').order('created_at',{ascending:false});
   if(error){
     console.error(error);
     document.getElementById('publicHomeList').innerHTML='<div class="empty">Uylarni yuklashda xatolik. Iltimos, keyinroq urinib ko‘ring.</div>';
@@ -2941,7 +2963,7 @@ function showPublicForm(type){
 
   if(type==='sell'){
     box.innerHTML=`
-      <button class="public-submit back" onclick="publicHome()" onclick="goBackFromPublicForm();return false;">← Orqaga</button>
+      <button class="public-submit back" onclick="goBackFromPublicForm();return false;">← Orqaga</button>
       <h2>🏠 Uyimni sotmoqchiman</h2>
       <p class="sub">Uy va aloqa ma’lumotlarini qoldiring.</p>
       <div class="public-grid">
@@ -2967,7 +2989,7 @@ function showPublicForm(type){
     `;
   }else{
     box.innerHTML=`
-      <button class="public-submit back" onclick="publicHome()" onclick="goBackFromPublicForm();return false;">← Orqaga</button>
+      <button class="public-submit back" onclick="goBackFromPublicForm();return false;">← Orqaga</button>
       <h2>🔑 Uy olmoqchiman</h2>
       <p class="sub">Sizga kerak bo‘lgan uy haqida ma’lumot qoldiring.</p>
       <div class="public-grid">
