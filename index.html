@@ -434,9 +434,6 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 .public-mobile-menu a:hover{background:#171d24;color:#f5b72c}
 
 
-.public-service-page .public-hero,
-.public-service-page .public-section,
-.public-service-page .public-footer{display:none!important}
 .public-service-page{
   min-height:100vh;
   display:flex;
@@ -446,20 +443,23 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
   padding:90px 18px 35px;
   overflow:auto;
 }
-.public-service-page .public-site-head{
+.public-service-page > *{display:none!important}
+.public-service-page > .public-site-head{
+  display:flex!important;
   position:absolute;
   top:0;left:0;right:0;
 }
-.public-service-page #publicForm{
-  display:block;
+.public-service-page > #publicForm{
+  display:block!important;
   width:min(720px,100%);
   margin:0 auto;
 }
-.public-service-page #publicSuccess{
+.public-service-page > #publicSuccess{
+  display:block!important;
   width:min(720px,100%);
   margin:0 auto;
 }
-
+.public-service-page > #publicForm.public-form:not(.show){display:none!important}
 
 @media(min-width:801px){
   .public-main-nav{position:relative}
@@ -2546,7 +2546,7 @@ async function publicHome(){
             <div class="public-stat-icon">♙</div>
             <div><div id="publicStatRealtors" class="public-stat-num">0</div><div class="public-stat-label">Professional rieltorlar</div></div>
           </div>
-          <a class="public-stat public-stat-link" href="https://telegram.me/alisher_sotuv" target="_blank" rel="noopener" aria-label="Telegram orqali 24/7 yordam">
+          <a class="public-stat public-stat-link" href="https://t.me/alisher_sotuv" target="_blank" rel="noopener" aria-label="Telegram orqali 24/7 yordam">
             <div class="public-stat-icon">◷</div>
             <div><div class="public-stat-num">24/7</div><div class="public-stat-label">Yordam va qo‘llab-quvvatlash</div></div>
           </a>
@@ -2576,10 +2576,10 @@ async function publicHome(){
   </div>
 
   <div class="public-social-row">
-    <a class="public-social-icon-btn telegram-logo" href="https://telegram.me/alisher_sotuv" target="_blank" rel="noopener" aria-label="Telegram"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#229ED9"/><path d="m17.5 7.1-1.8 8.6c-.1.6-.5.8-1 .5l-2.9-2.1-1.4 1.4c-.2.2-.3.3-.6.3l.2-3 5.4-4.9c.2-.2-.1-.3-.4-.1l-6.7 4.2-2.9-.9c-.6-.2-.6-.6.1-.9l11.4-4.4c.5-.2.9.2.8.9Z" fill="#fff"/></svg></a>
+    <a class="public-social-icon-btn telegram-logo" href="https://t.me/alisher_sotuv" target="_blank" rel="noopener" aria-label="Telegram"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#229ED9"/><path d="m17.5 7.1-1.8 8.6c-.1.6-.5.8-1 .5l-2.9-2.1-1.4 1.4c-.2.2-.3.3-.6.3l.2-3 5.4-4.9c.2-.2-.1-.3-.4-.1l-6.7 4.2-2.9-.9c-.6-.2-.6-.6.1-.9l11.4-4.4c.5-.2.9.2.8.9Z" fill="#fff"/></svg></a>
     <div>
       <div class="public-social-title">Telegram</div>
-      <a href="https://telegram.me/alisher_sotuv" target="_blank" rel="noopener">telegram.me/alisher_sotuv</a>
+      <a href="https://t.me/alisher_sotuv" target="_blank" rel="noopener">telegram.me/alisher_sotuv</a>
     </div>
   </div>
 
@@ -2711,12 +2711,13 @@ function publicHomesPage(){
 }
 async function loadAllHomes(){
   // Ommaviy uylar ro'yxati umumiy CRM `homes` jadvalidan olinadi.
-  const {data,error}=await client.from('homes').select('*').eq('status','Faol').order('created_at',{ascending:false});
+  const {data,error}=await client.from('homes').select('*').order('created_at',{ascending:false});
   if(error){
-    document.getElementById('allHomesList').innerHTML='<div class="empty">Uylarni yuklashda xatolik.</div>';
+    console.error('Umumiy homes bazasi:',error);
+    document.getElementById('allHomesList').innerHTML='<div class="empty">Bazadan uylarni yuklashda xatolik: '+esc(error.message||'Nomaʼlum xatolik')+'</div>';
     return;
   }
-  publicHomesDb=data||[];
+  publicHomesDb=(data||[]).filter(x=>String(x.status||'Faol').trim().toLowerCase()!=='sotildi');
   filterAllHomes();
 }
 function filterAllHomes(){
@@ -2823,8 +2824,11 @@ async function loadPublicStats(){
   const realtorsEl=document.getElementById('publicStatRealtors');
 
   try{
-    const r=await client.from('homes').select('id').eq('status','Faol');
-    if(!r.error && homesEl) homesEl.textContent=Number((r.data||[]).length).toLocaleString('uz-UZ')+'+';
+    const r=await client.from('homes').select('id,status');
+    if(!r.error && homesEl){
+      const n=(r.data||[]).filter(x=>String(x.status||'Faol').trim().toLowerCase()!=='sotildi').length;
+      homesEl.textContent=Number(n).toLocaleString('uz-UZ')+'+';
+    }
   }catch(e){ console.warn('Public homes count:',e); }
 
   try{
@@ -2899,13 +2903,13 @@ function publicHomeCards(a){
 }
 async function loadPublicHomes(){
   // Bosh sahifadagi e'lonlar ham umumiy CRM `homes` jadvalidan olinadi.
-  const {data,error}=await client.from('homes').select('*').eq('status','Faol').order('created_at',{ascending:false});
+  const {data,error}=await client.from('homes').select('*').order('created_at',{ascending:false});
   if(error){
-    console.error(error);
-    document.getElementById('publicHomeList').innerHTML='<div class="empty">Uylarni yuklashda xatolik. Iltimos, keyinroq urinib ko‘ring.</div>';
+    console.error('Umumiy homes bazasi:',error);
+    document.getElementById('publicHomeList').innerHTML='<div class="empty">Bazadan uylarni yuklashda xatolik: '+esc(error.message||'Nomaʼlum xatolik')+'</div>';
     return;
   }
-  publicHomesDb=data||[];
+  publicHomesDb=(data||[]).filter(x=>String(x.status||'Faol').trim().toLowerCase()!=='sotildi');
   document.getElementById('publicHomeList').innerHTML=publicHomeCards(publicHomesDb);
   const sharedId=new URLSearchParams(window.location.search).get('home');
   if(sharedId){
