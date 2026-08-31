@@ -447,6 +447,19 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
   .homes-popover{right:30%}
 }
 
+
+.public-stat-link{
+  text-decoration:none;
+  color:inherit;
+  cursor:pointer;
+  transition:transform .18s ease,border-color .18s ease,background .18s ease;
+}
+.public-stat-link:hover{
+  transform:translateY(-2px);
+  border-color:#f5b72c;
+  background:#11171e;
+}
+
 </style>
   <link rel="apple-touch-icon" href="logo-tel.PNG">
 <link rel="icon" type="image/png" href="logo-tel.PNG">
@@ -2435,7 +2448,6 @@ async function publicHome(){
           <p>Ishonchli rieltorlar. Yaxshi narxlar. Tezkor va qulay xizmat.</p>
           <div class="public-choice">
             <button class="public-choice-buy" onclick="openPublicService('buy')">🔑 UY OLAMAN</button>
-            <button class="public-choice-sell" onclick="openPublicService('sell')">🏠 UYIMNI SOTAMAN</button>
           </div>
         </div>
       </div>
@@ -2488,10 +2500,22 @@ async function publicHome(){
     <section class="public-section" id="services">
       <div class="public-section-inner">
         <div class="public-stats">
-          <div class="public-stat"><div class="public-stat-icon">🏢</div><div><div class="public-stat-num">1000+</div><div class="public-stat-label">Faol e’lonlar</div></div></div>
-          <div class="public-stat"><div class="public-stat-icon">♧</div><div><div class="public-stat-num">500+</div><div class="public-stat-label">Mavjud mijozlar</div></div></div>
-          <div class="public-stat"><div class="public-stat-icon">♙</div><div><div class="public-stat-num">50+</div><div class="public-stat-label">Professional rieltorlar</div></div></div>
-          <div class="public-stat"><div class="public-stat-icon">◷</div><div><div class="public-stat-num">24/7</div><div class="public-stat-label">Yordam va qo‘llab-quvvatlash</div></div></div>
+          <div class="public-stat">
+            <div class="public-stat-icon">🏢</div>
+            <div><div id="publicStatHomes" class="public-stat-num">0</div><div class="public-stat-label">Faol e’lonlar</div></div>
+          </div>
+          <div class="public-stat">
+            <div class="public-stat-icon">♧</div>
+            <div><div id="publicStatBuyers" class="public-stat-num">0</div><div class="public-stat-label">Mavjud mijozlar</div></div>
+          </div>
+          <div class="public-stat">
+            <div class="public-stat-icon">♙</div>
+            <div><div id="publicStatRealtors" class="public-stat-num">0</div><div class="public-stat-label">Professional rieltorlar</div></div>
+          </div>
+          <a class="public-stat public-stat-link" href="https://telegram.me/alisher_sotuv" target="_blank" rel="noopener" aria-label="Telegram orqali 24/7 yordam">
+            <div class="public-stat-icon">◷</div>
+            <div><div class="public-stat-num">24/7</div><div class="public-stat-label">Yordam va qo‘llab-quvvatlash</div></div>
+          </a>
         </div>
 
         <div class="public-section-head">
@@ -2499,18 +2523,12 @@ async function publicHome(){
           <a href="#new" onclick="document.getElementById('new').scrollIntoView({behavior:'smooth'});return false;">BARCHASI KO‘RISH →</a>
         </div>
         <div class="public-category-grid">
-          <button class="public-category" onclick="setPublicType('Kvartira')"><div class="public-category-icon">▦</div><div class="public-category-title">Kvartiralar</div><div class="public-category-count">Kvartira</div></button>
-          <button class="public-category" onclick="setPublicType('Hovli joy')"><div class="public-category-icon">⌂</div><div class="public-category-title">Hovli joylar</div><div class="public-category-count">Hovli joy</div></button>
-          <button class="public-category" onclick="setPublicType('Yer')"><div class="public-category-icon">⌖</div><div class="public-category-title">Yer uchastkalari</div><div class="public-category-count">Yer</div></button>
-          <button class="public-category" onclick="setPublicType('Noturar bino')"><div class="public-category-icon">▤</div><div class="public-category-title">Noturar bino</div><div class="public-category-count">Noturar bino</div></button>
+          <button class="public-category" onclick="openPublicHomes('Kvartira')"><div class="public-category-icon">▦</div><div class="public-category-title">Kvartiralar</div><div class="public-category-count">Kvartira</div></button>
+          <button class="public-category" onclick="openPublicHomes('Hovli joy')"><div class="public-category-icon">⌂</div><div class="public-category-title">Hovli joylar</div><div class="public-category-count">Hovli joy</div></button>
+          <button class="public-category" onclick="openPublicHomes('Yer')"><div class="public-category-icon">⌖</div><div class="public-category-title">Yer uchastkalari</div><div class="public-category-count">Yer</div></button>
+          <button class="public-category" onclick="openPublicHomes('Noturar bino')"><div class="public-category-icon">▤</div><div class="public-category-title">Noturar bino</div><div class="public-category-count">Noturar bino</div></button>
         </div>
-
-        <div class="public-section-head" id="new">
-          <h2>SO‘NGGI QO‘SHILGAN UYLAR</h2>
-          <a href="#new" onclick="clearPublicFilters();return false;">BARCHASINI KO‘RISH →</a>
-        </div>
-        <div class="public-homes">
-          <div id="publicHomeList" class="public-home-grid"><div class="empty">Uylar yuklanmoqda...</div></div>
+</div>
         </div>
 
         
@@ -2563,6 +2581,7 @@ async function publicHome(){
   setupPublicNavHover();
   trackSiteVisit();
   await loadPublicHomes();
+  loadPublicStats();
 }
 
 function goPublicHome(){
@@ -2741,6 +2760,28 @@ function togglePublicDrop(id){
 document.addEventListener('click',e=>{
   if(!e.target.closest('.public-nav-dropdown')) closePublicDrops();
 });
+
+
+async function loadPublicStats(){
+  const homesEl=document.getElementById('publicStatHomes');
+  const buyersEl=document.getElementById('publicStatBuyers');
+  const realtorsEl=document.getElementById('publicStatRealtors');
+
+  try{
+    const r=await client.from('public_homes').select('id',{count:'exact',head:true}).eq('status','Faol');
+    if(!r.error && homesEl) homesEl.textContent=Number(r.count||0).toLocaleString('uz-UZ')+'+';
+  }catch(e){ console.warn('Public homes count:',e); }
+
+  try{
+    const r=await client.from('buyers').select('id',{count:'exact',head:true});
+    if(!r.error && buyersEl) buyersEl.textContent=Number(r.count||0).toLocaleString('uz-UZ')+'+';
+  }catch(e){ console.warn('Buyer count:',e); }
+
+  try{
+    const r=await client.from('staff').select('id',{count:'exact',head:true}).eq('role','Rieltor');
+    if(!r.error && realtorsEl) realtorsEl.textContent=Number(r.count||0).toLocaleString('uz-UZ')+'+';
+  }catch(e){ console.warn('Realtor count:',e); }
+}
 
 function filterPublicAdvanced(){
   const city=(document.getElementById('publicFilterCity')?.value||'').trim().toLowerCase();
