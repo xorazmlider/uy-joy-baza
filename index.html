@@ -549,6 +549,26 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
   background:#11171e;
 }
 
+
+/* V10: bosh sahifada "Faol e'lonlar" statistik qatori ko'rinmasin */
+body:not(.public-service-page) .public-stats,
+body:not(.public-service-page) .stats-row,
+body:not(.public-service-page) .public-statistics{
+  display:none !important;
+}
+
+
+/* V10: bosh sahifada pastki telefon / Telegram / YouTube / Instagram qatori yo'q */
+body:not(.public-service-page) .public-contact,
+body:not(.public-service-page) .contact-section,
+body:not(.public-service-page) .public-social,
+body:not(.public-service-page) .social-links,
+body:not(.public-service-page) .public-footer-contact,
+body:not(.public-service-page) footer .public-social,
+body:not(.public-service-page) footer .contact-links{
+  display:none !important;
+}
+
 </style>
   <link rel="apple-touch-icon" href="logo-tel.PNG">
 <link rel="icon" type="image/png" href="logo-tel.PNG">
