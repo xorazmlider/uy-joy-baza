@@ -1008,62 +1008,18 @@ function filterBuyers(q){
     buyerRows(base.filter(x=>JSON.stringify(x).toLowerCase().includes(q)));
 }
 
+function buyerContractCode(b){
+  // Olib berish shartnomasi mijoz TALABI asosida tuziladi. Bu bosqichda uy kerak emas.
+  const n=Number(b?.id||0);
+  return n>0 ? 'XSH-'+String(Math.trunc(n)).padStart(6,'0') : 'XSH-—';
+}
+
 function openContractForBuyer(buyerId){
   const b=db.buyers.find(x=>Number(x.id)===Number(buyerId));
   if(!b)return;
-
-  // Xaridor uchun obyektni avtomatik aniqlaymiz. Qo'lda obyekt tanlash oynasi
-  // endi Olib berish shartnomasida chiqmaydi.
-  const meta=crmMeta(b.note,'CRM_BUYER');
-  let homeId=Number(meta.home_id||0);
-
-  // 1) Xaridor metadata
-  if(homeId && !db.homes.some(h=>Number(h.id)===homeId)) homeId=0;
-
-  // 2) Oxirgi bitim
-  if(!homeId){
-    const deals=(db.deals||[])
-      .filter(d=>Number(d.buyer_id)===Number(buyerId)&&Number(d.home_id)>0)
-      .sort((a,z)=>String(z.created_at||'').localeCompare(String(a.created_at||'')));
-    if(deals.length) homeId=Number(deals[0].home_id);
-  }
-
-  // 3) Shu telefon bilan bog'langan uy murojaati
-  if(!homeId){
-    const phone=String(b.phone||'').replace(/\D/g,'');
-    const inquiries=(db.inquiries||[])
-      .filter(q=>phone && String(q.phone||'').replace(/\D/g,'')===phone && Number(q.home_id)>0)
-      .sort((a,z)=>String(z.created_at||'').localeCompare(String(a.created_at||'')));
-    if(inquiries.length) homeId=Number(inquiries[0].home_id);
-  }
-
-  // 4) Eski xaridorlarda metadata/murojaat bo'lmasa, aniq mos bitta obyektni
-  // avtomatik topamiz. Bir nechta bo'lsa taxmin qilib tanlamaymiz.
-  if(!homeId){
-    const city=String(b.city||'').trim().toLowerCase();
-    const area=String(b.area||'').trim().toLowerCase();
-    const rooms=Number(b.rooms||0);
-    const budget=moneyAmount(b.budget);
-    const type=String(b.type||'').trim().toLowerCase();
-    const candidates=(db.homes||[]).filter(h=>{
-      if(h.status==='Sotildi')return false;
-      if(city && String(h.city||'').trim().toLowerCase()!==city)return false;
-      if(area && !String(h.area||'').trim().toLowerCase().includes(area))return false;
-      if(rooms && Number(h.rooms||0)!==rooms)return false;
-      if(budget && moneyAmount(h.price)!==budget)return false;
-      if(type && type!=="farqi yo'q" && String(h.type||'').trim().toLowerCase()!==type)return false;
-      return true;
-    });
-    if(candidates.length===1) homeId=Number(candidates[0].id);
-  }
-
-  if(!homeId){
-    alert('Bu xaridorga bog‘langan obyekt topilmadi. Shartnoma raqami XU kodi bo‘lishi uchun avval xaridorni aniq uyga bog‘lash kerak.');
-    return;
-  }
-
-  // Obyekt aniq topildi: shartnoma oynasi darhol XU kodi bilan ochiladi.
-  openContract(homeId,'buy',buyerId);
+  // Bu shartnoma hali topilmagan uy uchun emas, mijozning olib berish talabi uchun.
+  // Shuning uchun XU emas, XSH kodi avtomatik beriladi va obyekt tanlanmaydi.
+  openContract(null,'buy',buyerId);
 }
 
 function openContractForSellerHome(homeId){
@@ -1363,11 +1319,9 @@ function openContract(homeId=null, contractType='sell', buyerId=null){
   const phone=h?.phone||'';
   const floor=h?homeFloor(h):'';
   const isBuy=contractType==='buy';
-  const homeOptions=[{value:'',label:'— Obyektni tanlang —'},...(db.homes||[]).map(x=>({value:String(x.id),label:`${homeCodeForHome(x)} — ${x.title||x.type||'Obyekt'} — ${x.city||''}, ${x.area||''}`}))];
-  // Agar shartnoma aniq uy ichidan ochilgan bo'lsa, ikkinchi marta obyekt tanlash shart emas.
-  // Tanlash oynasi faqat uy hali aniqlanmagan yangi Olib berish shartnomasida chiqadi.
-  const homePicker=(isBuy && !h)
-    ? selectField('contract_home','🏠 Obyekt / uy',homeOptions,false)
+  // Olib berish shartnomasida obyekt tanlash yo‘q.
+  const homePicker=isBuy
+    ? `<input type="hidden" id="f_contract_home" value="">`
     : `<input type="hidden" id="f_contract_home" value="${h?.id||''}">`;
 
   modal(`<h2>📄 ${isBuy?'Olib berish shartnomasi':'Sotish shartnomasi'}</h2>
@@ -1375,7 +1329,7 @@ function openContract(homeId=null, contractType='sell', buyerId=null){
   <input type="hidden" id="f_contract_buyer" value="${b?b.id:''}">
   <div class="formgrid">
     ${homePicker}
-    <div><label class="muted">Shartnoma №</label><input id="f_contract_no" class="field" value="${esc(h?homeCodeForHome(h):'')}" readonly placeholder="Avval obyekt tanlang"></div>
+    <div><label class="muted">Shartnoma №</label><input id="f_contract_no" class="field" value="${esc(isBuy?(b?buyerContractCode(b):'XSH-—'):(h?homeCodeForHome(h):''))}" readonly></div>
     ${input('contract_date','Sana',new Date().toISOString().slice(0,10),1)}
     ${input('contract_city','Shahar','Urganch sh.',1)}
     ${input('contract_customer',isBuy?'Xaridor F.I.Sh.':'Sotuvchi F.I.Sh.',isBuy?(b?.name||'F.I.Sh.'):(owner||'F.I.Sh.'),1)}
@@ -1393,7 +1347,7 @@ function openContract(homeId=null, contractType='sell', buyerId=null){
     ${input('contract_mob2','Mobi 2','+998...',0)}
     ${input('contract_offer','Taklif','',0,true)}
   </div><br>
-  <div class="muted">💡 ${isBuy?(h?'Obyekt shartnomadan aniqlandi. Shartnoma № XU kodi bilan avtomatik berildi.':'Avval obyektni tanlang. Shartnoma № XU kodi bilan avtomatik beriladi.'):'Uy kodi va shartnoma raqami avtomatik beriladi.'} Qo‘shimcha maydonlarni kerak bo‘lsa to‘ldiring.</div><br>
+  <div class="muted">💡 ${isBuy?'Olib berish shartnomasi mijoz talabi asosida tuziladi. Obyekt hozircha tanlanmaydi. Shartnoma № XSH kodi avtomatik berildi.':'Sotish shartnomasida uy kodi va shartnoma raqami avtomatik beriladi.'} Qo‘shimcha maydonlarni kerak bo‘lsa to‘ldiring.</div><br>
   <button class="btn" onclick="previewContract()">📄 Ko‘rish / Chop etish</button>
   <button class="btn light" onclick="closeModal()">Bekor</button>`);
 
@@ -1403,6 +1357,8 @@ function openContract(homeId=null, contractType='sell', buyerId=null){
       const set=(k,v)=>{const e=document.getElementById('f_'+k);if(e)e.value=v??''};
       set('contract_type','buy');
       set('contract_buyer',String(b.id));
+      set('contract_no',buyerContractCode(b));
+      set('contract_home','');
       set('contract_customer',b.name||'');
       set('contract_customer_phone',b.phone||'');
       set('contract_city',b.city||'Urganch sh.');
@@ -1449,7 +1405,7 @@ function contractHtml(){
   const sell=type==='sell';
   const h=db.homes.find(x=>Number(x.id)===Number(v('contract_home')));
   const b=db.buyers.find(x=>Number(x.id)===Number(v('contract_buyer')));
-  const no=contractEsc(v('contract_no')||(h?homeCodeForHome(h):'_____'));
+  const no=contractEsc(v('contract_no')||(type==='buy'?(b?buyerContractCode(b):'XSH-—'):(h?homeCodeForHome(h):'_____')));
   const date=contractEsc(v('contract_date')||new Date().toISOString().slice(0,10));
   const customer=contractEsc(v('contract_customer')||b?.name||h?.seller||'');
   const title=sell
@@ -1622,9 +1578,19 @@ function showPublicContractQR(payload){
 }
 
 function previewContract(){
-  const homeId=val('contract_home');
-  if(!homeId){alert('Avval obyekt/uyni tanlang. Shartnoma raqami XU kodi bilan avtomatik beriladi.');return;}
-  if(!val('contract_no')){fillContractHome();}
+  const type=val('contract_type')||'sell';
+  const isBuy=type==='buy';
+  if(isBuy){
+    if(!val('contract_buyer')){alert('Xaridor aniqlanmadi.');return;}
+    if(!val('contract_no')){
+      const b=db.buyers.find(x=>Number(x.id)===Number(val('contract_buyer')));
+      if(b){const e=document.getElementById('f_contract_no');if(e)e.value=buyerContractCode(b);}
+    }
+  }else{
+    const homeId=val('contract_home');
+    if(!homeId){alert('Avval obyekt/uyni tanlang. Shartnoma raqami XU kodi bilan avtomatik beriladi.');return;}
+    if(!val('contract_no'))fillContractHome();
+  }
   if(!val('contract_no')){alert('Shartnoma raqamini aniqlab bo‘lmadi.');return;}
   const html=contractHtml();
   const w=window.open('','_blank');
@@ -1632,9 +1598,6 @@ function previewContract(){
   w.document.open();
   w.document.write(html);
   w.document.close();
-
-  // Muhim: print aynan tugma bosilgan paytdagi user action ichida chaqiriladi.
-  // Shu sababli Ctrl+P bosish talab qilinmaydi.
   w.print();
 }
 
