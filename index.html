@@ -482,6 +482,23 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
   z-index:20!important;
 }
 .public-service-page #publicForm.public-form:not(.show){display:none!important}
+.public-service-page #publicForm > .public-submit.back{
+  display:block!important;
+  width:100%!important;
+  margin:0 0 26px!important;
+  border-radius:6px!important;
+  padding:11px 16px!important;
+  text-align:center!important;
+}
+.public-service-page #publicForm > h2{
+  width:100%!important;
+  margin:0 0 6px!important;
+  font-size:18px!important;
+}
+.public-service-page #publicForm > .sub{
+  width:100%!important;
+  margin:0 0 18px!important;
+}
 @media(max-width:800px){
   .public-service-page #publicForm{width:calc(100% - 24px)!important;padding-top:78px!important}
 }
@@ -2974,6 +2991,7 @@ async function trackSiteVisit(){
 
 
 function goBackFromPublicForm(){
+  document.body.style.overflow='';
   const url=new URL(window.location.href);
   url.searchParams.delete('service');
   url.searchParams.delete('form');
@@ -2983,12 +3001,35 @@ function goBackFromPublicForm(){
 }
 
 function showPublicForm(type){
-  document.querySelector('.public-site')?.classList.add('public-service-page');
+  const site=document.querySelector('.public-site');
+  site?.classList.add('public-service-page');
   document.getElementById('publicChoice').style.display='none';
+
+  // Xizmat formasida bosh sahifaning boshqa qismlari umuman ko'rinmasin.
+  // Inline style bilan ham beramiz — eski CSS/kechikkan render formani pastga surmasligi uchun.
+  document.querySelectorAll('.public-site > .public-footer, .public-site .public-hero, .public-site .public-section, .public-site .public-homes, .public-site .public-stats, .public-site .public-categories, .public-site .public-contact, .public-site .public-search, .public-site .public-choice').forEach(el=>{
+    el.style.setProperty('display','none','important');
+  });
+  if(site){
+    site.style.setProperty('min-height','100vh','important');
+    site.style.setProperty('height','100vh','important');
+    site.style.setProperty('overflow-y','auto','important');
+    site.style.setProperty('background','#070a0f','important');
+  }
+  document.body.style.overflow='hidden';
+  window.scrollTo({top:0,behavior:'instant'});
+
   const homesSection=document.querySelector('.public-homes');
   if(homesSection) homesSection.style.display='none';
   const box=document.getElementById('publicForm');
   box.className='public-form show';
+  box.style.setProperty('display','block','important');
+  box.style.setProperty('width','min(960px, calc(100% - 40px))','important');
+  box.style.setProperty('margin','0 auto','important');
+  box.style.setProperty('padding-top','86px','important');
+  box.style.setProperty('padding-bottom','35px','important');
+  box.style.setProperty('position','relative','important');
+  box.style.setProperty('z-index','20','important');
 
   if(type==='sell'){
     box.innerHTML=`
