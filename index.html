@@ -2534,7 +2534,7 @@ async function publicHome(){
 
         <div class="public-section-head">
           <h2>KATEGORIYALAR</h2>
-          <a href="#new" onclick="document.getElementById('new').scrollIntoView({behavior:'smooth'});return false;">BARCHASI KO‘RISH →</a>
+          <a href="#" onclick="openAllHomes();return false;">BARCHASI KO‘RISH →</a>
         </div>
         <div class="public-category-grid">
           <button class="public-category" onclick="openPublicHomes('Kvartira')"><div class="public-category-icon">▦</div><div class="public-category-title">Kvartiralar</div><div class="public-category-count">Kvartira</div></button>
@@ -2602,9 +2602,17 @@ function goPublicHome(){
   const clean=window.location.pathname;
   window.location.href=clean;
 }
-function openAllHomes(){
+function openAllHomes(filters={}){
+  const params=new URLSearchParams();
+  params.set('homes','1');
+  Object.entries(filters||{}).forEach(([k,v])=>{
+    if(v!==undefined && v!==null && String(v)!=='')params.set(k,String(v));
+  });
   const clean=window.location.pathname;
-  window.open(clean+'?homes=1','_blank','noopener');
+  window.open(clean+'?'+params.toString(),'_blank','noopener');
+}
+function openPublicHomes(type=''){
+  openAllHomes(type ? {type:type} : {});
 }
 function toggleServicesMenu(){
   closeNavPopovers('services');
@@ -2621,10 +2629,6 @@ function closeNavPopovers(keep=''){
     if((keep==='services' && id==='servicesPopover') || (keep==='contact' && id==='contactPopover'))return;
     document.getElementById(id)?.classList.remove('show');
   });
-}
-function closeNavPopovers(){
-  document.getElementById('servicesPopover')?.classList.remove('show');
-  document.getElementById('contactPopover')?.classList.remove('show');
 }
 function publicHomesPage(){
   document.body.style.background='#070a0f';
@@ -2670,6 +2674,19 @@ function publicHomesPage(){
       </div>
     </div>`;
   trackSiteVisit();
+
+  // Bosh sahifadagi qidiruvdan kelgan filtrlarni shu oynaga qo'llaymiz.
+  const params=new URLSearchParams(window.location.search);
+  const set=(id,key)=>{
+    const v=params.get(key);
+    const el=document.getElementById(id);
+    if(v && el)el.value=v;
+  };
+  set('allHomesCity','city');
+  set('allHomesType','type');
+  set('allHomesRooms','rooms');
+  set('allHomesSort','sort');
+
   loadAllHomes();
 }
 async function loadAllHomes(){
@@ -2687,6 +2704,8 @@ function filterAllHomes(){
   const type=String(document.getElementById('allHomesType')?.value||'');
   const rooms=String(document.getElementById('allHomesRooms')?.value||'');
   const sort=String(document.getElementById('allHomesSort')?.value||'new');
+  const params=new URLSearchParams(window.location.search);
+  const priceLimit=Number(params.get('price')||0);
 
   let a=publicHomesDb.filter(x=>{
     if(q && !`${x.title} ${x.city} ${x.area} ${x.price} ${x.rooms} ${x.m2} ${x.finish}`.toLowerCase().includes(q))return false;
@@ -2697,6 +2716,7 @@ function filterAllHomes(){
       if(rooms==='5'){if(r<5)return false;}
       else if(r!==Number(rooms))return false;
     }
+    if(priceLimit && moneyCurrency(x.price)!=='USD' && moneyAmount(x.price)>priceLimit*1000000)return false;
     return true;
   });
   if(sort==='low')a.sort((x,y)=>moneyAmount(x.price)-moneyAmount(y.price));
@@ -2801,25 +2821,22 @@ async function loadPublicStats(){
 }
 
 function filterPublicAdvanced(){
-  const city=(document.getElementById('publicFilterCity')?.value||'').trim().toLowerCase();
-  const type=(document.getElementById('publicFilterType')?.value||'').trim().toLowerCase();
+  const city=(document.getElementById('publicFilterCity')?.value||'').trim();
+  const type=(document.getElementById('publicFilterType')?.value||'').trim();
   const rooms=(document.getElementById('publicFilterRooms')?.value||'').trim();
-  const price=Number(document.getElementById('publicFilterPrice')?.value||0);
+  const price=(document.getElementById('publicFilterPrice')?.value||'').trim();
 
-  const a=publicHomesDb.filter(x=>{
-    if(city && String(x.city||'').trim().toLowerCase()!==city)return false;
-    if(type && String(x.type||'').trim().toLowerCase()!==type)return false;
-    if(rooms){
-      const r=Number(x.rooms||0);
-      if(rooms==='5'){if(r<5)return false;}
-      else if(r!==Number(rooms))return false;
-    }
-    if(price && moneyCurrency(x.price)!=='USD' && moneyAmount(x.price)>price*1000000)return false;
-    return true;
-  });
+  // Bosh sahifada uylar ro'yxati ko'rsatilmaydi.
+  // Qidiruv natijasi alohida, bazadan olinadigan "Barcha uylar" oynasida chiqadi.
+  const params=new URLSearchParams();
+  params.set('homes','1');
+  if(city)params.set('city',city);
+  if(type)params.set('type',type);
+  if(rooms)params.set('rooms',rooms);
+  if(price)params.set('price',price);
 
-  const box=document.getElementById('publicHomeList');
-  if(box)box.innerHTML=publicHomeCards(a);
+  const url=window.location.pathname+'?'+params.toString();
+  window.open(url,'_blank','noopener');
 }
 
 function setPublicType(type){
