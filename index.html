@@ -31,53 +31,246 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 .login-field{width:100%;padding:14px;border:1px solid #d1d5db;border-radius:11px;margin:6px 0 10px;outline:none}.login-field:focus{border-color:#111827;box-shadow:0 0 0 3px #11182712}
 .login-btn{width:100%;padding:14px;border:0;border-radius:11px;background:#111827;color:#fff;font-weight:800;font-size:16px;margin-top:7px}.login-error{min-height:20px;color:#b91c1c;text-align:center;font-size:13px;margin-top:10px}
 
-.public-site{min-height:100vh;background:#070a0f;color:#f8fafc;padding:0 0 72px}
-.public-site-head{max-width:1280px;margin:0 auto;padding:22px 30px;display:flex;justify-content:space-between;align-items:center;gap:18px;position:relative;z-index:5}
-.public-site-logo{font-size:25px;font-weight:950;letter-spacing:-.8px}.public-site-sub{color:#8993a2;font-size:11px;margin-top:4px}
-.public-site-actions{display:flex;gap:8px;flex-wrap:wrap}.public-site-actions .btn{background:#e8ad3d;color:#080a0e;border:0;border-radius:9px;padding:10px 15px;font-weight:850}.public-site-actions .btn.light{background:transparent;color:#fff;border:1px solid #ffffff38}
-.public-hero{max-width:1280px;margin:0 auto;padding:10px 30px 28px}
-.public-hero-card{min-height:500px;border-radius:3px;overflow:hidden;position:relative;background:#121722;display:flex;align-items:center;box-shadow:0 24px 80px #0009}
-.public-hero-card:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#05070bea 0%,#05070ba8 42%,#05070b32 72%,#05070b18 100%);z-index:1}
-.public-hero-card:after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:#e6ad3b99;z-index:3}
-.public-hero-image{position:absolute;inset:0;background-position:center;background-size:cover;opacity:.78;filter:saturate(.92)}
-.public-hero-content{position:relative;z-index:2;padding:58px;max-width:720px}
-.public-eyebrow{display:inline-flex;align-items:center;gap:7px;color:#e8ad3d;font-size:11px;font-weight:900;letter-spacing:1.5px;margin-bottom:18px}
-.public-hero h1{font-size:clamp(42px,5.5vw,76px);line-height:.96;letter-spacing:-3.5px;margin:0 0 18px;max-width:680px}
-.public-hero p{font-size:16px;color:#d4d9e1;max-width:600px;line-height:1.6;margin:0 0 26px}
-.public-hero-cta{display:flex;gap:9px;flex-wrap:wrap}.public-hero-cta button{border-radius:8px;padding:13px 18px;font-weight:900;cursor:pointer}.public-hero-cta .main{background:#e8ad3d;color:#080a0e;border:1px solid #e8ad3d}.public-hero-cta .ghost{background:#ffffff0d;color:#fff;border:1px solid #ffffff45}
-.public-search-wrap{max-width:1180px;margin:-12px auto 0;padding:0 30px;position:relative;z-index:6}
-.public-search{background:#141922;border:1px solid #ffffff1b;border-radius:4px;padding:10px;display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:7px;box-shadow:0 18px 45px #0008}
-.public-search input,.public-search select{width:100%;padding:13px 13px;border:1px solid #ffffff14;border-radius:3px;background:#0d1118;color:#dfe4eb;outline:none}.public-search input::placeholder{color:#6f7886}.public-search input:focus,.public-search select:focus{border-color:#e8ad3d77}
-.public-search button{border:0;border-radius:3px;background:#e8ad3d;color:#080a0e;padding:0 20px;font-weight:950;cursor:pointer}
-.public-section{max-width:1280px;margin:42px auto 0;padding:0 30px}
-.public-section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:17px}.public-section-title{font-size:29px;font-weight:950;letter-spacing:-.9px}.public-section-sub{color:#7f8997;font-size:12px;margin-top:5px}.public-count{color:#e8ad3d;font-size:12px;font-weight:800}
-.public-homes{max-width:none;margin:0 auto}.public-home-toolbar{display:none}
-.public-home-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
-.public-home-card{border:1px solid #ffffff12;border-radius:3px;overflow:hidden;background:#11151d;box-shadow:0 12px 35px #0005;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}.public-home-card:hover{transform:translateY(-3px);border-color:#e8ad3d55;box-shadow:0 18px 45px #0008}
-.public-home-pic{height:205px;background:#1a202b;display:flex;align-items:center;justify-content:center;font-size:48px;overflow:hidden;position:relative}.public-home-pic:after{content:"XORAZMLIDER";position:absolute;left:10px;top:10px;background:#070a0ed9;color:#e8ad3d;border:1px solid #e8ad3d44;padding:5px 7px;border-radius:3px;font-size:8px;font-weight:950;letter-spacing:1px}
-.public-home-pic img{width:100%;height:100%;object-fit:cover;transition:transform .3s ease}.public-home-card:hover .public-home-pic img{transform:scale(1.035)
+
+/* ===== XORAZMLIDER PUBLIC PREMIUM DESIGN ===== */
+.public-site{
+  min-height:100vh;
+  background:#05080d;
+  color:#fff;
+  padding:0;
+  overflow:hidden;
 }
-.public-home-body{padding:14px}.public-home-price{font-size:19px;font-weight:950;margin-bottom:5px;color:#fff}.public-home-title{font-weight:850;font-size:14px;color:#f8fafc}.public-home-meta{color:#9aa4b2;font-size:12px;margin-top:7px;line-height:1.6}.public-home-btn{width:100%;margin-top:12px;padding:10px;border:1px solid #ffffff1b;border-radius:3px;background:#e8ad3d;color:#080a0e;font-weight:900;cursor:pointer}.public-view{font-size:10px;color:#697382;margin-top:7px}
-.public-filter-chips{display:flex;gap:7px;flex-wrap:wrap;margin:-3px 0 15px}.public-filter-chip{border:1px solid #ffffff18;background:#11151d;color:#9da6b3;border-radius:3px;padding:7px 10px;font-size:11px;font-weight:800;cursor:pointer}.public-filter-chip.on{background:#e8ad3d;color:#080a0e;border-color:#e8ad3d}
-.public-stats{max-width:1180px;margin:28px auto 0;padding:0 30px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#ffffff12}.public-stat{background:#0b0f15;padding:18px 20px}.public-stat b{display:block;color:#e8ad3d;font-size:24px;line-height:1}.public-stat span{display:block;color:#8f99a7;font-size:10px;margin-top:7px;text-transform:uppercase;letter-spacing:.8px}
-.public-categories{max-width:1180px;margin:30px auto 0;padding:0 30px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.public-category{background:#11151d;border:1px solid #ffffff12;border-radius:3px;padding:18px;text-align:center}.public-category .ico{font-size:24px}.public-category b{display:block;margin-top:8px;font-size:13px}.public-category span{display:block;color:#697382;font-size:10px;margin-top:4px}
-.public-contact{max-width:1280px;margin:38px auto 0;padding:22px 30px;border-top:1px solid #ffffff12;text-align:center;font-size:12px;color:#727d8b}.public-contact a{font-weight:900;color:#fff;text-decoration:none}.public-bottom-cta{display:none}
-@media(max-width:900px){
-  .public-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .public-hero-card{min-height:440px}.public-hero-content{padding:38px}.public-hero h1{font-size:52px}
-  .public-search{grid-template-columns:1fr 1fr}.public-search button{min-height:46px}
-  .public-stats{grid-template-columns:repeat(2,1fr)}.public-categories{grid-template-columns:repeat(2,1fr)}
+.public-site *{box-sizing:border-box}
+.public-site-head{
+  position:absolute;
+  top:0;left:0;right:0;
+  z-index:10;
+  max-width:none;
+  margin:0;
+  padding:18px 4.5%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+  background:linear-gradient(180deg,rgba(3,7,12,.92),rgba(3,7,12,.35),transparent);
 }
-@media(max-width:600px){
-  .public-site{padding-bottom:82px}.public-site-head{padding:14px 15px}.public-site-logo{font-size:19px}.public-site-sub{font-size:9px}.public-site-actions{display:none}
-  .public-hero{padding:7px 15px 18px}.public-hero-card{min-height:500px;border-radius:2px}.public-hero-content{padding:26px 21px}.public-hero h1{font-size:41px;letter-spacing:-2px}.public-hero p{font-size:13px;line-height:1.5}.public-eyebrow{font-size:9px;letter-spacing:1px}
-  .public-search-wrap{padding:0 15px}.public-search{grid-template-columns:1fr;gap:7px;padding:8px}.public-search button{min-height:45px}
-  .public-stats{margin-top:18px;padding:0 15px;grid-template-columns:repeat(2,1fr)}.public-stat{padding:15px 12px}.public-stat b{font-size:21px}
-  .public-section{margin-top:30px;padding:0 15px}.public-section-title{font-size:24px}.public-home-grid{grid-template-columns:1fr;gap:12px}.public-home-pic{height:225px}.public-home-body{padding:15px}
-  .public-categories{margin-top:22px;padding:0 15px;grid-template-columns:repeat(2,1fr)}.public-category{padding:15px 8px}
-  .public-bottom-cta{display:grid;grid-template-columns:1fr 1fr;position:fixed;left:9px;right:9px;bottom:9px;z-index:100;background:#0d1119ee;border:1px solid #ffffff18;backdrop-filter:blur(14px);border-radius:11px;padding:6px;gap:6px;box-shadow:0 12px 35px #0009}
-  .public-bottom-cta button{border:0;border-radius:7px;padding:11px 7px;font-weight:900}.public-bottom-cta .buy{background:#e8ad3d;color:#080a0e}.public-bottom-cta .sell{background:#171c25;color:#fff}
+.public-brand{
+  display:flex;align-items:center;gap:11px;
+  color:#fff;text-decoration:none;
 }
+.public-brand img{
+  width:48px;height:48px;object-fit:contain;
+}
+.public-brand-text{line-height:1.02}
+.public-brand-name{font-size:20px;font-weight:900;letter-spacing:.2px}
+.public-brand-name span{color:#f5b72c}
+.public-brand-sub{font-size:9px;letter-spacing:1.8px;color:#d7dbe1;margin-top:4px}
+.public-main-nav{
+  display:flex;align-items:center;gap:28px;
+}
+.public-main-nav a{
+  color:#fff;text-decoration:none;font-size:12px;font-weight:700;
+  text-transform:uppercase;transition:.2s;opacity:.92;
+}
+.public-main-nav a:hover{color:#f5b72c}
+.public-ad-btn{
+  color:#f5b72c!important;border:1px solid #f5b72c;border-radius:7px;
+  padding:11px 18px!important;
+}
+.public-menu-btn{display:none;background:none;border:0;color:#fff;font-size:27px}
+
+.public-hero{
+  position:relative;
+  min-height:760px;
+  display:flex;
+  align-items:center;
+  background-image:
+    linear-gradient(90deg,rgba(3,6,11,.97) 0%,rgba(3,6,11,.78) 30%,rgba(3,6,11,.18) 68%,rgba(3,6,11,.42) 100%),
+    url("hero-bg komp.PNG");
+  background-size:cover;
+  background-position:center;
+}
+.public-hero-inner{
+  width:min(1250px,91%);
+  margin:0 auto;
+  padding-top:95px;
+}
+.public-hero-copy{max-width:520px}
+.public-kicker{
+  color:#f5b72c;font-size:12px;font-weight:800;letter-spacing:2.2px;
+  text-transform:uppercase;margin-bottom:16px;
+}
+.public-hero h1{
+  margin:0;font-size:clamp(42px,5.2vw,70px);line-height:1.03;
+  font-weight:900;letter-spacing:-1.8px;
+}
+.public-hero h1 span{color:#f5b72c}
+.public-hero p{
+  margin:18px 0 24px;color:#d5d9df;font-size:15px;line-height:1.65;
+  max-width:450px;
+}
+.public-choice{
+  display:flex;gap:10px;flex-wrap:wrap;
+}
+.public-choice button{
+  border-radius:8px;padding:14px 24px;font-weight:900;font-size:13px;
+  cursor:pointer;
+}
+.public-choice-buy{background:#f5b72c;border:1px solid #f5b72c;color:#111}
+.public-choice-sell{background:rgba(0,0,0,.25);border:1px solid #d9dde3;color:#fff}
+
+.public-search-wrap{
+  position:absolute;left:50%;bottom:38px;transform:translateX(-50%);
+  width:min(1060px,90%);
+  background:rgba(10,13,18,.9);border:1px solid #343a43;border-radius:12px;
+  padding:15px;backdrop-filter:blur(12px);box-shadow:0 20px 60px #0008;
+}
+.public-search-grid{
+  display:grid;grid-template-columns:1.1fr 1.1fr .85fr 1fr auto;gap:10px;
+}
+.public-filter{
+  min-width:0;
+}
+.public-filter label{
+  display:block;color:#aeb5bf;font-size:9px;font-weight:800;
+  text-transform:uppercase;letter-spacing:.8px;margin:0 0 6px 2px;
+}
+.public-filter select,.public-filter input{
+  width:100%;height:45px;background:#11151b;border:1px solid #3b414a;
+  border-radius:7px;color:#fff;padding:0 12px;outline:none;font-size:12px;
+}
+.public-filter select:focus,.public-filter input:focus{border-color:#f5b72c}
+.public-search-btn{
+  align-self:end;height:45px;border:0;border-radius:7px;padding:0 24px;
+  background:#f5b72c;color:#111;font-weight:900;cursor:pointer;
+}
+
+.public-section{
+  background:#070a0f;padding:54px 4.5%;
+}
+.public-section-inner{width:min(1250px,100%);margin:0 auto}
+.public-stats{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:-2px;
+}
+.public-stat{
+  border:1px solid #262c34;background:#0d1117;border-radius:12px;padding:18px;
+  display:flex;align-items:center;gap:13px;
+}
+.public-stat-icon{
+  width:42px;height:42px;border:1px solid #80651f;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;color:#f5b72c;font-size:20px;
+}
+.public-stat-num{font-size:22px;font-weight:900;color:#f5b72c}
+.public-stat-label{font-size:11px;color:#c6cbd2;margin-top:3px}
+
+.public-section-head{
+  display:flex;justify-content:space-between;align-items:end;gap:15px;margin:48px 0 18px;
+}
+.public-section-head h2{margin:0;font-size:22px}
+.public-section-head a{color:#f5b72c;font-size:11px;font-weight:800;text-decoration:none}
+
+.public-category-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
+}
+.public-category{
+  min-height:125px;border:1px solid #292f37;background:#0b0f14;border-radius:11px;
+  color:#fff;cursor:pointer;padding:22px 15px;text-align:center;
+}
+.public-category-icon{font-size:28px;color:#f5b72c;margin-bottom:12px}
+.public-category-title{font-size:13px;font-weight:800}
+.public-category-count{font-size:10px;color:#8f969f;margin-top:4px}
+
+.public-home-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:15px;
+}
+.public-home-card{
+  border:1px solid #2a3038;border-radius:12px;overflow:hidden;background:#0d1117;
+  box-shadow:none;color:#fff;
+}
+.public-home-pic{height:190px;background:#11161d;position:relative;overflow:hidden}
+.public-home-pic img{width:100%;height:100%;object-fit:cover;display:block}
+.public-home-body{padding:14px}
+.public-home-price{font-size:18px;font-weight:900;color:#f5b72c;margin-bottom:7px}
+.public-home-title{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.public-home-meta{color:#aeb5bf;font-size:11px;margin-top:7px;line-height:1.65}
+.public-home-btn{
+  width:100%;margin-top:12px;padding:10px;border:1px solid #f5b72c;border-radius:7px;
+  background:#f5b72c;color:#111;font-weight:900;font-size:11px;cursor:pointer;
+}
+.public-view{font-size:10px;color:#727a84;margin-top:7px}
+.public-contact{margin-top:28px;text-align:center;font-size:13px;color:#9da4ad}
+.public-contact a{font-weight:900;color:#f5b72c;text-decoration:none}
+
+.public-footer{
+  border-top:1px solid #242a31;background:#05080d;color:#7e8792;
+  padding:28px 4.5%;font-size:11px;text-align:center;
+}
+
+.public-form-overlay{
+  min-height:100vh;background:#070a0f;padding:100px 18px 30px;
+}
+.public-form-box{
+  width:min(720px,100%);margin:0 auto;background:#0d1117;border:1px solid #2a3038;
+  border-radius:16px;padding:24px;color:#fff;
+}
+.public-form-box h2{margin-top:0}
+.public-form-box .sub{color:#9da4ad}
+.public-field label{color:#aeb5bf}
+.public-field input,.public-field select,.public-field textarea{
+  background:#11161d!important;color:#fff!important;border-color:#343a43!important;
+}
+.public-submit{background:#f5b72c!important;color:#111!important;border:0!important;font-weight:900}
+.public-submit.back{background:#151a21!important;color:#fff!important;border:1px solid #343a43!important}
+.public-note{color:#7f8790}
+.public-success{color:#fff}
+.public-success h2{color:#f5b72c}
+
+@media(max-width:1050px){
+  .public-main-nav{gap:15px}
+  .public-search-grid{grid-template-columns:repeat(2,1fr)}
+  .public-search-btn{width:100%}
+  .public-home-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:800px){
+  .public-site-head{padding:12px 16px}
+  .public-main-nav{display:none}
+  .public-menu-btn{display:block}
+  .public-brand img{width:42px;height:42px}
+  .public-brand-name{font-size:17px}
+  .public-hero{
+    min-height:790px;
+    background-image:
+      linear-gradient(180deg,rgba(3,6,11,.42) 0%,rgba(3,6,11,.5) 25%,rgba(3,6,11,.94) 66%,#070a0f 100%),
+      url("hero-bg tel.PNG");
+    background-position:center top;
+  }
+  .public-hero-inner{width:calc(100% - 32px);padding-top:105px;display:flex;align-items:flex-end;min-height:690px}
+  .public-hero-copy{max-width:100%}
+  .public-hero h1{font-size:39px;letter-spacing:-1px}
+  .public-hero p{font-size:13px;line-height:1.5;margin:13px 0 18px}
+  .public-choice button{flex:1;padding:13px 10px}
+  .public-search-wrap{
+    position:relative;left:auto;bottom:auto;transform:none;width:calc(100% - 24px);
+    margin:-74px auto 0;padding:12px;z-index:4;
+  }
+  .public-search-grid{grid-template-columns:1fr 1fr}
+  .public-section{padding:32px 12px}
+  .public-stats{grid-template-columns:1fr 1fr}
+  .public-stat{padding:12px}
+  .public-stat-num{font-size:17px}
+  .public-stat-label{font-size:9px}
+  .public-category-grid{grid-template-columns:1fr 1fr}
+  .public-home-grid{grid-template-columns:1fr 1fr}
+  .public-home-pic{height:150px}
+}
+@media(max-width:520px){
+  .public-search-grid{grid-template-columns:1fr}
+  .public-search-btn{grid-column:auto}
+  .public-home-grid{grid-template-columns:1fr}
+  .public-home-pic{height:190px}
+  .public-section-head h2{font-size:19px}
+}
+
 .inquiry-panel{margin-top:10px;padding:10px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa}
 .inquiry-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .inquiry-list{margin-top:8px;display:grid;gap:7px}
@@ -2011,82 +2204,171 @@ async function publicHome(){
   document.querySelector('.app').style.display='none';
   document.querySelector('.mobile-nav').style.display='none';
   document.getElementById('loginScreen').style.display='none';
+
   const app=document.getElementById('publicApp');
   app.style.display='block';
-  app.innerHTML=`<div class="public-site">
+  app.innerHTML=`
+  <div class="public-site">
     <header class="public-site-head">
-      <div><div class="public-site-logo">⌂ XORAZMLIDER</div><div class="public-site-sub">Xorazmdagi uy-joylar platformasi</div></div>
-      <div class="public-site-actions">
-        <button class="btn light" onclick="showPublicForm('sell')">Uyimni sotaman</button>
-        <button class="btn" onclick="showPublicForm('buy')">Uy olaman</button>
-      </div>
+      <a class="public-brand" href="#" onclick="publicHome();return false;">
+        <img src="logo-tel.PNG" alt="XORAZMLIDER">
+        <div class="public-brand-text">
+          <div class="public-brand-name">XORAZM<span>LIDER</span></div>
+          <div class="public-brand-sub">UY-JOY PLATFORMASI</div>
+        </div>
+      </a>
+      <nav class="public-main-nav">
+        <a href="#home">Bosh sahifa</a>
+        <a href="#homes">Uylar</a>
+        <a href="#new">Yangi uylar</a>
+        <a href="#rent">Ijara</a>
+        <a href="#services">Xizmatlar</a>
+        <a href="#realtors">Rieltorlar</a>
+        <a href="#contacts">Kontaktlar</a>
+        <a class="public-ad-btn" href="#" onclick="showPublicForm('sell');return false;">E’LON BERISH</a>
+      </nav>
+      <button class="public-menu-btn" onclick="showPublicForm('buy')" aria-label="Menyu">☰</button>
     </header>
-    <section class="public-hero">
-      <div class="public-hero-card">
-        <div id="publicHeroImage" class="public-hero-image"></div>
-        <div class="public-hero-content">
-          <div class="public-eyebrow">✦ XORAZM UYLAR • ISHONCHLI TANLOV</div>
-          <h1>Xorazmda o‘zingizga mos uyni toping.</h1>
-          <p>Ishonchli rieltorlar, saralangan obyektlar va qulay qidiruv. Kerakli uy-joyni hudud, xona, maydon va narx bo‘yicha bir necha soniyada toping.</p>
-          <div class="public-hero-cta">
-            <button class="main" onclick="document.getElementById('publicSearchInput').focus()">Uy olaman →</button>
-            <button class="ghost" onclick="showPublicForm('sell')">Uyimni sotaman →</button>
+
+    <section class="public-hero" id="home">
+      <div class="public-hero-inner">
+        <div class="public-hero-copy">
+          <div class="public-kicker">Xorazmdagi uy-joylar platformasi</div>
+          <h1>Xorazmda<br><span>o‘zingizga mos</span><br>uyni toping</h1>
+          <p>Ishonchli rieltorlar. Yaxshi narxlar. Tezkor va qulay xizmat.</p>
+          <div class="public-choice">
+            <button class="public-choice-buy" onclick="showPublicForm('buy')">🔑 UY OLAMAN</button>
+            <button class="public-choice-sell" onclick="showPublicForm('sell')">🏠 UYIMNI SOTAMAN</button>
           </div>
         </div>
       </div>
-    </section>
-    <div class="public-search-wrap">
-      <div class="public-search">
-        <input id="publicSearchInput" placeholder="🔎  Uy, hudud yoki narx bo‘yicha qidiring..." oninput="filterPublicHomes(this.value)">
-        <select id="publicRegionFilter" onchange="filterPublicHomes()">
-          <option value="">Hudud — Barchasi</option>
-          ${XORAZM_HUDUDLARI.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('')}
-        </select>
-        <select id="publicTypeFilter" onchange="filterPublicHomes()">
-          <option value="">Obyekt turi — Barchasi</option>
-          <option value="Hovli joy">Hovli joy</option>
-          <option value="Kvartira">Kvartira</option>
-          <option value="Noturar bino">Noturar bino</option>
-          <option value="Yer">Yer</option>
-        </select>
-        <button onclick="filterPublicHomes()">QIDIRISH</button>
+
+      <div class="public-search-wrap" id="homes">
+        <div class="public-search-grid">
+          <div class="public-filter">
+            <label>Hudud</label>
+            <select id="publicFilterCity" onchange="filterPublicAdvanced()">
+              <option value="">Barchasi</option>
+              ${XORAZM_HUDUDLARI.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="public-filter">
+            <label>Obyekt turi</label>
+            <select id="publicFilterType" onchange="filterPublicAdvanced()">
+              <option value="">Barchasi</option>
+              <option value="Hovli joy">Hovli joy</option>
+              <option value="Kvartira">Kvartira</option>
+              <option value="Yer">Yer</option>
+              <option value="Noturar bino">Noturar bino</option>
+            </select>
+          </div>
+          <div class="public-filter">
+            <label>Xona soni</label>
+            <select id="publicFilterRooms" onchange="filterPublicAdvanced()">
+              <option value="">Barchasi</option>
+              <option value="1">1 xona</option>
+              <option value="2">2 xona</option>
+              <option value="3">3 xona</option>
+              <option value="4">4 xona</option>
+              <option value="5">5+ xona</option>
+            </select>
+          </div>
+          <div class="public-filter">
+            <label>Narx</label>
+            <select id="publicFilterPrice" onchange="filterPublicAdvanced()">
+              <option value="">Istalgan narx</option>
+              <option value="300">300 mln gacha</option>
+              <option value="500">500 mln gacha</option>
+              <option value="800">800 mln gacha</option>
+              <option value="1500">1.5 mlrd gacha</option>
+            </select>
+          </div>
+          <button class="public-search-btn" onclick="filterPublicAdvanced()">⌕ QIDIRISH</button>
+        </div>
       </div>
-    </div>
-    <section class="public-stats">
-      <div class="public-stat"><b id="publicStatHomes">0+</b><span>Faol e'lonlar</span></div>
-      <div class="public-stat"><b id="publicStatBuyers">0+</b><span>Mijozlar</span></div>
-      <div class="public-stat"><b>50+</b><span>Professional rieltorlar</span></div>
-      <div class="public-stat"><b>24/7</b><span>Yordam va qo‘llab-quvvatlash</span></div>
     </section>
-    <section class="public-section">
-      <div class="public-section-head">
-        <div><div class="public-section-title">So‘nggi qo‘shilgan uylar</div><div class="public-section-sub">Xorazmdagi yangi takliflar</div></div>
-        <div id="publicHomeCount" class="public-count"></div>
+
+    <section class="public-section" id="services">
+      <div class="public-section-inner">
+        <div class="public-stats">
+          <div class="public-stat"><div class="public-stat-icon">🏢</div><div><div class="public-stat-num">1000+</div><div class="public-stat-label">Faol e’lonlar</div></div></div>
+          <div class="public-stat"><div class="public-stat-icon">♧</div><div><div class="public-stat-num">500+</div><div class="public-stat-label">Mavjud mijozlar</div></div></div>
+          <div class="public-stat"><div class="public-stat-icon">♙</div><div><div class="public-stat-num">50+</div><div class="public-stat-label">Professional rieltorlar</div></div></div>
+          <div class="public-stat"><div class="public-stat-icon">◷</div><div><div class="public-stat-num">24/7</div><div class="public-stat-label">Yordam va qo‘llab-quvvatlash</div></div></div>
+        </div>
+
+        <div class="public-section-head">
+          <h2>KATEGORIYALAR</h2>
+          <a href="#new" onclick="document.getElementById('new').scrollIntoView({behavior:'smooth'});return false;">BARCHASI KO‘RISH →</a>
+        </div>
+        <div class="public-category-grid">
+          <button class="public-category" onclick="setPublicType('Kvartira')"><div class="public-category-icon">▦</div><div class="public-category-title">Kvartiralar</div><div class="public-category-count">Kvartira</div></button>
+          <button class="public-category" onclick="setPublicType('Hovli joy')"><div class="public-category-icon">⌂</div><div class="public-category-title">Hovli joylar</div><div class="public-category-count">Hovli joy</div></button>
+          <button class="public-category" onclick="setPublicType('Yer')"><div class="public-category-icon">⌖</div><div class="public-category-title">Yer uchastkalari</div><div class="public-category-count">Yer</div></button>
+          <button class="public-category" onclick="setPublicType('Noturar bino')"><div class="public-category-icon">▤</div><div class="public-category-title">Noturar bino</div><div class="public-category-count">Noturar bino</div></button>
+        </div>
+
+        <div class="public-section-head" id="new">
+          <h2>YANGI QO‘SHILGAN UYLAR</h2>
+          <a href="#new" onclick="clearPublicFilters();return false;">BARCHASINI KO‘RISH →</a>
+        </div>
+        <div class="public-homes">
+          <div id="publicHomeList" class="public-home-grid"><div class="empty">Uylar yuklanmoqda...</div></div>
+        </div>
+
+        <div class="public-contact" id="contacts">
+          Murojaat uchun: <a href="tel:+998999625454">📞 +998 99 962 54 54</a>
+        </div>
       </div>
-      <div class="public-filter-chips">
-        <button class="public-filter-chip on" onclick="setPublicType('')">Barchasi</button>
-        <button class="public-filter-chip" onclick="setPublicType('Kvartira')">Kvartiralar</button>
-        <button class="public-filter-chip" onclick="setPublicType('Hovli joy')">Hovli joylar</button>
-        <button class="public-filter-chip" onclick="setPublicType('Yer')">Yer uchastkalari</button>
-        <button class="public-filter-chip" onclick="setPublicType('Noturar bino')">Noturar bino</button>
-      </div>
-      <div class="public-homes"><div id="publicHomeList" class="public-home-grid"><div class="empty">Uylar yuklanmoqda...</div></div></div>
     </section>
-    <section class="public-categories">
-      <div class="public-category"><div class="ico">🏢</div><b>Kvartiralar</b><span>Xorazm bo‘yicha</span></div>
-      <div class="public-category"><div class="ico">🏠</div><b>Hovli joylar</b><span>Tayyor uylar</span></div>
-      <div class="public-category"><div class="ico">▱</div><b>Yer uchastkalari</b><span>Joy va yerlar</span></div>
-      <div class="public-category"><div class="ico">🏬</div><b>Noturar bino</b><span>Tijorat obyektlari</span></div>
-    </section>
-    <div class="public-contact">Murojaat uchun: <a href="tel:+998999625454">📞 +998 99 962 54 54</a></div>
-    <div class="public-bottom-cta">
-      <button class="buy" onclick="showPublicForm('buy')">🔑 Uy olaman</button>
-      <button class="sell" onclick="showPublicForm('sell')">🏠 Uyimni sotaman</button>
-    </div>
-    <div id="publicChoice" style="display:none"></div><div id="publicForm" class="public-form"></div><div id="publicSuccess" class="public-success"></div>
+
+    <footer class="public-footer">
+      © ${new Date().getFullYear()} XORAZMLIDER — Xorazm uy-joy platformasi
+    </footer>
+
+    <div id="publicChoice" style="display:none"></div>
+    <div id="publicForm" class="public-form"></div>
+    <div id="publicSuccess" class="public-success"></div>
   </div>`;
+
   trackSiteVisit();
   await loadPublicHomes();
+}
+
+function filterPublicAdvanced(){
+  const city=(document.getElementById('publicFilterCity')?.value||'').trim().toLowerCase();
+  const type=(document.getElementById('publicFilterType')?.value||'').trim().toLowerCase();
+  const rooms=(document.getElementById('publicFilterRooms')?.value||'').trim();
+  const price=Number(document.getElementById('publicFilterPrice')?.value||0);
+
+  const a=publicHomesDb.filter(x=>{
+    if(city && String(x.city||'').trim().toLowerCase()!==city)return false;
+    if(type && String(x.type||'').trim().toLowerCase()!==type)return false;
+    if(rooms){
+      const r=Number(x.rooms||0);
+      if(rooms==='5'){if(r<5)return false;}
+      else if(r!==Number(rooms))return false;
+    }
+    if(price && moneyCurrency(x.price)!=='USD' && moneyAmount(x.price)>price*1000000)return false;
+    return true;
+  });
+
+  const box=document.getElementById('publicHomeList');
+  if(box)box.innerHTML=publicHomeCards(a);
+}
+
+function setPublicType(type){
+  const el=document.getElementById('publicFilterType');
+  if(el)el.value=type;
+  document.getElementById('homes')?.scrollIntoView({behavior:'smooth',block:'center'});
+  filterPublicAdvanced();
+}
+
+function clearPublicFilters(){
+  ['publicFilterCity','publicFilterType','publicFilterRooms','publicFilterPrice'].forEach(id=>{
+    const e=document.getElementById(id);if(e)e.value='';
+  });
+  filterPublicAdvanced();
 }
 
 
@@ -2099,7 +2381,7 @@ function publicImages(note){
 function publicHomeCards(a){
   return a.map(x=>{
     const imgs=publicImages(x.images_text);
-    const cover=imgs[0] ? `<img src="${esc(imgs[0])}" onerror="this.parentElement.innerHTML='🏠'">` : '🏠';
+    const cover=imgs[0] ? `<img src="${esc(imgs[0])}" onerror="this.parentElement.innerHTML='🏠'">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:52px">🏠</div>';
     return `<div class="public-home-card">
       <div class="public-home-pic">${cover}</div>
       <div class="public-home-body">
@@ -2121,22 +2403,6 @@ async function loadPublicHomes(){
   }
   publicHomesDb=data||[];
   document.getElementById('publicHomeList').innerHTML=publicHomeCards(publicHomesDb);
-  const statHomes=document.getElementById('publicStatHomes');
-  if(statHomes)statHomes.textContent=`${publicHomesDb.length}+`;
-  const statBuyers=document.getElementById('publicStatBuyers');
-  if(statBuyers){
-    try{
-      const {count}=await client.from('buyers').select('id',{count:'exact',head:true});
-      statBuyers.textContent=`${Number(count||0)}+`;
-    }catch(_){statBuyers.textContent='500+';}
-  }
-  const count=document.getElementById('publicHomeCount');
-  if(count)count.textContent=`${publicHomesDb.length} ta taklif`;
-  const hero=document.getElementById('publicHeroImage');
-  if(hero){
-    const firstImg=publicHomesDb.map(x=>publicImages(x.images_text)[0]).find(Boolean);
-    if(firstImg)hero.style.backgroundImage=`url("${String(firstImg).replace(/"/g,'&quot;')}")`;
-  }
   const sharedId=new URLSearchParams(window.location.search).get('home');
   if(sharedId){
     const sharedHome=publicHomesDb.find(x=>String(x.id)===String(sharedId));
@@ -2144,28 +2410,9 @@ async function loadPublicHomes(){
   }
 }
 function filterPublicHomes(q){
-  const input=document.getElementById('publicSearchInput');
-  const region=document.getElementById('publicRegionFilter');
-  const type=document.getElementById('publicTypeFilter');
-  if(q===undefined) q=input?.value||'';
   q=String(q||'').toLowerCase().trim();
-  const rv=String(region?.value||'').toLowerCase().trim();
-  const tv=String(type?.value||'').toLowerCase().trim();
-  const a=publicHomesDb.filter(x=>{
-    const hay=`${x.title||''} ${x.city||''} ${x.area||''} ${x.price||''} ${x.rooms||''} ${x.m2||''} ${x.finish||''}`.toLowerCase();
-    const regionOk=!rv||String(x.city||'').toLowerCase()===rv;
-    const typeOk=!tv||String(x.type||'').toLowerCase()===tv;
-    return hay.includes(q)&&regionOk&&typeOk;
-  });
+  const a=publicHomesDb.filter(x=>`${x.title} ${x.city} ${x.area} ${x.price} ${x.rooms} ${x.m2} ${x.finish}`.toLowerCase().includes(q));
   document.getElementById('publicHomeList').innerHTML=publicHomeCards(a);
-  const c=document.getElementById('publicHomeCount');
-  if(c)c.textContent=`${a.length} ta taklif`;
-}
-function setPublicType(type){
-  const sel=document.getElementById('publicTypeFilter');
-  if(sel)sel.value=type;
-  document.querySelectorAll('.public-filter-chip').forEach(b=>b.classList.toggle('on',String(b.textContent||'').toLowerCase().includes(type?type.toLowerCase():'barchasi')));
-  filterPublicHomes();
 }
 async function showPublicHome(id){
   const x=publicHomesDb.find(a=>a.id===id);
