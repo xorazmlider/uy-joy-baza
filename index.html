@@ -537,6 +537,32 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
   background:#11171e;
 }
 
+
+/* SERVICE FORM: faqat sotuvchi/oluvchi ro'yxati ko'rinsin */
+body.public-service-page .public-site-head,
+body.public-service-page .public-hero,
+body.public-service-page .public-section,
+body.public-service-page .public-footer,
+body.public-service-page .public-contact,
+body.public-service-page .contact-section,
+body.public-service-page .social-links,
+body.public-service-page .public-social,
+body.public-service-page footer,
+body.public-service-page .public-stats,
+body.public-service-page .public-categories {
+  display:none !important;
+}
+body.public-service-page {
+  min-height:100vh !important;
+  padding:24px 18px 40px !important;
+  display:block !important;
+}
+body.public-service-page #publicForm,
+body.public-service-page #publicSuccess {
+  display:block !important;
+  width:min(900px,100%) !important;
+  margin:0 auto !important;
+}
 </style>
   <link rel="apple-touch-icon" href="logo-tel.PNG">
 <link rel="icon" type="image/png" href="logo-tel.PNG">
@@ -2028,7 +2054,40 @@ function contractHtml(){
     </div>
   </section>
   ${appendix}
-  </body></html>`;
+  
+<script>
+/* Sotuvchi/oluvchi formasida aloqa va ijtimoiy bloklarni olib tashlash */
+(function(){
+  function cleanServicePage(){
+    if(!document.body.classList.contains('public-service-page')) return;
+    const selectors = [
+      '.public-contact',
+      '.contact-section',
+      '.social-links',
+      '.public-social',
+      '.public-footer',
+      'footer',
+      '[id*="contact" i]',
+      '[id*="social" i]'
+    ];
+    selectors.forEach(sel=>{
+      document.querySelectorAll(sel).forEach(el=>{
+        // Formning o'zidagi input/contact maydoniga tegmasin.
+        if(el.id === 'publicForm' || el.closest('#publicForm')) return;
+        el.remove();
+      });
+    });
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', cleanServicePage);
+  }else{
+    cleanServicePage();
+  }
+  setTimeout(cleanServicePage,150);
+})();
+</script>
+
+</body></html>`;
 }
 
 function encodeContractQRPayload(obj){
