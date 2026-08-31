@@ -2846,6 +2846,16 @@ async function trackSiteVisit(){
   try{await client.rpc('track_site_visit',{p_visitor_key:visitorKey()});}catch(e){console.warn('Statistika:',e.message||e);}
 }
 
+
+function goBackFromPublicForm(){
+  const url=new URL(window.location.href);
+  url.searchParams.delete('service');
+  url.searchParams.delete('form');
+  url.searchParams.delete('admin');
+  url.searchParams.delete('homes');
+  window.location.href=url.pathname+(url.search?url.search:'');
+}
+
 function showPublicForm(type){
   document.querySelector('.public-site')?.classList.add('public-service-page');
   document.getElementById('publicChoice').style.display='none';
@@ -2856,7 +2866,7 @@ function showPublicForm(type){
 
   if(type==='sell'){
     box.innerHTML=`
-      <button class="public-submit back" onclick="publicHome()">← Orqaga</button>
+      <button class="public-submit back" onclick="publicHome()" onclick="goBackFromPublicForm();return false;">← Orqaga</button>
       <h2>🏠 Uyimni sotmoqchiman</h2>
       <p class="sub">Uy va aloqa ma’lumotlarini qoldiring.</p>
       <div class="public-grid">
@@ -2882,7 +2892,7 @@ function showPublicForm(type){
     `;
   }else{
     box.innerHTML=`
-      <button class="public-submit back" onclick="publicHome()">← Orqaga</button>
+      <button class="public-submit back" onclick="publicHome()" onclick="goBackFromPublicForm();return false;">← Orqaga</button>
       <h2>🔑 Uy olmoqchiman</h2>
       <p class="sub">Sizga kerak bo‘lgan uy haqida ma’lumot qoldiring.</p>
       <div class="public-grid">
