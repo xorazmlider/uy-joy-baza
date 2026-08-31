@@ -1011,20 +1011,59 @@ function filterBuyers(q){
 function openContractForBuyer(buyerId){
   const b=db.buyers.find(x=>Number(x.id)===Number(buyerId));
   if(!b)return;
-  // Xaridor qaysi uy bo'yicha murojaat qilgan bo'lsa, avval o'sha uyga bog'laymiz.
-  // Agar CRM_BUYER metada bo'lmasa, oxirgi bitimdan uy ID sini olamiz.
+
+  // Xaridor uchun obyektni avtomatik aniqlaymiz. Qo'lda obyekt tanlash oynasi
+  // endi Olib berish shartnomasida chiqmaydi.
   const meta=crmMeta(b.note,'CRM_BUYER');
   let homeId=Number(meta.home_id||0);
+
+  // 1) Xaridor metadata
+  if(homeId && !db.homes.some(h=>Number(h.id)===homeId)) homeId=0;
+
+  // 2) Oxirgi bitim
   if(!homeId){
-    const deals=(db.deals||[]).filter(d=>Number(d.buyer_id)===Number(buyerId) && Number(d.home_id)>0);
-    if(deals.length) homeId=Number(deals[deals.length-1].home_id);
+    const deals=(db.deals||[])
+      .filter(d=>Number(d.buyer_id)===Number(buyerId)&&Number(d.home_id)>0)
+      .sort((a,z)=>String(z.created_at||'').localeCompare(String(a.created_at||'')));
+    if(deals.length) homeId=Number(deals[0].home_id);
   }
+
+  // 3) Shu telefon bilan bog'langan uy murojaati
   if(!homeId){
     const phone=String(b.phone||'').replace(/\D/g,'');
-    const inquiries=(db.inquiries||[]).filter(q=>phone && String(q.phone||'').replace(/\D/g,'')===phone && Number(q.home_id)>0);
-    if(inquiries.length) homeId=Number(inquiries[inquiries.length-1].home_id);
+    const inquiries=(db.inquiries||[])
+      .filter(q=>phone && String(q.phone||'').replace(/\D/g,'')===phone && Number(q.home_id)>0)
+      .sort((a,z)=>String(z.created_at||'').localeCompare(String(a.created_at||'')));
+    if(inquiries.length) homeId=Number(inquiries[0].home_id);
   }
-  openContract(homeId||null,'buy',buyerId);
+
+  // 4) Eski xaridorlarda metadata/murojaat bo'lmasa, aniq mos bitta obyektni
+  // avtomatik topamiz. Bir nechta bo'lsa taxmin qilib tanlamaymiz.
+  if(!homeId){
+    const city=String(b.city||'').trim().toLowerCase();
+    const area=String(b.area||'').trim().toLowerCase();
+    const rooms=Number(b.rooms||0);
+    const budget=moneyAmount(b.budget);
+    const type=String(b.type||'').trim().toLowerCase();
+    const candidates=(db.homes||[]).filter(h=>{
+      if(h.status==='Sotildi')return false;
+      if(city && String(h.city||'').trim().toLowerCase()!==city)return false;
+      if(area && !String(h.area||'').trim().toLowerCase().includes(area))return false;
+      if(rooms && Number(h.rooms||0)!==rooms)return false;
+      if(budget && moneyAmount(h.price)!==budget)return false;
+      if(type && type!=="farqi yo'q" && String(h.type||'').trim().toLowerCase()!==type)return false;
+      return true;
+    });
+    if(candidates.length===1) homeId=Number(candidates[0].id);
+  }
+
+  if(!homeId){
+    alert('Bu xaridorga bog‘langan obyekt topilmadi. Shartnoma raqami XU kodi bo‘lishi uchun avval xaridorni aniq uyga bog‘lash kerak.');
+    return;
+  }
+
+  // Obyekt aniq topildi: shartnoma oynasi darhol XU kodi bilan ochiladi.
+  openContract(homeId,'buy',buyerId);
 }
 
 function openContractForSellerHome(homeId){
@@ -1870,7 +1909,11 @@ async function editBuyer(id){
      document.getElementById('f_budget').value=priceInputValue(x.budget);
     const btn=document.querySelector('#modalBox .btn');
     btn.onclick=async()=>{
-      const rmin=Math.max(0,Number(val('rooms_min')||0)), rmax=Math.max(0,Number(val('rooms_max')||0)); if(!rmin||!rmax||rmax<rmin){alert('Xona minimum va maksimumini to‘g‘ri kiriting.');return;} let editBuyerNote=val('note'); editBuyerNote=(editBuyerNote?editBuyerNote+'\n\n':'')+'[CRM_BUYER]\nrooms_min='+rmin+'\nrooms_max='+rmax+'\nfloor_min='+Number(val('floor_min')||0)+'\nfloor_max='+Number(val('floor_max')||0)+'\n[/CRM_BUYER]'; const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:rmax,m2:Number(val('m2')||0),budget:parseMoneyInput(val('budget')),finish:val('finish'),type:val('type'),note:editBuyerNote};
+      const rmin=Math.max(0,Number(val('rooms_min')||0)), rmax=Math.max(0,Number(val('rooms_max')||0)); if(!rmin||!rmax||rmax<rmin){alert('Xona minimum va maksimumini to‘g‘ri kiriting.');return;}
+      const oldMeta=crmMeta(x.note,'CRM_BUYER');
+      let editBuyerNote=val('note');
+      editBuyerNote=(editBuyerNote?editBuyerNote+'\n\n':'')+'[CRM_BUYER]\nrooms_min='+rmin+'\nrooms_max='+rmax+'\nfloor_min='+Number(val('floor_min')||0)+'\nfloor_max='+Number(val('floor_max')||0)+'\n'+(oldMeta.home_id?'home_id='+Number(oldMeta.home_id)+'\n':'')+'[/CRM_BUYER]';
+      const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:rmax,m2:Number(val('m2')||0),budget:parseMoneyInput(val('budget')),finish:val('finish'),type:val('type'),note:editBuyerNote};
       const {data,error}=await client.from('buyers').update(row).eq('id',id).select().single();
       if(error)return alert('Tahrirlashda xatolik: '+error.message);
       Object.assign(x,data);closeModal();go('buyers');
