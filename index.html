@@ -1011,8 +1011,19 @@ function filterBuyers(q){
 function openContractForBuyer(buyerId){
   const b=db.buyers.find(x=>Number(x.id)===Number(buyerId));
   if(!b)return;
+  // Xaridor qaysi uy bo'yicha murojaat qilgan bo'lsa, avval o'sha uyga bog'laymiz.
+  // Agar CRM_BUYER metada bo'lmasa, oxirgi bitimdan uy ID sini olamiz.
   const meta=crmMeta(b.note,'CRM_BUYER');
-  const homeId=Number(meta.home_id||0);
+  let homeId=Number(meta.home_id||0);
+  if(!homeId){
+    const deals=(db.deals||[]).filter(d=>Number(d.buyer_id)===Number(buyerId) && Number(d.home_id)>0);
+    if(deals.length) homeId=Number(deals[deals.length-1].home_id);
+  }
+  if(!homeId){
+    const phone=String(b.phone||'').replace(/\D/g,'');
+    const inquiries=(db.inquiries||[]).filter(q=>phone && String(q.phone||'').replace(/\D/g,'')===phone && Number(q.home_id)>0);
+    if(inquiries.length) homeId=Number(inquiries[inquiries.length-1].home_id);
+  }
   openContract(homeId||null,'buy',buyerId);
 }
 
@@ -1314,7 +1325,9 @@ function openContract(homeId=null, contractType='sell', buyerId=null){
   const floor=h?homeFloor(h):'';
   const isBuy=contractType==='buy';
   const homeOptions=[{value:'',label:'— Obyektni tanlang —'},...(db.homes||[]).map(x=>({value:String(x.id),label:`${homeCodeForHome(x)} — ${x.title||x.type||'Obyekt'} — ${x.city||''}, ${x.area||''}`}))];
-  const homePicker=isBuy
+  // Agar shartnoma aniq uy ichidan ochilgan bo'lsa, ikkinchi marta obyekt tanlash shart emas.
+  // Tanlash oynasi faqat uy hali aniqlanmagan yangi Olib berish shartnomasida chiqadi.
+  const homePicker=(isBuy && !h)
     ? selectField('contract_home','🏠 Obyekt / uy',homeOptions,false)
     : `<input type="hidden" id="f_contract_home" value="${h?.id||''}">`;
 
@@ -1341,7 +1354,7 @@ function openContract(homeId=null, contractType='sell', buyerId=null){
     ${input('contract_mob2','Mobi 2','+998...',0)}
     ${input('contract_offer','Taklif','',0,true)}
   </div><br>
-  <div class="muted">💡 ${isBuy?'Avval obyektni tanlang. Shartnoma № XU kodi bilan avtomatik beriladi.':'Uy kodi va shartnoma raqami avtomatik beriladi.'} Qo‘shimcha maydonlarni kerak bo‘lsa to‘ldiring.</div><br>
+  <div class="muted">💡 ${isBuy?(h?'Obyekt shartnomadan aniqlandi. Shartnoma № XU kodi bilan avtomatik berildi.':'Avval obyektni tanlang. Shartnoma № XU kodi bilan avtomatik beriladi.'):'Uy kodi va shartnoma raqami avtomatik beriladi.'} Qo‘shimcha maydonlarni kerak bo‘lsa to‘ldiring.</div><br>
   <button class="btn" onclick="previewContract()">📄 Ko‘rish / Chop etish</button>
   <button class="btn light" onclick="closeModal()">Bekor</button>`);
 
@@ -1375,8 +1388,12 @@ function fillContractHome(){
     return;
   }
   set('contract_no',homeCodeForHome(h));
-  set('contract_customer',h.seller||'');
-  set('contract_customer_phone',h.phone||'');
+  // Olib berish shartnomasida xaridor ma'lumotlarini uy egasi bilan almashtirib yubormaymiz.
+  const contractType=val('contract_type')||'sell';
+  if(contractType!=='buy'){
+    set('contract_customer',h.seller||'');
+    set('contract_customer_phone',h.phone||'');
+  }
   set('contract_address',[h.city,h.area].filter(Boolean).join(', '));
   set('contract_rooms',h.rooms||'');
   set('contract_floor',homeFloor(h)||'');
