@@ -601,6 +601,222 @@ body:not(.public-service-page) footer .contact-links{
   .card .actions .small{font-size:10px;padding:6px 4px}
 }
 </style>
+
+<style>
+/* V10 MOBILE UX — telefon uchun ixcham, markazlashgan va overflow-siz */
+@media (max-width: 800px){
+  html,body{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden !important;
+  }
+
+  .public-site{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+  }
+
+  .public-site-head{
+    height:72px !important;
+    padding:10px 16px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
+    gap:10px !important;
+    position:relative;
+    z-index:30;
+  }
+
+  .public-brand{
+    min-width:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    gap:10px !important;
+  }
+  .public-brand img{
+    width:46px !important;
+    height:46px !important;
+    flex:0 0 46px !important;
+    border-radius:12px !important;
+  }
+  .public-brand-text{min-width:0 !important}
+  .public-brand-name{
+    font-size:18px !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
+  }
+  .public-brand-sub{
+    font-size:8px !important;
+    letter-spacing:1.4px !important;
+    margin-top:4px !important;
+    white-space:nowrap !important;
+  }
+  .public-menu-btn{
+    display:flex !important;
+    width:46px !important;
+    height:46px !important;
+    align-items:center !important;
+    justify-content:center !important;
+    padding:0 !important;
+    font-size:30px !important;
+    flex:0 0 46px !important;
+  }
+
+  .public-hero{
+    min-height:0 !important;
+    height:auto !important;
+    display:block !important;
+    background-position:center top !important;
+    padding:0 0 28px !important;
+  }
+  .public-hero-inner{
+    width:100% !important;
+    max-width:100% !important;
+    min-height:0 !important;
+    height:auto !important;
+    margin:0 !important;
+    padding:250px 16px 0 !important;
+    display:block !important;
+  }
+  .public-hero-copy{
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 !important;
+    text-align:left !important;
+  }
+  .public-kicker{
+    font-size:10px !important;
+    letter-spacing:1.8px !important;
+    margin-bottom:10px !important;
+  }
+  .public-hero h1{
+    width:100% !important;
+    max-width:100% !important;
+    font-size:42px !important;
+    line-height:1.02 !important;
+    letter-spacing:-1.5px !important;
+    margin:0 !important;
+    overflow-wrap:normal !important;
+  }
+  .public-hero p{
+    width:100% !important;
+    max-width:330px !important;
+    font-size:14px !important;
+    line-height:1.5 !important;
+    margin:15px 0 18px !important;
+  }
+  .public-choice{
+    width:100% !important;
+    display:flex !important;
+    flex-direction:column !important;
+    gap:9px !important;
+  }
+  .public-choice button,
+  .public-choice a{
+    width:100% !important;
+    min-height:50px !important;
+    flex:none !important;
+    margin:0 !important;
+    border-radius:12px !important;
+    font-size:14px !important;
+  }
+
+  .public-search-wrap{
+    position:relative !important;
+    left:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    top:auto !important;
+    transform:none !important;
+    width:calc(100% - 24px) !important;
+    max-width:520px !important;
+    margin:18px auto 0 !important;
+    padding:14px !important;
+    border-radius:16px !important;
+    box-sizing:border-box !important;
+  }
+  .public-search-grid{
+    width:100% !important;
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:9px !important;
+  }
+  .public-filter{
+    width:100% !important;
+    min-width:0 !important;
+  }
+  .public-filter label{
+    display:block !important;
+    margin-bottom:5px !important;
+    font-size:11px !important;
+  }
+  .public-filter select,
+  .public-filter input{
+    width:100% !important;
+    height:48px !important;
+    font-size:14px !important;
+    border-radius:10px !important;
+  }
+  .public-search-btn{
+    width:100% !important;
+    height:50px !important;
+    margin-top:2px !important;
+    border-radius:11px !important;
+    font-size:15px !important;
+  }
+
+  /* Bosh sahifadagi qolgan bloklar telefon kengligidan chiqmasin */
+  .public-section{
+    width:100% !important;
+    max-width:100% !important;
+    padding:28px 14px !important;
+    overflow:hidden !important;
+  }
+  .public-category-grid,
+  .public-home-grid{
+    width:100% !important;
+    grid-template-columns:1fr 1fr !important;
+    gap:10px !important;
+  }
+  .public-category-grid > *,
+  .public-home-grid > *{
+    min-width:0 !important;
+  }
+
+  /* Mobil menyu */
+  .public-mobile-menu{
+    right:12px !important;
+    top:66px !important;
+    width:min(280px,calc(100vw - 24px)) !important;
+    border-radius:14px !important;
+    z-index:100 !important;
+  }
+}
+
+@media (max-width: 430px){
+  .public-hero-inner{
+    padding:220px 14px 0 !important;
+  }
+  .public-hero h1{
+    font-size:38px !important;
+  }
+  .public-search-wrap{
+    width:calc(100% - 20px) !important;
+    margin-top:16px !important;
+    padding:12px !important;
+  }
+}
+
+@media (max-width: 360px){
+  .public-brand-name{font-size:16px !important}
+  .public-hero-inner{padding-top:190px !important}
+  .public-hero h1{font-size:34px !important}
+  .public-category-grid,
+  .public-home-grid{grid-template-columns:1fr !important}
+}
+</style>
+
 </head>
 <body>
 
