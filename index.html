@@ -341,35 +341,49 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 @media(max-width:800px){.pro-grid{grid-template-columns:1fr}}
 
 .public-social-links{
-  width:min(620px,100%);
+  width:min(1100px,100%);
   margin:44px auto 0;
-  padding:24px;
+  padding:18px;
   border:1px solid #292f37;
   border-radius:14px;
   background:#0b0f14;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
 }
 .public-contact-phone,.public-social-row{
-  display:flex;align-items:center;gap:15px;
-  padding:14px 4px;
+  display:flex;align-items:center;gap:11px;
+  padding:12px;
+  min-width:0;
+  border:1px solid #20262d;
+  border-radius:10px;
+  background:#0e1319;
 }
 .public-social-row + .public-social-row,
 .public-contact-phone + .public-social-row{
   border-top:1px solid #20262d;
 }
 .public-social-icon,.public-social-icon-btn{
-  width:46px;height:46px;min-width:46px;
-  border:1px solid #80651f;border-radius:12px;
+  width:42px;height:42px;min-width:42px;
+  border:1px solid #80651f;border-radius:10px;
   display:flex;align-items:center;justify-content:center;
-  color:#f5b72c;font-size:21px;text-decoration:none;
+  color:#f5b72c;font-size:20px;text-decoration:none;
   background:#10151b;
 }
 .public-social-icon-btn{cursor:pointer}
 .public-social-title{
-  font-size:12px;font-weight:900;text-transform:uppercase;
-  letter-spacing:.5px;color:#fff;margin-bottom:4px;
+  font-size:10px;font-weight:900;text-transform:uppercase;
+  letter-spacing:.5px;color:#fff;margin-bottom:3px;
 }
 .public-social-links a:not(.public-social-icon-btn){
-  color:#f5b72c;text-decoration:none;font-size:13px;
+  color:#f5b72c;text-decoration:none;font-size:11px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+@media(max-width:800px){
+  .public-social-links{grid-template-columns:1fr 1fr}
+}
+@media(max-width:520px){
+  .public-social-links{grid-template-columns:1fr}
 }
 
 
@@ -2768,18 +2782,21 @@ async function loadPublicStats(){
   const realtorsEl=document.getElementById('publicStatRealtors');
 
   try{
-    const r=await client.from('public_homes').select('id',{count:'exact',head:true}).eq('status','Faol');
-    if(!r.error && homesEl) homesEl.textContent=Number(r.count||0).toLocaleString('uz-UZ')+'+';
+    const r=await client.from('public_homes').select('id').eq('status','Faol');
+    if(!r.error && homesEl) homesEl.textContent=Number((r.data||[]).length).toLocaleString('uz-UZ')+'+';
   }catch(e){ console.warn('Public homes count:',e); }
 
   try{
-    const r=await client.from('buyers').select('id',{count:'exact',head:true});
-    if(!r.error && buyersEl) buyersEl.textContent=Number(r.count||0).toLocaleString('uz-UZ')+'+';
+    const r=await client.from('buyers').select('id');
+    if(!r.error && buyersEl) buyersEl.textContent=Number((r.data||[]).length).toLocaleString('uz-UZ')+'+';
   }catch(e){ console.warn('Buyer count:',e); }
 
   try{
-    const r=await client.from('staff').select('id',{count:'exact',head:true}).eq('role','Rieltor');
-    if(!r.error && realtorsEl) realtorsEl.textContent=Number(r.count||0).toLocaleString('uz-UZ')+'+';
+    const r=await client.from('staff').select('id,role');
+    if(!r.error && realtorsEl){
+      const n=(r.data||[]).filter(x=>String(x.role||'').toLowerCase()==='rieltor').length;
+      realtorsEl.textContent=Number(n).toLocaleString('uz-UZ')+'+';
+    }
   }catch(e){ console.warn('Realtor count:',e); }
 }
 
@@ -3135,7 +3152,8 @@ if(qrPayload){
 }else if(isHomesPage){
   publicHomesPage();
 }else if(publicService==='sell' || publicService==='buy'){
-  publicHome().then(()=>showPublicForm(publicService));
+  publicHome();
+  setTimeout(()=>showPublicForm(publicService),150);
 }else if(isPublicForm){
   publicHome();
 }else if(isAdmin){
