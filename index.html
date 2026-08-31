@@ -478,21 +478,31 @@ function monthLabel(key){
 }
 function ownerStaffIdFromHome(h){const m=ownerMeta(h);return String(m.staff_id||'')}
 function ownerStaffIdFromNote(note,key='CRM_OWNER'){const m=crmMeta(note,key);return String(m.staff_id||'')}
+function kpiTeamIds(managerId){
+  const mid=String(managerId);
+  return (db.staff||[]).filter(s=>String(s.manager_id||'')===mid&&s.is_active!==false).map(s=>String(s.id));
+}
 function kpiFact(staffId,key){
   const sid=String(staffId);
-  if(key==='homes')return db.homes.filter(h=>ownerStaffIdFromHome(h)===sid).filter(h=>monthKey(h.created_at)===monthKey(kpiCurrentMonth)).length;
-  if(key==='buyers')return db.buyers.filter(b=>String(b.owner_staff_id||'')===sid).filter(b=>monthKey(b.created_at)===monthKey(kpiCurrentMonth)).length;
-  if(key==='deals')return (db.deals||[]).filter(d=>String(ownerStaffIdFromNote(d.note,'CRM_DEAL_OWNER'))===sid&&d.stage==='Sotildi'&&monthKey(d.created_at)===monthKey(kpiCurrentMonth)).length;
-  if(key==='tasks')return (db.tasks||[]).filter(t=>String(ownerStaffIdFromNote(t.note,'CRM_TASK_OWNER'))===sid&&t.status==='Bajarildi'&&monthKey(t.created_at)===monthKey(kpiCurrentMonth)).length;
+  const staff=db.staff.find(s=>String(s.id)===sid);
+  const isManager=staff&&normalizeRole(staff.role)==='Menejer';
+  const ids=isManager ? kpiTeamIds(staffId) : [sid];
+  if(key==='homes')return db.homes.filter(h=>ids.includes(ownerStaffIdFromHome(h))&&monthKey(h.created_at)===monthKey(kpiCurrentMonth)).length;
+  if(key==='buyers')return db.buyers.filter(b=>ids.includes(String(b.owner_staff_id||''))&&monthKey(b.created_at)===monthKey(kpiCurrentMonth)).length;
+  if(key==='deals')return (db.deals||[]).filter(d=>ids.includes(String(ownerStaffIdFromNote(d.note,'CRM_DEAL_OWNER')))&&d.stage==='Sotildi'&&monthKey(d.created_at)===monthKey(kpiCurrentMonth)).length;
+  if(key==='tasks')return (db.tasks||[]).filter(t=>ids.includes(String(ownerStaffIdFromNote(t.note,'CRM_TASK_OWNER')))&&t.status==='Bajarildi'&&monthKey(t.created_at)===monthKey(kpiCurrentMonth)).length;
   return 0;
 }
 let kpiCurrentMonth=monthKey(new Date());
 function kpiSummary(staff){
   const plans=kpiPlans(staff?.note)[kpiCurrentMonth]||{};
-  const rows=[['homes','Yangi uylar'],['buyers','Yangi mijozlar'],['deals','Sotuvlar'],['tasks','Bajarilgan vazifalar']];
+  const isManager=normalizeRole(staff?.role)==='Menejer';
+  const rows=isManager
+    ? [['homes','Jamoa yangi uylari'],['buyers','Jamoa yangi mijozlari'],['deals','Jamoa sotuvlari'],['tasks','Jamoa bajarilgan vazifalari']]
+    : [['homes','Yangi uylar'],['buyers','Yangi mijozlar'],['deals','Sotuvlar'],['tasks','Bajarilgan vazifalar']];
   let sum=0,count=0;
   const out=rows.map(([key,label])=>{const plan=Math.max(0,Number(plans[key]||0));const fact=kpiFact(staff.id,key);const pct=plan?Math.round(fact/plan*100):0;if(plan){sum+=Math.min(pct,100);count++;}return {key,label,plan,fact,pct};});
-  return {rows:out,pct:count?Math.round(sum/count):0};
+  return {rows:out,pct:count?Math.round(sum/count):0,isManager};
 }
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function go(p){if(!requirePage(p))return;document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.page===p));document.querySelectorAll('.mobile-nav [data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render(p)}
@@ -688,8 +698,10 @@ function reportsPage(){
   const revenue=(db.deals||[]).filter(d=>d.stage==='Sotildi').reduce((s,d)=>s+dealCommission(d),0);
   const totalValue=(db.deals||[]).filter(d=>d.stage==='Sotildi').reduce((s,d)=>s+Math.abs(Number(d.price)||0),0);
   const byCity={};db.homes.forEach(h=>byCity[h.city||'Noma’lum']=(byCity[h.city||'Noma’lum']||0)+1);
-  const staffRows=(db.staff||[]).filter(s=>['Rieltor','Menejer'].includes(normalizeRole(s.role)));
-  const kpiCards=staffRows.map(s=>{const k=kpiSummary(s);return `<div class="match"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><b>👤 ${esc(s.name||'—')}</b><b>${k.pct}%</b></div>${k.rows.map(r=>`<div class="muted" style="margin-top:4px">${r.label}: <b>${r.fact}</b> / ${r.plan||'—'} ${r.plan?`(${r.pct}%)`:''}</div>`).join('')}</div>`}).join('')||'<div class="muted">KPI rejasi hali berilmagan.</div>';
+  const allKpiStaff=(db.staff||[]).filter(s=>['Rieltor','Menejer'].includes(normalizeRole(s.role)));
+  const renderKpiCards=(arr,empty)=>arr.map(s=>{const k=kpiSummary(s);return `<div class="match"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><b>👤 ${esc(s.name||'—')}</b><b>${k.pct}%</b></div>${k.rows.map(r=>`<div class="muted" style="margin-top:4px">${r.label}: <b>${r.fact}</b> / ${r.plan||'—'} ${r.plan?`(${r.pct}%)`:''}</div>`).join('')}</div>`}).join('')||`<div class="muted">${empty}</div>`;
+  const realtorKpi=allKpiStaff.filter(s=>normalizeRole(s.role)==='Rieltor');
+  const managerKpi=allKpiStaff.filter(s=>normalizeRole(s.role)==='Menejer');
   return header('Hisobot','Sotuv, inventar, daromad va xodim KPI ko‘rsatkichlari')+
   `<div class="toolbar"><label class="muted" style="padding-top:10px">KPI oyi</label><input id="kpiMonth" class="field" type="month" value="${kpiCurrentMonth}" onchange="kpiCurrentMonth=this.value;go('reports')"></div>
   <div class="stats">
@@ -698,7 +710,8 @@ function reportsPage(){
     <div class="stat"><div class="kpi">${money(totalValue)}</div><div class="label">Sotilgan uylar qiymati</div></div>
     <div class="stat"><div class="kpi">${money(revenue)}</div><div class="label">Komissiya daromadi</div></div>
   </div>
-  <div class="panel" style="margin-bottom:14px"><h3>🎯 ${esc(monthLabel(kpiCurrentMonth))} — Rieltor KPI</h3>${kpiCards}</div>
+  <div class="panel" style="margin-bottom:14px"><h3>🎯 ${esc(monthLabel(kpiCurrentMonth))} — Rieltor KPI</h3>${renderKpiCards(realtorKpi,'Rieltor KPI rejasi hali berilmagan.')}</div>
+  <div class="panel" style="margin-bottom:14px"><h3>👔 ${esc(monthLabel(kpiCurrentMonth))} — Menejer KPI</h3>${renderKpiCards(managerKpi,'Menejer KPI rejasi hali berilmagan.')}</div>
   <div class="pro-grid">
     <div class="panel"><h3>📍 Hududlar</h3>${Object.entries(byCity).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="match"><b>${esc(k)}</b> — ${v} ta obyekt</div>`).join('')||'<div class="empty">Ma’lumot yo‘q.</div>'}</div>
     <div class="panel"><h3>💰 Bitim bosqichlari</h3>${['Yangi','Ko‘rish','Muzokara','Shartnoma','Sotildi','Bekor qilindi'].map(st=>`<div class="match"><b>${st}</b> — ${(db.deals||[]).filter(d=>d.stage===st).length} ta</div>`).join('')}</div>
@@ -706,10 +719,10 @@ function reportsPage(){
 }
 
 function openKpiPlan(staffId){
-  if(currentRole()!=='Admin'){alert('Rieltor KPI rejasini faqat Admin belgilaydi.');return;}
+  if(currentRole()!=='Admin'){alert('KPI rejasini faqat Admin belgilaydi.');return;}
   const s=db.staff.find(x=>Number(x.id)===Number(staffId));if(!s)return;
   const key=kpiCurrentMonth, old=kpiPlans(s.note)[key]||{};
-  modal(`<h2>🎯 ${esc(s.name)} — KPI rejasi</h2><p class="muted">${esc(monthLabel(key))} uchun reja belgilang. Fakt CRMdagi yangi yozuvlardan avtomatik hisoblanadi.</p><div class="formgrid">
+  modal(`<h2>🎯 ${esc(s.name)} — KPI rejasi</h2><p class="muted">${esc(monthLabel(key))} uchun reja belgilang. Rieltor KPI shaxsiy natijalardan, Menejer KPI esa unga biriktirilgan jamoa natijalaridan avtomatik hisoblanadi.</p><div class="formgrid">
     ${input('kpi_homes','Yangi uylar','20',1)}
     ${input('kpi_buyers','Yangi mijozlar','30',1)}
     ${input('kpi_deals','Sotuvlar','3',1)}
@@ -1178,7 +1191,7 @@ function staffRows(a){
     <td>${esc(staffManagerName(x.manager_id))}</td>
     <td>${x.is_active===false?'🔴 Faol emas':'🟢 Faol'}</td>
     <td>
-      <button class="small" onclick="editStaff(${x.id})">Tahrir</button> ${currentRole()==='Admin'&&normalizeRole(x.role)==='Rieltor'?`<button class="small primary" onclick="openKpiPlan(${x.id})">🎯 KPI</button>`:''}
+      <button class="small" onclick="editStaff(${x.id})">Tahrir</button> ${currentRole()==='Admin'&&['Rieltor','Menejer'].includes(normalizeRole(x.role))?`<button class="small primary" onclick="openKpiPlan(${x.id})">🎯 KPI</button>`:''}
       ${String(x.role||'').toLowerCase()==='admin'?'<span class="muted">🔒 Admin</span>':`<button class="small" onclick="toggleStaff(${x.id},${x.is_active===false?'true':'false'})">${x.is_active===false?'Faollashtirish':'O‘chirish'}</button>`}
       ${String(x.role||'').toLowerCase()==='admin'?'':`<button class="small" onclick="deleteStaff(${x.id})">🗑</button>`}
     </td>
