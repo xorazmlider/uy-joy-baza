@@ -435,31 +435,56 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 
 
 .public-service-page{
-  min-height:100vh;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  padding:90px 18px 35px;
-  overflow:auto;
+  min-height:100vh!important;
+  height:100vh!important;
+  display:block!important;
+  position:relative!important;
+  padding:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  background:#070a0f!important;
 }
-.public-service-page > *{display:none!important}
+/* Xizmat formasida bosh sahifaning footer/statistika/uylar qismlari ko'rinmasin. */
+.public-service-page .public-hero,
+.public-service-page .public-section,
+.public-service-page .public-homes,
+.public-service-page .public-footer,
+.public-service-page .public-stats,
+.public-service-page .public-categories,
+.public-service-page .public-contact,
+.public-service-page .public-search,
+.public-service-page .public-choice{display:none!important}
 .public-service-page > .public-site-head{
   display:flex!important;
-  position:absolute;
+  position:fixed!important;
   top:0;left:0;right:0;
+  z-index:100!important;
 }
-.public-service-page > #publicForm{
+.public-service-page #publicForm{
   display:block!important;
-  width:min(720px,100%);
-  margin:0 auto;
+  width:min(760px,calc(100% - 36px))!important;
+  margin:0 auto!important;
+  padding-top:92px!important;
+  padding-bottom:35px!important;
+  position:relative!important;
+  z-index:20!important;
 }
-.public-service-page > #publicSuccess{
+.public-service-page #publicForm .public-form-box,
+.public-service-page #publicForm.public-form{
+  background:#0d1117!important;
+}
+.public-service-page #publicSuccess{
   display:block!important;
-  width:min(720px,100%);
-  margin:0 auto;
+  width:min(760px,calc(100% - 36px))!important;
+  margin:0 auto!important;
+  padding-top:120px!important;
+  position:relative!important;
+  z-index:20!important;
 }
-.public-service-page > #publicForm.public-form:not(.show){display:none!important}
+.public-service-page #publicForm.public-form:not(.show){display:none!important}
+@media(max-width:800px){
+  .public-service-page #publicForm{width:calc(100% - 24px)!important;padding-top:78px!important}
+}
 
 @media(min-width:801px){
   .public-main-nav{position:relative}
