@@ -1671,7 +1671,8 @@ function findHomes(b){
     const hf=homeFloor(h);
     const floorOk=(!req.fmin&&!req.fmax)||(hf>=req.fmin&&(req.fmax?hf<=req.fmax:true));
     const typeOk=!b.type||b.type==='Farqi yo‘q'||b.type===h.type;
-    return priceOk&&roomOk&&floorOk&&typeOk;
+    const cityOk=!String(b.city||'').trim()||String(b.city||'').trim()===String(h.city||'').trim();
+    return priceOk&&roomOk&&floorOk&&typeOk&&cityOk;
   });
 }
 function findBuyers(h){
@@ -1682,7 +1683,8 @@ function findBuyers(h){
     const roomOk=Number(h.rooms)>=req.rmin&&Number(h.rooms)<=req.rmax;
     const floorOk=(!req.fmin&&!req.fmax)||(hf>=req.fmin&&(req.fmax?hf<=req.fmax:true));
     const typeOk=!b.type||b.type==='Farqi yo‘q'||b.type===h.type;
-    return priceOk&&roomOk&&floorOk&&typeOk;
+    const cityOk=!String(b.city||'').trim()||String(b.city||'').trim()===String(h.city||'').trim();
+    return priceOk&&roomOk&&floorOk&&typeOk&&cityOk;
   });
 }
 function showBuyerMatches(id){let b=db.buyers.find(x=>x.id===id),m=findHomes(b);if(!b)return;modal(`<h2>🎯 ${esc(b.name)} uchun mos uylar</h2><p>${esc(b.city)} • ${esc(b.area)} • ${b.rooms} xona • ${b.m2} m² • ${money(b.budget)} gacha</p>${m.map(x=>`<div class="match"><b>${esc(x.title)}</b><br>${esc(x.city)} • ${esc(x.area)} • ${x.rooms} xona • ${x.m2} m²<br><b>${money(x.price)}</b> • 📞 ${esc(x.phone)}<br><button class="small primary" onclick="showHome(${x.id})">Uy tafsiloti</button></div>`).join('')||'<div class="empty">Aniq mos uy topilmadi.</div>'}<button class="btn light" onclick="closeModal()">Yopish</button>`)}
@@ -1709,13 +1711,13 @@ function showHome(id){
   const cleanNote=String(x.note||'').replace(/\n?\n?\[PROPERTY_IMAGES\][\s\S]*?\[\/PROPERTY_IMAGES\]/g,'').trim();
   modal(`<h2>${esc(x.title)}</h2>${gallery}<div class="match"><b>${money(x.price)}</b><br>📍 ${esc(x.city)}, ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}<br>👤 ${esc(x.seller)} • 📞 ${esc(x.phone)}${cleanNote?`<br>${esc(cleanNote)}`:''}</div><button class="btn light" onclick="closeModal()">Yopish</button>`);
 }
-function openHome(){if(!requireHomeAdd())return;modal(`<h2>🏠 Obyekt qo‘shish</h2><div class="formgrid">${input('title','Obyekt nomi','Masalan: 2 xonali pod klyuch uy',1)}${selectField('type','🏷️ Obyekt turi',[{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}],true)}${input('city','Shahar/tuman','Urganch',1)}${input('area','Hudud/mavze','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Maydon m²','60',1)}${input('floor','Qavat','1',0)}${input('price','Narx (so‘m yoki dollar)','680000000 yoki $170000',1)}${input('finish','Ta’mir holati','Pod klyuch',1)}${input('seller','Sotuvchi ismi','Sardor',1)}${input('phone','Telefon','+998...',1)}<div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>${input('note','Izoh','Stadion yonida',1,true)}</div><br><button class="btn" onclick="addHome()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
-function openBuyer(){modal(`<h2>👤 Xaridor qo‘shish</h2><div class="formgrid">${input('name','Mijoz ismi','Mijoz 1',1)}${input('phone','Telefon','+998...',1)}${input('city','Shahar/tuman','Urganch',0)}${input('area','Kerakli hudud','Stadion',0)}${input('rooms_min','Xona — minimum','2',1)}${input('rooms_max','Xona — maksimum','5',1)}${input('floor_min','Qavat — minimum','1',0)}${input('floor_max','Qavat — maksimum','2',0)}${input('m2','Kerakli maydon m²','60',0)}${input('budget','Maksimal budjet (so‘m yoki dollar)','700000000 yoki $170000',1)}${input('finish','Ta’mir talabi (ixtiyoriy)','Pod klyuch',0)}${selectField('type','🏷️ Obyekt turi',[{value:'',label:'Farqi yo‘q'},{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}])}${input('note','Izoh','Stadion yaqinidan kerak',0,true)}</div><br><div class="muted">🎯 Moslashtirish: narx + xona + qavat + uy turi. Xona va qavat min/max oralig‘ida tekshiriladi. “Farqi yo‘q” tanlansa, barcha obyekt turlari mos keladi.</div><br><button class="btn" onclick="addBuyer()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
+function openHome(){if(!requireHomeAdd())return;modal(`<h2>🏠 Obyekt qo‘shish</h2><div class="formgrid">${input('title','Obyekt nomi','Masalan: 2 xonali pod klyuch uy',1)}${selectField('type','🏷️ Obyekt turi',[{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}],true)}${selectField('city','🏙️ Uy qayerda joylashgan?',XORAZM_HUDUDLARI,true)}${input('area','Hudud/mavze','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Maydon m²','60',1)}${input('floor','Qavat','1',0)}${input('price','Narx (so‘m yoki dollar)','680000000 yoki $170000',1)}${input('finish','Ta’mir holati','Pod klyuch',1)}${input('seller','Sotuvchi ismi','Sardor',1)}${input('phone','Telefon','+998...',1)}<div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>${input('note','Izoh','Stadion yonida',1,true)}</div><br><button class="btn" onclick="addHome()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
+function openBuyer(){modal(`<h2>👤 Xaridor qo‘shish</h2><div class="formgrid">${input('name','Mijoz ismi','Mijoz 1',1)}${input('phone','Telefon','+998...',1)}${selectField('city','🏙️ Qaysi hududdan uy olmoqchi?',XORAZM_HUDUDLARI,true)}${input('area','Kerakli hudud / mavze','Stadion',0)}${input('rooms_min','Xona — minimum','2',1)}${input('rooms_max','Xona — maksimum','5',1)}${input('floor_min','Qavat — minimum','1',0)}${input('floor_max','Qavat — maksimum','2',0)}${input('m2','Kerakli maydon m²','60',0)}${input('budget','Maksimal budjet (so‘m yoki dollar)','700000000 yoki $170000',1)}${input('finish','Ta’mir talabi (ixtiyoriy)','Pod klyuch',0)}${selectField('type','🏷️ Obyekt turi',[{value:'',label:'Farqi yo‘q'},{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}])}${input('note','Izoh','Stadion yaqinidan kerak',0,true)}</div><br><div class="muted">🎯 Moslashtirish: hudud + narx + xona + qavat + uy turi. Xona va qavat min/max oralig‘ida tekshiriladi. “Farqi yo‘q” tanlansa, barcha obyekt turlari mos keladi.</div><br><button class="btn" onclick="addBuyer()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
 function openSeller(){modal(`<h2>🤝 Sotuvchi qo‘shish</h2><div class="formgrid">
 ${input('name','Ism','Sardor',1)}
 ${input('phone','Telefon','+998...',1)}
 ${input('title','Obyekt nomi','Masalan: 5 xonali hovli',1)}
-${input('city','Shahar/tuman','Urganch',1)}
+${selectField('city','🏙️ Uy qayerda sotiladi?',XORAZM_HUDUDLARI,true)}
 ${input('area','Hudud/mavze','Stadion',1)}
 ${input('rooms','Xona soni','5',1)}
 ${input('m2','Maydon m²','200',1)}
@@ -1724,7 +1726,22 @@ ${input('finish','Ta’mir holati','Remontli',1)}
 ${selectField('type','🏷️ Obyekt turi',[{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}],true)}
 <div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>
 ${input('note','Izoh','Uy haqida qo‘shimcha ma’lumot',0,true)}
-</div><br><div class="muted">💡 Sotuvchi va uning uyi bir vaqtda bazaga saqlanadi. Uy avtomatik ravishda shu sotuvchiga bog‘lanadi.</div><br><button class="btn" onclick="addSeller()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`) }
+</div><br><div class="muted">📍 Hudud tanlovi keyinchalik uylarni hudud bo‘yicha moslashtirish va hisobotlarda ishlatiladi.<br>💡 Sotuvchi va uning uyi bir vaqtda bazaga saqlanadi. Uy avtomatik ravishda shu sotuvchiga bog‘lanadi.</div><br><button class="btn" onclick="addSeller()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`) }
+const XORAZM_HUDUDLARI=[
+  {value:'Urganch shahri',label:'Urganch shahri'},
+  {value:'Xiva shahri',label:'Xiva shahri'},
+  {value:'Bog‘ot tumani',label:'Bog‘ot tumani'},
+  {value:'Gurlan tumani',label:'Gurlan tumani'},
+  {value:'Qo‘shko‘pir tumani',label:'Qo‘shko‘pir tumani'},
+  {value:'Urganch tumani',label:'Urganch tumani'},
+  {value:'Shovot tumani',label:'Shovot tumani'},
+  {value:'Xonqa tumani',label:'Xonqa tumani'},
+  {value:'Xiva tumani',label:'Xiva tumani'},
+  {value:'Yangiariq tumani',label:'Yangiariq tumani'},
+  {value:'Yangibozor tumani',label:'Yangibozor tumani'},
+  {value:'Hazorasp tumani',label:'Hazorasp tumani'},
+  {value:'Tuproqqal‘a tumani',label:'Tuproqqal‘a tumani'}
+];
 function input(id,label,ph,required,full){return `<div class="${full?'full':''}"><label class="muted">${label}</label><input id="f_${id}" class="field" placeholder="${ph}" ${required?'required':''}></div>`}
 function selectField(id,label,options,required=false,full=false){return `<div class="${full?'full':''}"><label class="muted">${label}</label><select id="f_${id}" class="field" ${required?'required':''}>${options.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('')}</select></div>`}
 function val(k){return document.getElementById('f_'+k)?.value.trim()||''}
