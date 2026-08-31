@@ -2077,7 +2077,7 @@ function showPublicForm(type){
         ${publicInput('seller_name','Ism','Ismingiz')}
         ${publicInput('seller_phone','Telefon','+998...')}
         ${publicInput('title','Uy nomi','Masalan: 5 xonali hovli')}
-        ${publicInput('city','Shahar/tuman','Urganch')}
+        ${publicRegionSelect('city','Shahar/tuman')}
         ${publicInput('area','Hudud/mavze','Stadion')}
         ${publicInput('rooms','Xona soni','5','number')}
         ${publicInput('m2','Maydon m²','200','number')}
@@ -2102,7 +2102,7 @@ function showPublicForm(type){
       <div class="public-grid">
         ${publicInput('name','Ism','Ismingiz')}
         ${publicInput('phone','Telefon','+998...')}
-        ${publicInput('city','Shahar/tuman','Urganch')}
+        ${publicRegionSelect('city','Shahar/tuman')}
         ${publicInput('area','Kerakli hudud','Stadion')}
         ${publicInput('rooms','Xona soni','3','number')}
         ${publicInput('m2','Kerakli maydon m²','80','number')}
@@ -2123,6 +2123,13 @@ function publicInput(id,label,ph,type='text'){
 
 function publicSelect(id,label,options,required=true){
   return `<div class="public-field"><label>${label}${required?' *':''}</label><select id="pf_${id}" ${required?'required':''}>${options.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('')}</select></div>`;
+}
+
+function publicRegionSelect(id,label){
+  return `<div class="public-field"><label>${label} *</label><select id="pf_${id}" required>
+    <option value="">— Hududni tanlang —</option>
+    ${XORAZM_HUDUDLARI.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('')}
+  </select></div>`;
 }
 
 function pf(id){
