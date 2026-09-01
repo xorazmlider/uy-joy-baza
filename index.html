@@ -466,11 +466,33 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 .public-service-page .public-contact,
 .public-service-page .public-search,
 .public-service-page .public-choice{display:none!important}
+/* V11: Xizmat formasida kontakt/social qatori ham yashiriladi. Forma darhol menyu ostidan boshlanadi. */
+.public-service-page .public-social-links,
+.public-service-page .public-social,
+.public-service-page .social-links,
+.public-service-page .public-footer-contact,
+.public-service-page footer .public-social,
+.public-service-page footer .contact-links{
+  display:none!important;
+}
 .public-service-page > .public-site-head{
   display:flex!important;
   position:fixed!important;
   top:0;left:0;right:0;
   z-index:100!important;
+}
+/* XIZMAT FORMASI: menyu ostidan boshlanadi, boshqa bloklar joy egallamaydi. */
+.public-service-page > .public-site-head ~ .public-social-links,
+.public-service-page > .public-site-head ~ .public-footer,
+.public-service-page > .public-site-head ~ .public-section,
+.public-service-page > .public-site-head ~ .public-hero,
+.public-service-page > .public-site-head ~ .public-search-wrap,
+.public-service-page > .public-site-head ~ .public-nav-popover{
+  display:none!important;
+  height:0!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
 }
 .public-service-page #publicForm{
   display:block!important;
@@ -569,17 +591,6 @@ body:not(.public-service-page) footer .contact-links{
   display:none !important;
 }
 
-
-/* Instagram direct landing */
-.public-instagram-page .public-site-head{position:fixed;top:0;left:0;right:0;z-index:50}
-.public-instagram-choice{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:110px 20px 40px;box-sizing:border-box}
-.public-instagram-card{width:min(720px,92vw);padding:34px 36px;border:1px solid rgba(255,255,255,.28);border-radius:18px;background:rgba(18,23,34,.92);box-shadow:0 18px 55px rgba(0,0,0,.35);text-align:center}
-.public-instagram-icon{font-size:48px;margin-bottom:8px}
-.public-instagram-card h1{font-size:24px;margin:0 0 8px;color:#fff}
-.public-instagram-card p{margin:0 0 24px;color:#cbd2df}
-.public-instagram-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.public-instagram-actions button{border:1px solid #f5b72c;background:#f5b72c;color:#111;border-radius:10px;padding:15px 12px;font-weight:800;cursor:pointer}
-@media(max-width:700px){.public-instagram-choice{padding:95px 14px 25px}.public-instagram-card{padding:26px 18px}.public-instagram-actions{grid-template-columns:1fr}.public-instagram-card h1{font-size:20px}}
 </style>
 <style>
 /* V10 MOBILE FIX: bosh sahifaga kirganda qidiruv paneli yopiq bo‘ladi. */
@@ -662,7 +673,7 @@ const ROLE_PAGES={
   Admin:['dashboard','homes','buyers','sellers','staff','matches','deals','tasks','reports','documents','contracts','sold'],
   Menejer:['dashboard','homes','buyers','sellers','matches','deals','tasks','reports','documents','contracts','sold'],
   Rieltor:['dashboard','homes','buyers','sellers','matches','deals','tasks','documents','contracts','sold'],
-  Agent:['dashboard','homes','buyers','sellers','matches','deals','tasks','documents','contracts','sold']
+  Agent:['dashboard','homes','buyers','sellers','matches','deals','tasks','reports','documents','contracts','sold']
 };
 
 function normalizeRole(role){
@@ -1213,59 +1224,9 @@ function dealsPage(){
     <td><b>${esc(b?.name||'—')}</b><br><span class="muted">${esc(b?.phone||'')}</span></td>
     <td>${esc(h?.title||'—')}</td><td>${money(d.price)}</td><td>${money(dealCommission(d))}</td>
     <td><span class="badge">${esc(d.stage||'Yangi')}</span></td>
-    <td style="white-space:nowrap">${d.stage==='Sotildi'?`<button class="small primary" onclick="previewHandoverAct(${Number(d.id)})">📋 Akt (ilova)</button>`:''} <button class="small" onclick="proDelete('crm_deals','deals','${String(d.id)}')">×</button></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">Bitimlar hali yo‘q.</td></tr>'}
+    <td><button class="small" onclick="proDelete('crm_deals','deals','${String(d.id)}')">×</button></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">Bitimlar hali yo‘q.</td></tr>'}
   </table></div></div>`;
 }
-function previewHandoverAct(dealId){
-  const d=(db.deals||[]).find(x=>Number(x.id)===Number(dealId));
-  if(!d){alert('Bitim topilmadi.');return;}
-  if(d.stage!=='Sotildi'){alert('Akt faqat “Sotildi” bosqichidagi bitim uchun chiqariladi.');return;}
-  const h=db.homes.find(x=>Number(x.id)===Number(d.home_id));
-  const b=db.buyers.find(x=>Number(x.id)===Number(d.buyer_id));
-  if(!h||!b){alert('Akt uchun uy yoki xaridor ma’lumoti topilmadi.');return;}
-  const sellerName=h.seller||'____________________________';
-  const sellerPhone=h.phone||'________________';
-  const buyerName=b.name||'____________________________';
-  const buyerPhone=b.phone||'________________';
-  const address=[h.city,h.area].filter(Boolean).join(', ')||'____________________________';
-  const actNo='AKT-'+String(d.id).padStart(6,'0');
-  const date=d.created_at?new Date(d.created_at).toLocaleDateString('uz-UZ') : new Date().toLocaleDateString('uz-UZ');
-  const price=money(d.price||h.price);
-  const html=`<!doctype html><html lang="uz"><head><meta charset="utf-8"><title>${actNo} — Qabul qilish-topshirish dalolatnomasi</title>
-  <style>
-    @page{size:A4;margin:18mm 18mm 16mm}
-    *{box-sizing:border-box}body{font-family:"Times New Roman",serif;color:#111;background:#fff;margin:0}
-    .page{width:100%;max-width:174mm;margin:0 auto}.top{text-align:right;font-size:12px;margin-bottom:24px}
-    h1{text-align:center;font-size:18px;margin:0 0 8px;text-transform:uppercase}h2{text-align:center;font-size:13px;font-weight:normal;margin:0 0 24px}
-    p{font-size:13px;line-height:1.55;text-align:justify;margin:8px 0}.data{width:100%;border-collapse:collapse;margin:18px 0;font-size:12.5px}
-    .data td{border:1px solid #222;padding:7px}.data td:first-child{width:34%;font-weight:bold}.sign{display:grid;grid-template-columns:1fr 1fr;gap:55px;margin-top:48px;font-size:13px}.line{margin-top:28px;border-bottom:1px solid #111;height:1px}.note{font-size:11px;color:#444;margin-top:25px}
-    @media print{.no-print{display:none!important}.page{max-width:none}}
-  </style></head><body><div class="page">
-  <div class="top">№ ${esc(actNo)}<br>${esc(date)}</div>
-  <h1>QABUL QILISH-TOPSHIRISH DALOLATNOMASI</h1>
-  <h2>Ko‘chmas mulkni topshirish va qabul qilish akti</h2>
-  <p>Biz, quyida imzo qo‘yuvchilar, <b>${esc(sellerName)}</b> (sotuvchi) va <b>${esc(buyerName)}</b> (xaridor), ushbu dalolatnoma orqali quyidagi ko‘chmas mulk xaridorga topshirilganini va xaridor tomonidan qabul qilib olinganini tasdiqlaymiz.</p>
-  <table class="data"><tr><td>Sotuvchi</td><td>${esc(sellerName)}<br>Tel: ${esc(sellerPhone)}</td></tr>
-  <tr><td>Xaridor</td><td>${esc(buyerName)}<br>Tel: ${esc(buyerPhone)}</td></tr>
-  <tr><td>Ko‘chmas mulk</td><td>${esc(h.title||'—')}</td></tr>
-  <tr><td>Manzil</td><td>${esc(address)}</td></tr>
-  <tr><td>Xona soni</td><td>${esc(h.rooms||'—')}</td></tr>
-  <tr><td>Maydoni</td><td>${esc(h.m2||'—')} m²</td></tr>
-  <tr><td>Bitim qiymati</td><td><b>${esc(price)}</b></td></tr>
-  <tr><td>Shartnoma №</td><td>${esc(homeCodeForHome(h)||'________________')}</td></tr><tr><td>Bitim raqami</td><td>${esc(String(d.id))}</td></tr></table>
-  <p>1. Sotuvchi yuqorida ko‘rsatilgan ko‘chmas mulkni xaridorga topshirdi.</p>
-  <p>2. Xaridor ko‘chmas mulkni ko‘zdan kechirib, qabul qilib oldi.</p>
-  <p>3. Tomonlar ko‘chmas mulkni topshirish-qabul qilish bo‘yicha bir-biriga nisbatan da’vosi yo‘qligini tasdiqlaydilar, bundan alohida yozma ravishda ko‘rsatilgan holatlar mustasno.</p>
-  <p>4. Mazkur dalolatnoma tomonlar tomonidan imzolangan kundan boshlab topshirish-qabul qilishni tasdiqlovchi hujjat sifatida tuzildi.</p>
-  <div class="sign"><div><b>SOTUVCHI:</b><div>${esc(sellerName)}</div><div class="line"></div><div>Imzo</div></div><div><b>XARIDOR:</b><div>${esc(buyerName)}</div><div class="line"></div><div>Imzo</div></div></div>
-  <div class="note">Eslatma: ushbu akt CRMdagi bitim, uy va xaridor ma’lumotlari asosida avtomatik shakllantirildi. Zarur bo‘lsa chop etishdan oldin ma’lumotlarni hujjatga muvofiq tekshiring.</div>
-  <button class="no-print" onclick="window.print()" style="margin-top:22px;padding:10px 18px">🖨 Chop etish / PDF saqlash</button>
-  </div></body></html>`;
-  const w=window.open('','_blank','width=900,height=900');
-  if(!w){alert('Brauzer yangi oynani blokladi. Pop-up oynalarga ruxsat bering.');return;}
-  w.document.open();w.document.write(html);w.document.close();
-}
-
 function reportsPage(){
   if(!canPage('reports'))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2><p>Sizning rolingizda bu bo‘lim yopiq.</p></div>';
   const active=db.homes.filter(x=>x.status!=='Sotildi').length,sold=db.homes.filter(x=>x.status==='Sotildi').length;
@@ -3091,50 +3052,12 @@ async function trackSiteVisit(){
 }
 
 
-function openInstagramService(type){
-  const url=new URL(window.location.href);
-  url.searchParams.delete('form');
-  url.searchParams.delete('homes');
-  url.searchParams.delete('admin');
-  url.searchParams.set('instagram','1');
-  url.searchParams.set('service',type);
-  window.location.href=url.toString();
-}
-
-async function instagramLanding(){
-  await publicHome();
-  const site=document.querySelector('.public-site');
-  if(!site)return;
-  site.classList.add('public-instagram-page');
-  site.querySelector('.public-hero')?.remove();
-  site.querySelector('.public-search-wrap')?.remove();
-  site.querySelectorAll('.public-section,.public-categories,.public-stats,.public-footer').forEach(x=>x.remove());
-  site.querySelector('#homesPopover')?.remove();
-  site.querySelector('#contactPopover')?.remove();
-  site.querySelector('#servicesPopover')?.remove();
-  const head=site.querySelector('.public-site-head');
-  const box=document.createElement('main');
-  box.className='public-instagram-choice';
-  box.innerHTML=`<div class="public-instagram-card">
-    <div class="public-instagram-icon">🏠</div>
-    <h1>Xorazm Uy-Joy Platformasi</h1>
-    <p>Sizga qanday xizmat kerak?</p>
-    <div class="public-instagram-actions">
-      <button onclick="openInstagramService('buy')">🔑 UY OLMOQCHIMAN</button>
-      <button onclick="openInstagramService('sell')">🏠 UYIMNI SOTMOQCHIMAN</button>
-    </div>
-  </div>`;
-  head?.insertAdjacentElement('afterend',box);
-}
-
 function goBackFromPublicForm(){
   const url=new URL(window.location.href);
-  const fromInstagram=url.searchParams.get('instagram')==='1';
   url.searchParams.delete('service');
   url.searchParams.delete('form');
   url.searchParams.delete('admin');
   url.searchParams.delete('homes');
-  if(fromInstagram) url.searchParams.set('instagram','1');
   window.location.href=url.pathname+(url.search?url.search:'');
 }
 
@@ -3146,27 +3069,40 @@ function showPublicForm(type){
   document.body.style.background='#070a0f';
   document.body.style.overflow='auto';
 
-  // Xizmat sahifasida bosh sahifaning barcha kontentlarini yashiramiz.
+  // XIZMAT SAHIFASI: bosh sahifadagi barcha bloklarni layoutdan butunlay chiqaramiz.
+  // Faqat fixed menyu va forma qoladi. Bu o'rtadagi katta bo'sh joyni ham yo'q qiladi.
+  site.style.setProperty('height','auto','important');
+  site.style.setProperty('min-height','100vh','important');
+  site.style.setProperty('overflow','visible','important');
+  site.style.setProperty('display','block','important');
   site.querySelectorAll(':scope > *').forEach(el=>{
     if(el.classList.contains('public-site-head') || el.id==='publicForm' || el.id==='publicSuccess') return;
     el.style.setProperty('display','none','important');
+    el.style.setProperty('height','0','important');
+    el.style.setProperty('min-height','0','important');
+    el.style.setProperty('margin','0','important');
+    el.style.setProperty('padding','0','important');
   });
 
   const box=document.getElementById('publicForm');
   if(!box)return;
 
-  // Formani headerdan keyin DOM bo‘yicha ham birinchi kontent qilamiz.
-  // Shu sababli yashirilgan eski hero/footer/contacts bloklari hech qanday joy egallamaydi.
+  // XIZMAT FORMASINI DOMda menyuning bevosita ostiga olib chiqamiz.
+  // Formaning eski joyi (footer/social va boshqa bloklardan keyin) scroll/zoomda
+  // katta bo'sh joy paydo bo'lishiga sabab bo'lishi mumkin. Shu sababli uni
+  // headerdan keyingi birinchi blok qilamiz.
   const head=site.querySelector('.public-site-head');
-  if(head && box.parentElement===site){
-    head.insertAdjacentElement('afterend',box);
+  if(head && box.previousElementSibling!==head){
+    site.insertBefore(box,head.nextSibling);
   }
 
   box.className='public-form show';
   box.style.setProperty('display','block','important');
   box.style.setProperty('width','min(1100px,calc(100% - 36px))','important');
   box.style.setProperty('margin','0 auto','important');
-  box.style.setProperty('padding','78px 0 35px','important');
+  // Header fixed bo'lgani uchun forma uning tagidan boshlanadi.
+  box.style.setProperty('padding','86px 0 35px','important');
+  box.style.setProperty('margin-top','0','important');
   box.style.setProperty('position','relative','important');
   box.style.setProperty('z-index','20','important');
   window.scrollTo(0,0);
@@ -3357,11 +3293,7 @@ function publicSuccess(message){
 
 function openInstagramLink(){
   const url=new URL(window.location.href);
-  url.searchParams.delete('form');
-  url.searchParams.delete('service');
-  url.searchParams.delete('homes');
-  url.searchParams.delete('admin');
-  url.searchParams.set('instagram','1');
+  url.searchParams.set('form','1');
   const link=url.toString();
   modal(`<h2>📲 Instagram uchun link</h2>
   <p>Instagram Story yoki Bio'ga shu havolani qo‘ying. Odam kirganda faqat 2 ta tanlovni ko‘radi:</p>
@@ -3393,7 +3325,6 @@ document.addEventListener('click',e=>{const n=e.target.closest?.('.nav[data-page
 
 const params=new URLSearchParams(window.location.search);
 const isPublicForm=params.get('form')==='1';
-const isInstagram=params.get('instagram')==='1';
 const isHomesPage=params.get('homes')==='1';
 const isAdmin=params.get('admin')==='1';
 const publicService=params.get('service');
@@ -3406,14 +3337,8 @@ if(qrPayload){
 }else if(isHomesPage){
   publicHomesPage();
 }else if(publicService==='sell' || publicService==='buy'){
-  // Xizmat formasi faqat public sahifa to‘liq qurilgandan keyin ochilsin.
-  // setTimeout ishlatilmaydi: async publicHome() bilan poyga bo‘lib, eski bloklar qayta ko‘rinib qolishi mumkin.
-  publicHome().then(()=>showPublicForm(publicService));
-}else if(isInstagram){
-  instagramLanding();
-}else if(isPublicForm && !publicService){
-  // Eski Instagram havolalari (?form=1) ham to'g'ridan-to'g'ri 2 ta tanlovni ochsin.
-  instagramLanding();
+  publicHome();
+  setTimeout(()=>showPublicForm(publicService),50);
 }else if(isPublicForm){
   publicHome();
 }else if(isAdmin){
