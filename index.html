@@ -1377,7 +1377,7 @@ function renderHomeInquiries(homeId){
     ${q.note?`<div class="inquiry-meta">📝 ${esc(q.note)}</div>`:''}
     ${q.created_at?`<div class="inquiry-meta">📅 ${new Date(q.created_at).toLocaleString('uz-UZ')}</div>`:''}
     <div class="inquiry-actions">
-      <a class="small" href="tel:${esc(q.phone||'')}">📞 Qo‘ng‘iroq</a>
+      <a class="small" href="tel:${esc(q.phone||'')}">📞 +998 99 962 54 54</a>
       <button class="small" onclick="editHomeInquiry(${q.id})">Tahrir</button>
       <button class="small" onclick="deleteHomeInquiry(${q.id})">O‘chirish</button>
     </div>
@@ -3017,7 +3017,7 @@ function publicHomeCards(a){
         <div class="public-view">👁️ ${Number(x.view_count||0)} marta ko‘rilgan</div>
         <button class="public-home-btn" onclick="showPublicHome(${x.id})">Uy haqida batafsil</button>
         <div class="public-home-contact">
-          <a class="public-home-phone" href="tel:+998999625454">📞 Qo‘ng‘iroq</a>
+          <a class="public-home-phone" href="tel:+998999625454">📞 +998 99 962 54 54</a>
           <a class="public-home-telegram" href="https://t.me/alisher_sotuv" target="_blank" rel="noopener">✈️ Telegram</a>
         </div>
       </div>
@@ -3054,7 +3054,7 @@ async function showPublicHome(id){
     <div class="match"><b>${money(x.price)}</b><br>📍 ${esc(x.city)}, ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}</div>
     <div class="public-contact">Murojaat uchun: <a href="tel:+998999625454">📞 +998 99 962 54 54</a></div>
     <div class="public-home-contact">
-      <a class="public-home-phone" href="tel:+998999625454">📞 Qo‘ng‘iroq qilish</a>
+      <a class="public-home-phone" href="tel:+998999625454">📞 +998 99 962 54 54</a>
       <a class="public-home-telegram" href="https://t.me/alisher_sotuv" target="_blank" rel="noopener">✈️ Telegram</a>
     </div>
     <button class="btn light" onclick="closeModal()">Yopish</button>`);
