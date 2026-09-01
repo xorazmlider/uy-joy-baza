@@ -2556,7 +2556,7 @@ async function publicHome(){
       <button class="public-menu-btn" onclick="togglePublicMobileMenu()" aria-label="Menyu">☰</button>
       <div id="publicMobileMenu" class="public-mobile-menu">
         <a href="#home" onclick="publicHome();return false;">Bosh sahifa</a>
-        <a href="#homes" onclick="document.getElementById('homes')?.scrollIntoView({behavior:'smooth'});return false;">Uylar</a>
+        <a href="#" onclick="closePublicDrops();closePublicNavMenu();openAllHomes();return false;">Uylar</a>
         <a href="#" onclick="openPublicService('sell');return false;">🏠 Uyimni sotmoqchiman</a>
         <a href="#" onclick="openPublicService('buy');return false;">🔑 Uy olmoqchiman</a>
         <a href="tel:+998999625454">☎ +998 99 962 54 54</a>
@@ -2921,6 +2921,9 @@ function openPublicService(type){
 }
 function togglePublicMobileMenu(){
   document.getElementById('publicMobileMenu')?.classList.toggle('open');
+}
+function closePublicNavMenu(){
+  document.getElementById('publicMobileMenu')?.classList.remove('open');
 }
 function closePublicDrops(){
   document.querySelectorAll('.public-nav-drop.open').forEach(x=>x.classList.remove('open'));
