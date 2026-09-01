@@ -3402,6 +3402,9 @@ if(qrPayload){
   setTimeout(()=>showPublicForm(publicService),50);
 }else if(isInstagram){
   instagramLanding();
+}else if(isPublicForm && !publicService){
+  // Eski Instagram havolalari (?form=1) ham to'g'ridan-to'g'ri 2 ta tanlovni ochsin.
+  instagramLanding();
 }else if(isPublicForm){
   publicHome();
 }else if(isAdmin){
