@@ -3086,11 +3086,23 @@ function showPublicForm(type){
 
   const box=document.getElementById('publicForm');
   if(!box)return;
+
+  // XIZMAT FORMASINI DOMda menyuning bevosita ostiga olib chiqamiz.
+  // Formaning eski joyi (footer/social va boshqa bloklardan keyin) scroll/zoomda
+  // katta bo'sh joy paydo bo'lishiga sabab bo'lishi mumkin. Shu sababli uni
+  // headerdan keyingi birinchi blok qilamiz.
+  const head=site.querySelector('.public-site-head');
+  if(head && box.previousElementSibling!==head){
+    site.insertBefore(box,head.nextSibling);
+  }
+
   box.className='public-form show';
   box.style.setProperty('display','block','important');
   box.style.setProperty('width','min(1100px,calc(100% - 36px))','important');
   box.style.setProperty('margin','0 auto','important');
-  box.style.setProperty('padding','72px 0 35px','important');
+  // Header fixed bo'lgani uchun forma uning tagidan boshlanadi.
+  box.style.setProperty('padding','86px 0 35px','important');
+  box.style.setProperty('margin-top','0','important');
   box.style.setProperty('position','relative','important');
   box.style.setProperty('z-index','20','important');
   window.scrollTo(0,0);
