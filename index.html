@@ -252,6 +252,19 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
   width:100%;margin-top:12px;padding:10px;border:1px solid #f5b72c;border-radius:7px;
   background:#f5b72c;color:#111;font-weight:900;font-size:11px;cursor:pointer;
 }
+.public-home-contact{
+  display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px;
+}
+.public-home-contact a{
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  padding:9px 6px;border-radius:7px;text-decoration:none;font-weight:900;font-size:10px;
+}
+.public-home-phone{
+  background:#1f9d55;color:#fff;border:1px solid #1f9d55;
+}
+.public-home-telegram{
+  background:#229ED9;color:#fff;border:1px solid #229ED9;
+}
 .public-view{font-size:10px;color:#727a84;margin-top:7px}
 .public-contact{margin-top:28px;text-align:center;font-size:13px;color:#9da4ad}
 .public-contact a{font-weight:900;color:#f5b72c;text-decoration:none}
@@ -675,7 +688,7 @@ const ROLE_PAGES={
   Admin:['dashboard','homes','buyers','sellers','staff','matches','deals','tasks','reports','documents','contracts','sold'],
   Menejer:['dashboard','homes','buyers','sellers','matches','deals','tasks','reports','documents','contracts','sold'],
   Rieltor:['dashboard','homes','buyers','sellers','matches','deals','tasks','documents','contracts','sold'],
-  Agent:['dashboard','homes','buyers','sellers','matches','deals','tasks','documents','contracts','sold']
+  Agent:['dashboard','homes','buyers','sellers','matches','deals','tasks','reports','documents','contracts','sold']
 };
 
 function normalizeRole(role){
@@ -1217,121 +1230,6 @@ function dealCommission(d){
   const p=Math.abs(Number(d.price)||0),c=Number(d.commission)||0;
   return d.commission_type==='percent'?p*c/100:c;
 }
-
-/* ===== BITIMDAN AKT — QABUL QILISH / TOPSHIRISH DALOLATNOMASI ===== */
-function transferActHtml(d){
-  const b=db.buyers.find(x=>Number(x.id)===Number(d?.buyer_id));
-  const h=db.homes.find(x=>Number(x.id)===Number(d?.home_id));
-  if(!d||!b||!h)return '';
-
-  const actNo='AKT-'+String(d.id).padStart(6,'0');
-  const date=new Date(d.created_at||Date.now()).toISOString().slice(0,10);
-  const seller=h.seller||'—';
-  const sellerPhone=h.phone||'—';
-  const buyer=b.name||'—';
-  const buyerPhone=b.phone||'—';
-  const address=[h.city,h.area].filter(Boolean).join(', ')||'—';
-  const house=h.title||'—';
-  const rooms=h.rooms||'—';
-  const m2=h.m2||'—';
-  const price=money(d.price);
-  const note=visibleNote(d.note)||'';
-  const e=contractEsc;
-
-  return `<!doctype html><html lang="uz"><head><meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Xorazm Uylar — Qabul qilish-topshirish dalolatnomasi</title>
-  <style>
-    *{box-sizing:border-box}
-    body{margin:0;background:#fff;color:#111;font-family:Arial,sans-serif}
-    .page{width:min(900px,100%);margin:0 auto;padding:42px 48px}
-    h1{text-align:center;font-size:22px;margin:0 0 7px;text-transform:uppercase}
-    h2{text-align:center;font-size:16px;margin:0 0 28px}
-    .meta{display:flex;justify-content:space-between;gap:20px;margin-bottom:22px;font-size:13px}
-    p{font-size:14px;line-height:1.65;text-align:justify}
-    table{width:100%;border-collapse:collapse;margin:18px 0}
-    th,td{border:1px solid #222;padding:9px 10px;font-size:13px;vertical-align:top}
-    th{text-align:left;width:34%}
-    .sign{display:grid;grid-template-columns:1fr 1fr;gap:50px;margin-top:55px}
-    .sign h3{font-size:14px;margin:0 0 38px}
-    .line{border-bottom:1px solid #111;height:20px}
-    .small{font-size:11px;color:#555;margin-top:5px}
-    .print{position:fixed;right:20px;top:20px;border:0;border-radius:7px;background:#111;color:#fff;padding:11px 16px;font-weight:700;cursor:pointer}
-    @media print{.print{display:none}.page{padding:20mm 16mm}}
-    @media(max-width:600px){.page{padding:24px 18px}.sign{grid-template-columns:1fr;gap:35px}}
-  </style></head><body>
-  <button class="print" onclick="window.print()">🖨 Chop etish</button>
-  <div class="page">
-    <h1>QABUL QILISH — TOPSHIRISH DALOLATNOMASI</h1>
-    <h2>Ko‘chmas mulk bo‘yicha</h2>
-    <div class="meta">
-      <div><b>Dalolatnoma №:</b> ${e(actNo)}</div>
-      <div><b>Sana:</b> ${e(date)}</div>
-    </div>
-
-    <p>Biz, quyida imzo qo‘yuvchilar — <b>${e(seller)}</b> (Sotuvchi) va
-    <b>${e(buyer)}</b> (Xaridor), ushbu dalolatnomani tuzdikki, Sotuvchi
-    quyidagi ko‘chmas mulkni Xaridorga topshirdi, Xaridor esa qabul qilib oldi.</p>
-
-    <table>
-      <tr><th>Sotuvchi</th><td>${e(seller)}<br>Telefon: ${e(sellerPhone)}</td></tr>
-      <tr><th>Xaridor</th><td>${e(buyer)}<br>Telefon: ${e(buyerPhone)}</td></tr>
-      <tr><th>Ko‘chmas mulk</th><td>${e(house)}</td></tr>
-      <tr><th>Manzil</th><td>${e(address)}</td></tr>
-      <tr><th>Xona soni</th><td>${e(rooms)}</td></tr>
-      <tr><th>Maydoni</th><td>${e(m2)} m²</td></tr>
-      <tr><th>Bitim qiymati</th><td>${e(price)}</td></tr>
-    </table>
-
-    <p>1. Ko‘chmas mulk Xaridorga amaldagi holatida topshirildi.</p>
-    <p>2. Tomonlar ko‘chmas mulkni ko‘zdan kechirib, uning holati bo‘yicha
-    o‘zaro da’vo va e’tirozlari yo‘qligini tasdiqlaydilar.</p>
-    <p>3. Kalitlar, mavjud hujjatlar va boshqa tegishli buyumlar tomonlarning
-    kelishuviga muvofiq topshirildi.</p>
-    ${note?`<p><b>Qo‘shimcha izoh:</b> ${e(note)}</p>`:''}
-    <p>Ushbu dalolatnoma ikki nusxada tuzildi va har ikki tomon uchun bir nusxadan berildi.</p>
-
-    <div class="sign">
-      <div>
-        <h3>SOTUVCHI</h3>
-        <div>${e(seller)}</div>
-        <div class="line"></div>
-        <div class="small">F.I.Sh. / imzo</div>
-      </div>
-      <div>
-        <h3>XARIDOR</h3>
-        <div>${e(buyer)}</div>
-        <div class="line"></div>
-        <div class="small">F.I.Sh. / imzo</div>
-      </div>
-    </div>
-  </div></body></html>`;
-}
-
-function previewTransferAct(dealId){
-  const d=(db.deals||[]).find(x=>String(x.id)===String(dealId));
-  if(!d){alert('Bitim topilmadi.');return;}
-  if(d.stage!=='Sotildi'){
-    alert('Akt faqat “Sotildi” bosqichidagi bitim uchun chiqariladi.');
-    return;
-  }
-  const b=db.buyers.find(x=>Number(x.id)===Number(d.buyer_id));
-  const h=db.homes.find(x=>Number(x.id)===Number(d.home_id));
-  if(!b||!h){
-    alert('Bitimdagi xaridor yoki uy ma’lumoti topilmadi.');
-    return;
-  }
-  const html=transferActHtml(d);
-  const w=window.open('','_blank');
-  if(!w){
-    alert('Akt oynasi ochilmadi. Brauzerda popup oynalarga ruxsat bering.');
-    return;
-  }
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
-}
-
 function dealsPage(){
   if(!canPage('deals'))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2><p>Sizning rolingizda bu bo‘lim yopiq.</p></div>';
   return header('Bitimlar','Sotuv jarayonini bosqichma-bosqich boshqaring','+ Bitim','openDeal()').replace('<button class="btn" onclick="openDeal()">+ Bitim</button>','<button type="button" id="addDealBtn" class="btn">+ Bitim</button>')+
@@ -1341,14 +1239,11 @@ function dealsPage(){
     <td><b>${esc(b?.name||'—')}</b><br><span class="muted">${esc(b?.phone||'')}</span></td>
     <td>${esc(h?.title||'—')}</td><td>${money(d.price)}</td><td>${money(dealCommission(d))}</td>
     <td><span class="badge">${esc(d.stage||'Yangi')}</span></td>
-    <td style="white-space:nowrap">
-      ${d.stage==='Sotildi'?`<button class="small primary" onclick="previewTransferAct('${String(d.id)}')">📄 Akt</button>`:''}
-      <button class="small" onclick="proDelete('crm_deals','deals','${String(d.id)}')">×</button>
-    </td></tr>`}).join('')||'<tr><td colspan="6" class="empty">Bitimlar hali yo‘q.</td></tr>'}
+    <td><button class="small" onclick="proDelete('crm_deals','deals','${String(d.id)}')">×</button></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">Bitimlar hali yo‘q.</td></tr>'}
   </table></div></div>`;
 }
 function reportsPage(){
-  if(!['Admin','Menejer'].includes(currentRole()))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2><p>Hisobot bo‘limi faqat Admin va Menejer uchun ochiq.</p></div>';
+  if(!canPage('reports'))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2><p>Sizning rolingizda bu bo‘lim yopiq.</p></div>';
   const active=db.homes.filter(x=>x.status!=='Sotildi').length,sold=db.homes.filter(x=>x.status==='Sotildi').length;
   const revenue=(db.deals||[]).filter(d=>d.stage==='Sotildi').reduce((s,d)=>s+dealCommission(d),0);
   const totalValue=(db.deals||[]).filter(d=>d.stage==='Sotildi').reduce((s,d)=>s+Math.abs(Number(d.price)||0),0);
@@ -3121,6 +3016,10 @@ function publicHomeCards(a){
         <div class="public-home-meta">📍 ${esc(x.city)} • ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}</div>
         <div class="public-view">👁️ ${Number(x.view_count||0)} marta ko‘rilgan</div>
         <button class="public-home-btn" onclick="showPublicHome(${x.id})">Uy haqida batafsil</button>
+        <div class="public-home-contact">
+          <a class="public-home-phone" href="tel:+998999625454">📞 Qo‘ng‘iroq</a>
+          <a class="public-home-telegram" href="https://t.me/alisher_sotuv" target="_blank" rel="noopener">✈️ Telegram</a>
+        </div>
       </div>
     </div>`;
   }).join('')||'<div class="empty">Hozircha sotuvda uylar yo‘q.</div>';
@@ -3154,6 +3053,10 @@ async function showPublicHome(id){
   modal(`<h2>${esc(x.title)}</h2>${gallery}
     <div class="match"><b>${money(x.price)}</b><br>📍 ${esc(x.city)}, ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}</div>
     <div class="public-contact">Murojaat uchun: <a href="tel:+998999625454">📞 +998 99 962 54 54</a></div>
+    <div class="public-home-contact">
+      <a class="public-home-phone" href="tel:+998999625454">📞 Qo‘ng‘iroq qilish</a>
+      <a class="public-home-telegram" href="https://t.me/alisher_sotuv" target="_blank" rel="noopener">✈️ Telegram</a>
+    </div>
     <button class="btn light" onclick="closeModal()">Yopish</button>`);
   const {data}=await client.rpc('increment_home_view',{p_home_id:id});
   if(data!==null){
