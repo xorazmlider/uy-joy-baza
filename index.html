@@ -481,6 +481,19 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
   top:0;left:0;right:0;
   z-index:100!important;
 }
+/* XIZMAT FORMASI: menyu ostidan boshlanadi, boshqa bloklar joy egallamaydi. */
+.public-service-page > .public-site-head ~ .public-social-links,
+.public-service-page > .public-site-head ~ .public-footer,
+.public-service-page > .public-site-head ~ .public-section,
+.public-service-page > .public-site-head ~ .public-hero,
+.public-service-page > .public-site-head ~ .public-search-wrap,
+.public-service-page > .public-site-head ~ .public-nav-popover{
+  display:none!important;
+  height:0!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+}
 .public-service-page #publicForm{
   display:block!important;
   width:min(1100px,calc(100% - 36px))!important;
@@ -3056,10 +3069,19 @@ function showPublicForm(type){
   document.body.style.background='#070a0f';
   document.body.style.overflow='auto';
 
-  // Xizmat sahifasida bosh sahifaning barcha kontentlarini yashiramiz.
+  // XIZMAT SAHIFASI: bosh sahifadagi barcha bloklarni layoutdan butunlay chiqaramiz.
+  // Faqat fixed menyu va forma qoladi. Bu o'rtadagi katta bo'sh joyni ham yo'q qiladi.
+  site.style.setProperty('height','auto','important');
+  site.style.setProperty('min-height','100vh','important');
+  site.style.setProperty('overflow','visible','important');
+  site.style.setProperty('display','block','important');
   site.querySelectorAll(':scope > *').forEach(el=>{
     if(el.classList.contains('public-site-head') || el.id==='publicForm' || el.id==='publicSuccess') return;
     el.style.setProperty('display','none','important');
+    el.style.setProperty('height','0','important');
+    el.style.setProperty('min-height','0','important');
+    el.style.setProperty('margin','0','important');
+    el.style.setProperty('padding','0','important');
   });
 
   const box=document.getElementById('publicForm');
@@ -3068,7 +3090,7 @@ function showPublicForm(type){
   box.style.setProperty('display','block','important');
   box.style.setProperty('width','min(1100px,calc(100% - 36px))','important');
   box.style.setProperty('margin','0 auto','important');
-  box.style.setProperty('padding','78px 0 35px','important');
+  box.style.setProperty('padding','72px 0 35px','important');
   box.style.setProperty('position','relative','important');
   box.style.setProperty('z-index','20','important');
   window.scrollTo(0,0);
