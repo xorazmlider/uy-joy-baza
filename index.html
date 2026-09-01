@@ -534,6 +534,8 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
   z-index:20!important;
 }
 .public-service-page #publicForm.public-form:not(.show){display:none!important}
+.instagram-choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:800px){.instagram-choice-grid{grid-template-columns:1fr}.public-service-page #publicForm{width:calc(100% - 24px)!important}}
 @media(max-width:800px){
   .public-service-page #publicForm{width:calc(100% - 24px)!important;padding-top:78px!important}
 }
@@ -3054,10 +3056,14 @@ async function trackSiteVisit(){
 
 function goBackFromPublicForm(){
   const url=new URL(window.location.href);
+  const fromInstagram=url.searchParams.get('instagram')==='1';
   url.searchParams.delete('service');
   url.searchParams.delete('form');
   url.searchParams.delete('admin');
   url.searchParams.delete('homes');
+  // Instagram link rejimida Orqaga 2 ta tanlov sahifasiga qaytadi.
+  if(fromInstagram) url.searchParams.set('instagram','1');
+  else url.searchParams.delete('instagram');
   window.location.href=url.pathname+(url.search?url.search:'');
 }
 
@@ -3293,7 +3299,11 @@ function publicSuccess(message){
 
 function openInstagramLink(){
   const url=new URL(window.location.href);
-  url.searchParams.set('form','1');
+  url.searchParams.delete('form');
+  url.searchParams.delete('service');
+  url.searchParams.delete('admin');
+  url.searchParams.delete('homes');
+  url.searchParams.set('instagram','1');
   const link=url.toString();
   modal(`<h2>📲 Instagram uchun link</h2>
   <p>Instagram Story yoki Bio'ga shu havolani qo‘ying. Odam kirganda faqat 2 ta tanlovni ko‘radi:</p>
@@ -3312,6 +3322,65 @@ async function copyInstagramLink(link){
   }
 }
 
+function openInstagramService(type){
+  const url=new URL(window.location.href);
+  // Instagram tanlov sahifasidan kirilganini saqlab qolamiz.
+  // Shunda forma ichidagi "← Orqaga" yana 2 ta tanlovga qaytaradi.
+  url.searchParams.set('instagram','1');
+  url.searchParams.delete('form');
+  url.searchParams.delete('homes');
+  url.searchParams.delete('admin');
+  url.searchParams.set('service',type);
+  window.location.href=url.toString();
+}
+
+function showInstagramChoice(){
+  const site=document.querySelector('.public-site');
+  if(!site)return;
+  site.classList.add('public-service-page');
+  document.body.style.background='#070a0f';
+  document.body.style.overflow='auto';
+
+  const head=site.querySelector('.public-site-head');
+  const box=document.getElementById('publicForm');
+  if(!head || !box)return;
+
+  site.querySelectorAll(':scope > *').forEach(el=>{
+    if(el===head || el===box || el.id==='publicSuccess') return;
+    el.style.setProperty('display','none','important');
+    el.style.setProperty('height','0','important');
+    el.style.setProperty('min-height','0','important');
+    el.style.setProperty('margin','0','important');
+    el.style.setProperty('padding','0','important');
+  });
+
+  head.style.setProperty('position','fixed','important');
+  head.style.setProperty('top','0','important');
+  head.style.setProperty('left','0','important');
+  head.style.setProperty('right','0','important');
+  head.style.setProperty('z-index','100','important');
+
+  head.insertAdjacentElement('afterend',box);
+  box.className='public-form show';
+  box.style.setProperty('display','block','important');
+  box.style.setProperty('width','min(760px,calc(100% - 36px))','important');
+  box.style.setProperty('margin','0 auto','important');
+  box.style.setProperty('padding','105px 0 40px','important');
+  box.style.setProperty('position','relative','important');
+  box.style.setProperty('z-index','20','important');
+  box.innerHTML=`
+    <div class="public-form-box" style="text-align:center;padding:34px 28px">
+      <div style="font-size:44px;margin-bottom:10px">🏠</div>
+      <h2 style="margin-bottom:8px">Xorazm Uy-Joy Platformasi</h2>
+      <div class="sub" style="margin-bottom:24px">Sizga qanday xizmat kerak?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <button class="public-choice-buy" style="width:100%;min-height:58px" onclick="openInstagramService('buy')">🔑 UY OLMOQCHIMAN</button>
+        <button class="public-choice-buy" style="width:100%;min-height:58px" onclick="openInstagramService('sell')">🏠 UYIMNI SOTMOQCHIMAN</button>
+      </div>
+    </div>`;
+  window.scrollTo(0,0);
+}
+
 function bindProButtons(){
   const deal=document.getElementById('addDealBtn');
   if(deal && !deal.dataset.bound){deal.dataset.bound='1';deal.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openDeal();});}
@@ -3325,6 +3394,7 @@ document.addEventListener('click',e=>{const n=e.target.closest?.('.nav[data-page
 
 const params=new URLSearchParams(window.location.search);
 const isPublicForm=params.get('form')==='1';
+const isInstagram=params.get('instagram')==='1';
 const isHomesPage=params.get('homes')==='1';
 const isAdmin=params.get('admin')==='1';
 const publicService=params.get('service');
@@ -3339,6 +3409,9 @@ if(qrPayload){
 }else if(publicService==='sell' || publicService==='buy'){
   publicHome();
   setTimeout(()=>showPublicForm(publicService),50);
+}else if(isInstagram){
+  publicHome();
+  setTimeout(()=>showInstagramChoice(),50);
 }else if(isPublicForm){
   publicHome();
 }else if(isAdmin){
