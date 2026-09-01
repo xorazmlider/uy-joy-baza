@@ -569,6 +569,17 @@ body:not(.public-service-page) footer .contact-links{
   display:none !important;
 }
 
+
+/* Instagram direct landing */
+.public-instagram-page .public-site-head{position:fixed;top:0;left:0;right:0;z-index:50}
+.public-instagram-choice{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:110px 20px 40px;box-sizing:border-box}
+.public-instagram-card{width:min(720px,92vw);padding:34px 36px;border:1px solid rgba(255,255,255,.28);border-radius:18px;background:rgba(18,23,34,.92);box-shadow:0 18px 55px rgba(0,0,0,.35);text-align:center}
+.public-instagram-icon{font-size:48px;margin-bottom:8px}
+.public-instagram-card h1{font-size:24px;margin:0 0 8px;color:#fff}
+.public-instagram-card p{margin:0 0 24px;color:#cbd2df}
+.public-instagram-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.public-instagram-actions button{border:1px solid #f5b72c;background:#f5b72c;color:#111;border-radius:10px;padding:15px 12px;font-weight:800;cursor:pointer}
+@media(max-width:700px){.public-instagram-choice{padding:95px 14px 25px}.public-instagram-card{padding:26px 18px}.public-instagram-actions{grid-template-columns:1fr}.public-instagram-card h1{font-size:20px}}
 </style>
 <style>
 /* V10 MOBILE FIX: bosh sahifaga kirganda qidiruv paneli yopiq bo‘ladi. */
@@ -3080,12 +3091,50 @@ async function trackSiteVisit(){
 }
 
 
+function openInstagramService(type){
+  const url=new URL(window.location.href);
+  url.searchParams.delete('form');
+  url.searchParams.delete('homes');
+  url.searchParams.delete('admin');
+  url.searchParams.set('instagram','1');
+  url.searchParams.set('service',type);
+  window.location.href=url.toString();
+}
+
+async function instagramLanding(){
+  await publicHome();
+  const site=document.querySelector('.public-site');
+  if(!site)return;
+  site.classList.add('public-instagram-page');
+  site.querySelector('.public-hero')?.remove();
+  site.querySelector('.public-search-wrap')?.remove();
+  site.querySelectorAll('.public-section,.public-categories,.public-stats,.public-footer').forEach(x=>x.remove());
+  site.querySelector('#homesPopover')?.remove();
+  site.querySelector('#contactPopover')?.remove();
+  site.querySelector('#servicesPopover')?.remove();
+  const head=site.querySelector('.public-site-head');
+  const box=document.createElement('main');
+  box.className='public-instagram-choice';
+  box.innerHTML=`<div class="public-instagram-card">
+    <div class="public-instagram-icon">🏠</div>
+    <h1>Xorazm Uy-Joy Platformasi</h1>
+    <p>Sizga qanday xizmat kerak?</p>
+    <div class="public-instagram-actions">
+      <button onclick="openInstagramService('buy')">🔑 UY OLMOQCHIMAN</button>
+      <button onclick="openInstagramService('sell')">🏠 UYIMNI SOTMOQCHIMAN</button>
+    </div>
+  </div>`;
+  head?.insertAdjacentElement('afterend',box);
+}
+
 function goBackFromPublicForm(){
   const url=new URL(window.location.href);
+  const fromInstagram=url.searchParams.get('instagram')==='1';
   url.searchParams.delete('service');
   url.searchParams.delete('form');
   url.searchParams.delete('admin');
   url.searchParams.delete('homes');
+  if(fromInstagram) url.searchParams.set('instagram','1');
   window.location.href=url.pathname+(url.search?url.search:'');
 }
 
@@ -3300,7 +3349,11 @@ function publicSuccess(message){
 
 function openInstagramLink(){
   const url=new URL(window.location.href);
-  url.searchParams.set('form','1');
+  url.searchParams.delete('form');
+  url.searchParams.delete('service');
+  url.searchParams.delete('homes');
+  url.searchParams.delete('admin');
+  url.searchParams.set('instagram','1');
   const link=url.toString();
   modal(`<h2>📲 Instagram uchun link</h2>
   <p>Instagram Story yoki Bio'ga shu havolani qo‘ying. Odam kirganda faqat 2 ta tanlovni ko‘radi:</p>
@@ -3332,6 +3385,7 @@ document.addEventListener('click',e=>{const n=e.target.closest?.('.nav[data-page
 
 const params=new URLSearchParams(window.location.search);
 const isPublicForm=params.get('form')==='1';
+const isInstagram=params.get('instagram')==='1';
 const isHomesPage=params.get('homes')==='1';
 const isAdmin=params.get('admin')==='1';
 const publicService=params.get('service');
@@ -3346,6 +3400,8 @@ if(qrPayload){
 }else if(publicService==='sell' || publicService==='buy'){
   publicHome();
   setTimeout(()=>showPublicForm(publicService),50);
+}else if(isInstagram){
+  instagramLanding();
 }else if(isPublicForm){
   publicHome();
 }else if(isAdmin){
