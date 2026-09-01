@@ -3154,6 +3154,14 @@ function showPublicForm(type){
 
   const box=document.getElementById('publicForm');
   if(!box)return;
+
+  // Formani headerdan keyin DOM bo‘yicha ham birinchi kontent qilamiz.
+  // Shu sababli yashirilgan eski hero/footer/contacts bloklari hech qanday joy egallamaydi.
+  const head=site.querySelector('.public-site-head');
+  if(head && box.parentElement===site){
+    head.insertAdjacentElement('afterend',box);
+  }
+
   box.className='public-form show';
   box.style.setProperty('display','block','important');
   box.style.setProperty('width','min(1100px,calc(100% - 36px))','important');
@@ -3398,8 +3406,9 @@ if(qrPayload){
 }else if(isHomesPage){
   publicHomesPage();
 }else if(publicService==='sell' || publicService==='buy'){
-  publicHome();
-  setTimeout(()=>showPublicForm(publicService),50);
+  // Xizmat formasi faqat public sahifa to‘liq qurilgandan keyin ochilsin.
+  // setTimeout ishlatilmaydi: async publicHome() bilan poyga bo‘lib, eski bloklar qayta ko‘rinib qolishi mumkin.
+  publicHome().then(()=>showPublicForm(publicService));
 }else if(isInstagram){
   instagramLanding();
 }else if(isPublicForm && !publicService){
