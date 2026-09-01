@@ -3056,10 +3056,14 @@ async function trackSiteVisit(){
 
 function goBackFromPublicForm(){
   const url=new URL(window.location.href);
+  const fromInstagram=url.searchParams.get('instagram')==='1';
   url.searchParams.delete('service');
   url.searchParams.delete('form');
   url.searchParams.delete('admin');
   url.searchParams.delete('homes');
+  // Instagram link rejimida Orqaga 2 ta tanlov sahifasiga qaytadi.
+  if(fromInstagram) url.searchParams.set('instagram','1');
+  else url.searchParams.delete('instagram');
   window.location.href=url.pathname+(url.search?url.search:'');
 }
 
@@ -3320,7 +3324,9 @@ async function copyInstagramLink(link){
 
 function openInstagramService(type){
   const url=new URL(window.location.href);
-  url.searchParams.delete('instagram');
+  // Instagram tanlov sahifasidan kirilganini saqlab qolamiz.
+  // Shunda forma ichidagi "← Orqaga" yana 2 ta tanlovga qaytaradi.
+  url.searchParams.set('instagram','1');
   url.searchParams.delete('form');
   url.searchParams.delete('homes');
   url.searchParams.delete('admin');
