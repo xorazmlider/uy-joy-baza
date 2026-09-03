@@ -104,14 +104,6 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
   padding:15px;box-shadow:0 18px 50px #000b;
 }
 .public-nav-popover.show{display:block}
-/* V10: Uylar menyusi aynan "Uylar" tugmasining tagidan ochiladi. */
-.homes-popover{
-  right:auto!important;
-  left:0;
-  top:0;
-  transform:none;
-}
-
 .public-nav-popover h3{margin:0 0 10px;font-size:15px}
 .public-contact-row{
   display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #242a31;
@@ -640,7 +632,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
   .public-nav-popover::before{
     content:"";position:absolute;top:-12px;left:0;right:0;height:12px;
   }
-  .homes-popover{right:30%}
+  .homes-popover{right:auto!important;}
 }
 
 
@@ -2654,6 +2646,15 @@ function contractHtml(){
   .public-home-btn{font-size:12px!important;padding:12px!important}
 }
 
+
+/* V13: Uylar dropdown — exact tag position, independent of the old right:30% rule. */
+.public-main-nav > a{position:relative;}
+#homesPopover.homes-popover{
+  position:fixed!important;
+  right:auto!important;
+  z-index:9999!important;
+}
+
 </style></head><body>
   <section class="page">
     <h1>${title}</h1>
@@ -3487,80 +3488,71 @@ function filterAllHomes(){
 function setupPublicNavHover(){
   const nav=document.querySelector('.public-main-nav');
   if(!nav)return;
-  const links=Array.from(nav.querySelectorAll(':scope > a'));
-  const homesLink=links.find(a=>a.textContent.trim()==='Uylar');
-  const servicesLink=links.find(a=>a.textContent.trim()==='Xizmatlar');
-  const contactsLink=links.find(a=>a.textContent.trim()==='Kontaktlar');
+
+  const getLinks=()=>Array.from(nav.querySelectorAll('a'));
+  const findLink=(name)=>getLinks().find(a=>a.textContent.trim()===name);
 
   const positionHomesPopover=()=>{
+    const link=findLink('Uylar');
     const pop=document.getElementById('homesPopover');
-    if(!homesLink||!pop)return;
-    const r=homesLink.getBoundingClientRect();
-    const wasHidden=!pop.classList.contains('show');
-    if(wasHidden)pop.classList.add('show');
-    const w=pop.offsetWidth||235;
-    const gap=9;
+    if(!link||!pop)return;
+
+    const r=link.getBoundingClientRect();
+    const w=pop.offsetWidth||300;
     const center=r.left+(r.width/2);
-    const minLeft=w/2+8;
-    const maxLeft=window.innerWidth-w/2-8;
-    const left=Math.max(minLeft,Math.min(center,maxLeft));
-    pop.style.position='fixed';
-    pop.style.left=left+'px';
-    pop.style.right='auto';
-    pop.style.top=(r.bottom+gap)+'px';
-    pop.style.transform='translateX(-50%)';
+    const left=Math.max(w/2+8,Math.min(center,window.innerWidth-w/2-8));
+
+    pop.style.setProperty('position','fixed','important');
+    pop.style.setProperty('left',left+'px','important');
+    pop.style.setProperty('right','auto','important');
+    pop.style.setProperty('top',(r.bottom+8)+'px','important');
+    pop.style.setProperty('transform','translateX(-50%)','important');
+    pop.style.setProperty('z-index','9999','important');
   };
 
-  const bind=(link,id,keep)=>{
-    if(!link)return;
-    link.addEventListener('mouseenter',()=>{
-      closeNavPopovers(keep);
-      const pop=document.getElementById(id);
-      if(pop)pop.classList.add('show');
-      if(id==='homesPopover')positionHomesPopover();
-    });
+  const showPopover=(id)=>{
+    closeNavPopovers();
+    const pop=document.getElementById(id);
+    if(pop)pop.classList.add('show');
+    if(id==='homesPopover')positionHomesPopover();
   };
-  bind(homesLink,'homesPopover','homes');
-  bind(servicesLink,'servicesPopover','services');
-  bind(contactsLink,'contactPopover','contact');
+
+  const bind=(name,id)=>{
+    const link=findLink(name);
+    if(!link)return;
+
+    link.addEventListener('mouseenter',()=>showPopover(id));
+    link.addEventListener('mouseover',()=>showPopover(id));
+  };
+
+  bind('Uylar','homesPopover');
+  bind('Xizmatlar','servicesPopover');
+  bind('Kontaktlar','contactPopover');
 
   ['homesPopover','servicesPopover','contactPopover'].forEach(id=>{
     const pop=document.getElementById(id);
     if(!pop)return;
     pop.addEventListener('mouseenter',()=>{
       pop.classList.add('show');
+      if(id==='homesPopover')positionHomesPopover();
     });
     pop.addEventListener('mouseleave',()=>{
       pop.classList.remove('show');
     });
   });
 
-  nav.addEventListener('mouseleave',e=>{
-    if(!e.relatedTarget || !e.relatedTarget.closest('.public-nav-popover')) {
-      setTimeout(()=>{
-        if(!document.querySelector('.public-nav-popover:hover'))
-          closeNavPopovers();
-      },80);
-    }
+  nav.addEventListener('mouseleave',()=>{
+    setTimeout(()=>{
+      if(!document.querySelector('.public-nav-popover:hover'))
+        closeNavPopovers();
+    },120);
+  });
+
+  window.addEventListener('resize',()=>{
+    const pop=document.getElementById('homesPopover');
+    if(pop?.classList.contains('show'))positionHomesPopover();
   });
 }
-
-window.addEventListener('resize',()=>{
-  const p=document.getElementById('homesPopover');
-  if(p?.classList.contains('show')){
-    const link=Array.from(document.querySelectorAll('.public-main-nav > a')).find(a=>a.textContent.trim()==='Uylar');
-    if(link){
-      const r=link.getBoundingClientRect();
-      const w=p.offsetWidth||235;
-      const left=Math.max(w/2+8,Math.min(r.left+r.width/2,window.innerWidth-w/2-8));
-      p.style.position='fixed';
-      p.style.left=left+'px';
-      p.style.right='auto';
-      p.style.top=(r.bottom+9)+'px';
-      p.style.transform='translateX(-50%)';
-    }
-  }
-});
 
 function openPublicService(type){
   closePublicDrops();
