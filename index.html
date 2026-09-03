@@ -1239,7 +1239,7 @@ function dealsPage(){
     <td><b>${esc(b?.name||'—')}</b><br><span class="muted">${esc(b?.phone||'')}</span></td>
     <td>${esc(h?.title||'—')}</td><td>${money(d.price)}</td><td>${money(dealCommission(d))}</td>
     <td><span class="badge">${esc(d.stage||'Yangi')}</span></td>
-    <td><button class="small" onclick="proDelete('crm_deals','deals','${String(d.id)}')">×</button></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">Bitimlar hali yo‘q.</td></tr>'}
+    <td style="white-space:nowrap">${h?`<button class="small" onclick="openContractForSellerHome(${h.id})">📄 Shartnoma</button> <button class="small primary" onclick="openActForHome(${h.id})">📋 AKT</button>`:''} <button class="small" onclick="proDelete('crm_deals','deals','${String(d.id)}')">×</button></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">Bitimlar hali yo‘q.</td></tr>'}
   </table></div></div>`;
 }
 function reportsPage(){
