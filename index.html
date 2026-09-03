@@ -3301,7 +3301,7 @@ async function submitPublicBuy(){
   const required=[name,phone,pf('city'),pf('area'),pf('rooms'),pf('m2'),pf('budget'),pf('finish'),pf('type')];
   if(required.some(v=>!v)){alert('Iltimos, barcha majburiy maydonlarni to‘ldiring.');return;}
 
-  const submit=document.querySelector('#publicForm button.public-submit');
+  const submit=document.querySelector('#publicForm button.public-submit:not(.back)');
   publicBuySubmitting=true;
   const submitStartedAt=Date.now();
   if(submit){
