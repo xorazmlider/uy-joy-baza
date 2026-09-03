@@ -320,9 +320,15 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
 .public-home-meta{color:#aeb5bf;font-size:11px;margin-top:9px;line-height:1.45;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}
 .public-meta-row{display:flex;align-items:center;gap:7px;min-width:0;color:#b9c1cb;font-weight:600}
 .public-meta-row.full{grid-column:1/-1}
-.public-meta-icon{width:17px;height:17px;flex:0 0 17px;color:#2f73d9;display:inline-flex;align-items:center;justify-content:center}
-.public-meta-icon svg{width:17px;height:17px;display:block;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.public-meta-icon{width:16px;height:16px;flex:0 0 16px;color:#4f6f9f;display:inline-flex;align-items:center;justify-content:center}
+.public-meta-icon svg{width:16px;height:16px;display:block;stroke:currentColor;fill:none;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
+.public-detail-icons{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;margin-top:8px}
+.public-detail-item{display:flex;align-items:center;gap:8px;min-height:30px;color:#667085;font-size:12px;border-bottom:1px solid #edf0f4}
+.public-detail-item .public-meta-icon{width:16px;height:16px;flex-basis:16px;color:#536f9f}
+.public-detail-item .public-meta-icon svg{width:16px;height:16px;stroke-width:1.6}
+@media(max-width:650px){.public-detail-icons{grid-template-columns:1fr}}
 .public-meta-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.public-mini-icon{display:inline-flex;width:13px;height:13px;vertical-align:-2px;color:#536f9f;margin-right:3px}.public-mini-icon svg{width:13px;height:13px;display:block;stroke:currentColor;fill:none;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round}.public-view-dot{margin:0 3px;color:#a1a9b5}
 .public-home-btn{
   width:100%;margin-top:12px;padding:10px;border:1px solid #f5b72c;border-radius:7px;
   background:#f5b72c;color:#111;font-weight:900;font-size:11px;cursor:pointer;
@@ -3457,7 +3463,7 @@ function publicHomeCards(a){
           ${x.floor?`<div class="public-meta-row"><span class="public-meta-icon"><svg viewBox="0 0 24 24"><path d="M5 20V5h14v15"/><path d="M8 8h8M8 12h8M8 16h8"/></svg></span><span class="public-meta-text">${esc(x.floor)}-qavat</span></div>`:''}
           <div class="public-meta-row${x.floor?'':' full'}"><span class="public-meta-icon"><svg viewBox="0 0 24 24"><path d="M4 20V10l8-6 8 6v10"/><path d="M9 20v-5h6v5M8 11h8"/></svg></span><span class="public-meta-text">${esc(x.finish||'Ta’mir holati ko‘rsatilmagan')}</span></div>
         </div>
-        <div class="public-view">👁️ ${Number(x.view_count||0)} marta ko‘rilgan &nbsp;•&nbsp; 🗓️ Qo‘shilgan: ${esc(formatDateTime(x.created_at))}</div>
+        <div class="public-view"><span class="public-mini-icon"><svg viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></span>${Number(x.view_count||0)} marta ko‘rilgan <span class="public-view-dot">•</span> <span class="public-mini-icon"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg></span>Qo‘shilgan: ${esc(formatDateTime(x.created_at))}</div>
         <button class="public-home-btn" onclick="showPublicHome(${x.id})">Uy haqida batafsil</button>
         <div class="public-home-contact">
           <a class="public-home-phone" href="tel:+998999625454">📞 +998 99 962 54 54</a>
@@ -3494,7 +3500,14 @@ async function showPublicHome(id){
   const imgs=publicPropertyImages(x);
   const gallery=imgs.length?`<div class="image-preview" style="margin-bottom:12px">${imgs.map(u=>`<img src="${esc(u)}" style="width:120px;height:90px" onclick="window.open('${esc(u)}','_blank')">`).join('')}</div>`:'';
   modal(`<h2>${esc(x.title)}</h2>${gallery}
-    <div class="match"><b>${money(x.price)}</b><br>📍 ${esc(x.city)}, ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}</div>
+    <div class="match"><b>${money(x.price)}</b>
+      <div class="public-detail-icons">
+        <div class="public-detail-item"><span class="public-meta-icon"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span>${esc(x.city)}, ${esc(x.area)}</span></div>
+        <div class="public-detail-item"><span class="public-meta-icon"><svg viewBox="0 0 24 24"><path d="M3 20V9l9-6 9 6v11"/><path d="M7 20v-6h10v6M9 10h6"/></svg></span><span>${x.rooms||'—'} xona</span></div>
+        <div class="public-detail-item"><span class="public-meta-icon"><svg viewBox="0 0 24 24"><path d="M4 4v16M4 4h5M4 20h16M20 20v-5M20 20h-5"/><path d="M8 8h8M8 12h5M12 16h4"/></svg></span><span>${x.m2||'—'} m²</span></div>
+        ${x.floor?`<div class="public-detail-item"><span class="public-meta-icon"><svg viewBox="0 0 24 24"><path d="M5 20V5h14v15"/><path d="M8 8h8M8 12h8M8 16h8"/></svg></span><span>${esc(x.floor)}-qavat</span></div>`:''}
+        <div class="public-detail-item"><span class="public-meta-icon"><svg viewBox="0 0 24 24"><path d="M4 20V10l8-6 8 6v10"/><path d="M9 20v-5h6v5M8 11h8"/></svg></span><span>${esc(x.finish||'Ta’mir holati ko‘rsatilmagan')}</span></div>
+      </div></div>
     <div class="public-contact">Murojaat uchun: <a href="tel:+998999625454">📞 +998 99 962 54 54</a></div>
     <div class="public-home-contact">
       <a class="public-home-phone" href="tel:+998999625454">📞 +998 99 962 54 54</a>
