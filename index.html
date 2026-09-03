@@ -1648,11 +1648,19 @@ function openSellerContractChooser(sellerId){
 
 function sellers(){
   const visibleSellers=sellersVisibleForCurrentUser(db.sellers);
+  const seenPhones=new Set();
+  const uniqueSellers=visibleSellers.filter(x=>{
+    const key=normalizeSellerPhone(x.phone);
+    if(!key)return true;
+    if(seenPhones.has(key))return false;
+    seenPhones.add(key);
+    return true;
+  });
   return header('Sotuvchilar','Uy egalari va realtorlar bazasi','+ Sotuvchi qo‘shish','openSeller()')+
   `<div class="panel">
-    <div class="tablewrap"><table class="table">
+    <div class="muted" style="margin-bottom:8px">Bir telefon raqami bir marta sotuvchi sifatida saqlanadi.</div><div class="tablewrap"><table class="table">
       <tr><th>Ism</th><th>Telefon</th><th>Uylari</th><th>Izoh</th><th>Amallar</th></tr>
-      ${visibleSellers.map(x=>{
+      ${uniqueSellers.map(x=>{
         const linkedHomes=db.homes.filter(h=>
           String(h.seller||'').trim().toLowerCase()===String(x.name||'').trim().toLowerCase() ||
           (x.phone && h.phone && String(h.phone).replace(/\D/g,'')===String(x.phone).replace(/\D/g,''))
@@ -2370,6 +2378,26 @@ async function addBuyer(){
   if(error)return alert('Saqlashda xatolik: '+error.message);
   db.buyers.unshift(data);closeModal();go('buyers');
 }
+
+function normalizeSellerPhone(phone){
+  return String(phone||'').replace(/\D/g,'').replace(/^998(?=9\d{8}$)/,'998');
+}
+
+async function findExistingSellerByPhone(phone){
+  const raw=String(phone||'').trim();
+  const digits=normalizeSellerPhone(raw);
+  const last9=digits.length>=9?digits.slice(-9):digits;
+  if(!digits)return null;
+  try{
+    const res=await client.from('sellers').select('*');
+    if(res.error) return null;
+    return (res.data||[]).find(s=>{
+      const sd=normalizeSellerPhone(s.phone);
+      return sd===digits || (last9 && sd.slice(-9)===last9);
+    })||null;
+  }catch(e){return null;}
+}
+
 async function addSeller(){
   const name=val('name'), phone=val('phone'), title=val('title');
   if(!name||!phone||!title){alert('Iltimos, ism, telefon va uy nomini kiriting.');return;}
@@ -2382,8 +2410,12 @@ async function addSeller(){
     let sellerNote=val('note')||'Uy egasi';
     sellerNote+=(sellerNote?'\n\n':'')+'[CRM_SELLER_OWNER]\nstaff_id='+String(currentStaff?.id||'')+'\nlogin='+String(currentStaff?.login||'')+'\nemail='+String(currentStaff?.email||currentUser?.email||'')+'\n[/CRM_SELLER_OWNER]';
     const sellerRow={name,phone,note:sellerNote,owner_staff_id:currentStaff?.id||null};
-    const sellerRes=await client.from('sellers').insert(sellerRow).select().single();
-    if(sellerRes.error)throw sellerRes.error;
+    let sellerData=await findExistingSellerByPhone(phone);
+    if(!sellerData){
+      const sellerRes=await client.from('sellers').insert(sellerRow).select().single();
+      if(sellerRes.error)throw sellerRes.error;
+      sellerData=sellerRes.data;
+    }
 
     let imageUrls=[];
     if(files.length) imageUrls=await uploadPropertyImages(files,title);
@@ -2412,7 +2444,7 @@ async function addSeller(){
     const homeRes=await client.from('homes').insert(homeRow).select().single();
     if(homeRes.error)throw homeRes.error;
 
-    db.sellers.unshift(sellerRes.data);
+    if(!db.sellers.some(x=>normalizeSellerPhone(x.phone)===normalizeSellerPhone(phone))) db.sellers.unshift(sellerData);
     db.homes.unshift(homeRes.data);
     closeModal();
     go('sellers');
@@ -3126,6 +3158,12 @@ function showPublicForm(type){
     site.insertBefore(box,head.nextSibling);
   }
 
+  // Natija bloki ham forma bilan birga turadi: footer/ijtimoiy tarmoqlardan pastga tushib ketmaydi.
+  const successBox=document.getElementById('publicSuccess');
+  if(successBox && successBox.previousElementSibling!==box){
+    site.insertBefore(successBox,box.nextSibling);
+  }
+
   box.className='public-form show';
   box.style.setProperty('display','block','important');
   box.style.setProperty('width','min(1100px,calc(100% - 36px))','important');
@@ -3258,26 +3296,9 @@ async function submitPublicSell(){
   if(submit){submit.disabled=true;submit.textContent='Yuborilmoqda...';}
 
   // Telefonni bir xil ko‘rinishga keltiramiz: faqat raqamlar.
-  const phoneDigits=String(phone).replace(/\D/g,'');
-  const last9=phoneDigits.length>=9?phoneDigits.slice(-9):phoneDigits;
-
   try{
     // Bir xil telefon raqamli sotuvchi bo‘lsa, yangi sellers qatori yaratmaymiz.
-    // Avval to‘liq raqamni, keyin oxirgi 9 raqamni tekshiramiz.
-    let existingSeller=null;
-    try{
-      if(phoneDigits){
-        const exact=await client.from('sellers').select('*').eq('phone',phone).limit(1);
-        if(!exact.error && exact.data?.length) existingSeller=exact.data[0];
-      }
-      if(!existingSeller && last9){
-        const byLast9=await client.from('sellers').select('*').ilike('phone','%'+last9).limit(1);
-        if(!byLast9.error && byLast9.data?.length) existingSeller=byLast9.data[0];
-      }
-    }catch(e){
-      // Public SELECT RLS bilan yopiq bo‘lsa, odatdagi INSERT yo‘lida davom etamiz.
-      existingSeller=null;
-    }
+    let existingSeller=await findExistingSellerByPhone(phone);
 
     let sellerData=existingSeller;
     if(!sellerData){
@@ -3323,9 +3344,16 @@ async function submitPublicSell(){
 }
 
 async function submitPublicBuy(){
+  // Bir marta bosilgandan keyin qayta yuborishni bloklaymiz.
+  if(window.__publicBuySubmitting)return;
+
   const name=pf('name'), phone=pf('phone');
   const required=[name,phone,pf('city'),pf('area'),pf('rooms'),pf('m2'),pf('budget'),pf('finish'),pf('type')];
   if(required.some(v=>!v)){alert('Iltimos, barcha majburiy maydonlarni to‘ldiring.');return;}
+
+  const submit=document.querySelector('#publicForm .public-submit:not(.back)');
+  window.__publicBuySubmitting=true;
+  if(submit){submit.disabled=true;submit.textContent='⏳ Yuborilmoqda...';}
 
   const row={
     name,
@@ -3339,14 +3367,26 @@ async function submitPublicBuy(){
     type:pf('type'),
     note:pf('note')
   };
-  const res=await client.from('buyers').insert(row);
-  if(res.error){alert('Saqlashda xatolik: '+res.error.message);return;}
-  publicSuccess('Xarid talabangiz qabul qilindi. Sizga mos uylar topilganda bog‘lanamiz.');
+  try{
+    const res=await client.from('buyers').insert(row);
+    if(res.error) throw res.error;
+    if(submit){submit.textContent='✅ Yuborildi';}
+    publicSuccess('Xarid talabangiz qabul qilindi. Sizga mos uylar topilganda bog‘lanamiz.');
+  }catch(err){
+    alert('Saqlashda xatolik: '+(err.message||err));
+    window.__publicBuySubmitting=false;
+    if(submit){submit.disabled=false;submit.textContent='Yuborish';}
+  }
 }
 
 function publicSuccess(message){
-  document.getElementById('publicForm').style.display='none';
+  const form=document.getElementById('publicForm');
   const s=document.getElementById('publicSuccess');
+  if(form) form.style.display='none';
+  // Natija formaning darhol tagida chiqadi. Footer/aloqa qatoridan pastga tushmaydi.
+  if(form && s && s.parentNode!==form.parentNode){
+    form.parentNode.insertBefore(s,form.nextSibling);
+  }
   s.className='public-success show';
   s.innerHTML=`<div style="font-size:50px">✅</div><h2>Qabul qilindi</h2><p>${esc(message)}</p><button class="public-submit" onclick="publicHome()">Bosh sahifaga qaytish</button>`;
 }
