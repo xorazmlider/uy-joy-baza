@@ -2654,6 +2654,37 @@ function contractHtml(){
   .public-home-btn{font-size:12px!important;padding:12px!important}
 }
 
+
+/* ===== V11: PUBLIC HOME DARK BACKGROUND CONTINUITY ===== */
+.public-homes-page,
+.public-homes-page > *,
+.public-homes-page-inner{
+  background-color:#070a0f!important;
+}
+.public-homes-page{
+  color:#f8fafc!important;
+}
+.public-homes-page .public-homes-count{
+  color:#98a2b3!important;
+}
+.public-homes-page .public-home-grid{
+  background:transparent!important;
+}
+.public-homes-page .public-category-section,
+.public-homes-page .public-categories,
+.public-homes-page .public-social-section,
+.public-homes-page .public-footer,
+.public-homes-page footer{
+  background-color:#070a0f!important;
+}
+/* If the page uses a full-width section immediately before the footer,
+   prevent its default white background from creating the visible stripe. */
+.public-homes-page section,
+.public-homes-page .section,
+.public-homes-page .container{
+  background-color:transparent;
+}
+
 </style></head><body>
   <section class="page">
     <h1>${title}</h1>
