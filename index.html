@@ -3301,7 +3301,7 @@ async function submitPublicBuy(){
   const required=[name,phone,pf('city'),pf('area'),pf('rooms'),pf('m2'),pf('budget'),pf('finish'),pf('type')];
   if(required.some(v=>!v)){alert('Iltimos, barcha majburiy maydonlarni to‘ldiring.');return;}
 
-  const submit=document.querySelector('#publicForm .public-submit');
+  const submit=document.querySelector('#publicForm button.public-submit');
   publicBuySubmitting=true;
   const submitStartedAt=Date.now();
   if(submit){
@@ -3332,6 +3332,8 @@ async function submitPublicBuy(){
     const elapsed=Date.now()-submitStartedAt;
     if(elapsed<800) await new Promise(r=>setTimeout(r,800-elapsed));
 
+    if(submit){submit.textContent='✅ Yuborildi';submit.disabled=true;submit.style.opacity='1';}
+    await new Promise(r=>setTimeout(r,600));
     publicSuccess('Mijoz ma’lumotlari muvaffaqiyatli yuborildi.');
   }catch(err){
     publicBuySubmitting=false;
