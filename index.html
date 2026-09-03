@@ -1648,11 +1648,19 @@ function openSellerContractChooser(sellerId){
 
 function sellers(){
   const visibleSellers=sellersVisibleForCurrentUser(db.sellers);
+  // Eski testlar sabab bir xil telefon bilan dublikat sellerlar bo‘lsa,
+  // admin jadvalida bitta yozuv sifatida ko‘rsatamiz.
+  const sellerGroups=new Map();
+  visibleSellers.forEach(x=>{
+    const key=normalizePhoneForCRM(x.phone)||('id:'+x.id);
+    if(!sellerGroups.has(key))sellerGroups.set(key,x);
+  });
+  const sellerRows=[...sellerGroups.values()];
   return header('Sotuvchilar','Uy egalari va realtorlar bazasi','+ Sotuvchi qo‘shish','openSeller()')+
   `<div class="panel">
     <div class="tablewrap"><table class="table">
       <tr><th>Ism</th><th>Telefon</th><th>Uylari</th><th>Izoh</th><th>Amallar</th></tr>
-      ${visibleSellers.map(x=>{
+      ${sellerRows.map(x=>{
         const linkedHomes=db.homes.filter(h=>
           String(h.seller||'').trim().toLowerCase()===String(x.name||'').trim().toLowerCase() ||
           (x.phone && h.phone && String(h.phone).replace(/\D/g,'')===String(x.phone).replace(/\D/g,''))
@@ -1886,8 +1894,90 @@ function contracts(){
   if(!canPage('contracts'))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2><p>Sizning rolingizda bu bo‘lim yopiq.</p></div>';
   return header('Shartnomalar','Sotish va Olib berish shartnomalari','+ Shartnoma yaratish','openContract()')+
   `<div class="panel"><h3>📄 Ko‘chmas mulk reklama xizmat shartnomalari</h3><p class="muted">Uy va buyurtmachi ma’lumotlarini tanlang. Shartnoma Word namunangizdagi mazmun asosida tayyorlanadi.</p>
-  ${db.homes.map(h=>`<div class="match"><b>${esc(h.title)}</b> — ${money(h.price)}<br>👤 ${esc(h.seller||'-')} • 📞 ${esc(h.phone||'-')}<br><button class="small primary" onclick="openContractForSellerHome(${h.id})">📄 Sotish shartnomasi</button></div>`).join('')||'<div class="empty">Avval uy qo‘shing.</div>'}</div>`;
+  ${db.homes.map(h=>`<div class="match"><b>${esc(h.title)}</b> — ${money(h.price)}<br>👤 ${esc(h.seller||'-')} • 📞 ${esc(h.phone||'-')}<br><button class="small primary" onclick="openContractForSellerHome(${h.id})">📄 Sotish shartnomasi</button> <button class="small" onclick="openActForHome(${h.id})">📋 AKT / Dalolatnoma</button></div>`).join('')||'<div class="empty">Avval uy qo‘shing.</div>'}</div>`;
 }
+
+function openActForHome(homeId){
+  if(!requirePage('contracts'))return;
+  const h=db.homes.find(x=>Number(x.id)===Number(homeId));
+  if(!h)return;
+  const linkedDeals=(db.deals||[]).filter(d=>Number(d.home_id)===Number(homeId));
+  const deal=linkedDeals.find(d=>d.stage==='Sotildi')||linkedDeals[0];
+  const buyer=deal?db.buyers.find(b=>Number(b.id)===Number(deal.buyer_id)):null;
+  const actNo='XAK-'+String(Math.trunc(Number(h.id)||0)).padStart(6,'0');
+  modal(`<h2>📋 AKT / Dalolatnoma</h2>
+    <p class="muted">${esc(h.title||'Uy')} bo‘yicha xizmat yakuni / topshirish-qabul qilish dalolatnomasi. Ma’lumotlar uy kartasidan avtomatik to‘ldirildi.</p>
+    <div class="formgrid">
+      <div><label class="muted">AKT №</label><input id="f_act_no" class="field" value="${esc(actNo)}" readonly></div>
+      ${input('act_date','Sana',new Date().toISOString().slice(0,10),1)}
+      ${input('act_customer','Buyurtmachi F.I.Sh.',h.seller||'',1)}
+      ${input('act_phone','Telefon',h.phone||'',1)}
+      ${input('act_address','Manzil',[h.city,h.area].filter(Boolean).join(', '),1)}
+      ${input('act_house','Obyekt / Uy',h.title||'',1)}
+      ${input('act_rooms','Xona soni',h.rooms||'',0)}
+      ${input('act_floor','Qavati',homeFloor(h)||'',0)}
+      ${input('act_price','Uy narxi',priceInputValue(h.price),0)}
+      ${input('act_fee','Xizmat haqi','',0)}
+      ${input('act_condition','Holati','Tomonlar obyektni ko‘zdan kechirdilar va mavjud holatini qabul qildilar.',0,true)}
+      ${input('act_keys','Kalit / hujjatlar','',0,true)}
+      ${input('act_info','Qo‘shimcha ma’lumot','',0,true)}
+      ${input('act_buyer','Xaridor F.I.Sh.',buyer?.name||'',0)}
+      ${input('act_buyer_phone','Xaridor telefoni',buyer?.phone||'',0)}
+    </div><br>
+    <button class="btn primary" onclick="previewAct()">🖨️ AKTni chiqarish</button>
+    <button class="btn light" onclick="closeModal()">Bekor</button>`);
+}
+
+function actEsc(v){return esc(v||'—')}
+function actHtml(){
+  const v=k=>val(k);
+  const actNo=actEsc(v('act_no'));
+  const date=actEsc(v('act_date')||new Date().toISOString().slice(0,10));
+  const customer=actEsc(v('act_customer'));
+  const phone=actEsc(v('act_phone'));
+  const address=actEsc(v('act_address'));
+  const house=actEsc(v('act_house'));
+  const rooms=actEsc(v('act_rooms'));
+  const floor=actEsc(v('act_floor'));
+  const price=actEsc(v('act_price'));
+  const fee=actEsc(v('act_fee'));
+  const condition=actEsc(v('act_condition'));
+  const keys=actEsc(v('act_keys'));
+  const info=actEsc(v('act_info'));
+  const buyer=actEsc(v('act_buyer'));
+  const buyerPhone=actEsc(v('act_buyer_phone'));
+  return `<!doctype html><html lang="uz"><head><meta charset="utf-8"><title>XORAZMLIDER — AKT ${actNo}</title>
+  <style>body{font-family:"Times New Roman",serif;color:#111;margin:0}.page{width:190mm;min-height:270mm;margin:0 auto;padding:15mm 12mm;box-sizing:border-box}h1,h2{text-align:center;margin:0 0 10px}h1{font-size:17px}h2{font-size:15px}.meta{font-size:12px;line-height:1.5;margin:8px 0 15px}.data{border:1px solid #111;border-collapse:collapse;width:100%;font-size:11px}.data td{border:1px solid #111;padding:7px;vertical-align:top}.sign{display:flex;justify-content:space-between;gap:30px;margin-top:55px;font-size:12px}.line{display:inline-block;min-width:150px;border-bottom:1px solid #111}@media print{@page{margin:0}.page{margin:0}}</style></head><body><section class="page">
+  <h1>ХИЗМАТ КЎРСАТИШ БЎЙИЧА</h1><h2>ҚАБУЛ ҚИЛИШ — ТОПШИРИШ ДАЛОЛАТНОМАСИ</h2>
+  <div class="meta"><b>AKT №:</b> ${actNo}<br><b>Sana:</b> ${date}<br><b>Ташкилот:</b> ЯТТ Худайберганов Алишер Сапарбаевич</div>
+  <p style="font-size:12px;line-height:1.5;text-align:justify">Ушбу далолатнома «БАЖАРУВЧИ» томонидан кўрсатилган кўчмас мулкни реклама қилиш, харидор топиш ва битимни ташкил этишга кўмаклашиш хизматлари натижасини қайд этиш мақсадида тузилди. Томонлар қуйидаги маълумотларни тасдиқлайдилар:</p>
+  <table class="data">
+    <tr><td><b>Буюртмачи / Сотувчи</b></td><td>${customer}</td></tr>
+    <tr><td><b>Телефон</b></td><td>${phone}</td></tr>
+    <tr><td><b>Манзил</b></td><td>${address}</td></tr>
+    <tr><td><b>Обиект / Уй</b></td><td>${house}</td></tr>
+    <tr><td><b>Хона сони</b></td><td>${rooms}</td></tr>
+    <tr><td><b>Қавати</b></td><td>${floor}</td></tr>
+    <tr><td><b>Уй нархи</b></td><td>${price}</td></tr>
+    <tr><td><b>Хизмат ҳақи</b></td><td>${fee}</td></tr>
+    <tr><td><b>Харидор</b></td><td>${buyer}</td></tr>
+    <tr><td><b>Харидор телефони</b></td><td>${buyerPhone}</td></tr>
+    <tr><td><b>Обиект ҳолати</b></td><td>${condition}</td></tr>
+    <tr><td><b>Калит / ҳужжатлар</b></td><td>${keys}</td></tr>
+    <tr><td><b>Қўшимча маълумот</b></td><td>${info}</td></tr>
+  </table>
+  <p style="font-size:12px;line-height:1.5;text-align:justify;margin-top:14px">Томонлар ушбу далолатномада кўрсатилган маълумотлар билан танишиб, хизмат натижаси бўйича эътироз ва қўшимча талабларини билдириш имкониятига эга эканликларини тасдиқлайдилар. Ушбу шаблон шартнома билан бирга қўллаш учун мўлжалланган бўлиб, имзолашдан олдин ҳуқуқий талабларга мувофиқлиги текширилиши лозим.</p>
+  <div class="sign"><div><b>«БАЖАРУВЧИ»</b><br><br>ЯТТ Худайберганов Алишер Сапарбаевич<br><br>Имзо: <span class="line"></span></div><div><b>«БУЮРТМАЧИ»</b><br><br>${customer}<br><br>Имзо: <span class="line"></span></div></div>
+  </section></body></html>`;
+}
+function previewAct(){
+  if(!val('act_customer')||!val('act_phone')){alert('Buyurtmachi/sotuvchi ismi va telefonini kiriting.');return;}
+  const html=actHtml();
+  const w=window.open('','_blank');
+  if(!w){alert('Brauzer yangi oynani blokladi.');return;}
+  w.document.open();w.document.write(html);w.document.close();w.print();
+}
+
 function openContract(homeId=null, contractType='sell', buyerId=null){
   let h=homeId?db.homes.find(x=>Number(x.id)===Number(homeId)):null;
   const b=buyerId?db.buyers.find(x=>Number(x.id)===Number(buyerId)):null;
@@ -2370,11 +2460,6 @@ async function addBuyer(){
   if(error)return alert('Saqlashda xatolik: '+error.message);
   db.buyers.unshift(data);closeModal();go('buyers');
 }
-function normalizeSellerPhone(v){
-  const d=String(v||'').replace(/\D/g,'');
-  return d.length>=9 ? d.slice(-9) : d;
-}
-
 async function addSeller(){
   const name=val('name'), phone=val('phone'), title=val('title');
   if(!name||!phone||!title){alert('Iltimos, ism, telefon va uy nomini kiriting.');return;}
@@ -2384,19 +2469,11 @@ async function addSeller(){
   if(files.length>10){alert('Ko‘pi bilan 10 ta rasm yuborish mumkin.');return;}
 
   try{
-    const normalizedPhone=normalizeSellerPhone(phone);
-    const existingSeller=(db.sellers||[]).find(s=>normalizeSellerPhone(s.phone)===normalizedPhone);
-
-    let sellerData=existingSeller||null;
-    if(!sellerData){
-      let sellerNote=val('note')||'Uy egasi';
-      sellerNote+=(sellerNote?'\n\n':'')+'[CRM_SELLER_OWNER]\nstaff_id='+String(currentStaff?.id||'')+'\nlogin='+String(currentStaff?.login||'')+'\nemail='+String(currentStaff?.email||currentUser?.email||'')+'\n[/CRM_SELLER_OWNER]';
-      const sellerRow={name,phone,note:sellerNote,owner_staff_id:currentStaff?.id||null};
-      const sellerRes=await client.from('sellers').insert(sellerRow).select().single();
-      if(sellerRes.error)throw sellerRes.error;
-      sellerData=sellerRes.data;
-      db.sellers.unshift(sellerData);
-    }
+    let sellerNote=val('note')||'Uy egasi';
+    sellerNote+=(sellerNote?'\n\n':'')+'[CRM_SELLER_OWNER]\nstaff_id='+String(currentStaff?.id||'')+'\nlogin='+String(currentStaff?.login||'')+'\nemail='+String(currentStaff?.email||currentUser?.email||'')+'\n[/CRM_SELLER_OWNER]';
+    const sellerRow={name,phone,note:sellerNote,owner_staff_id:currentStaff?.id||null};
+    const sellerRes=await client.from('sellers').insert(sellerRow).select().single();
+    if(sellerRes.error)throw sellerRes.error;
 
     let imageUrls=[];
     if(files.length) imageUrls=await uploadPropertyImages(files,title);
@@ -2416,14 +2493,16 @@ async function addSeller(){
       price:parseMoneyInput(val('price'))||0,
       finish:val('finish'),
       type:val('type'),
-      seller:sellerData.name||name,
-      phone:sellerData.phone||phone,
+      seller:name,
+      phone,
       status:'Faol',
       note
     };
+
     const homeRes=await client.from('homes').insert(homeRow).select().single();
     if(homeRes.error)throw homeRes.error;
 
+    db.sellers.unshift(sellerRes.data);
     db.homes.unshift(homeRes.data);
     closeModal();
     go('sellers');
@@ -2431,6 +2510,7 @@ async function addSeller(){
     alert('Saqlashda xatolik: '+(err.message||err));
   }
 }
+
 async function editHome(id){
   let x=db.homes.find(a=>a.id===id);if(!x)return;
   if(!requireHomeEdit(x))return;
@@ -3256,8 +3336,13 @@ async function uploadPropertyImages(files, title){
 
 let publicSellSubmitting=false;
 
+function normalizePhoneForCRM(v){
+  return String(v||'').replace(/\D/g,'');
+}
+
 async function submitPublicSell(){
   if(publicSellSubmitting)return;
+
   const name=pf('seller_name'), phone=pf('seller_phone'), title=pf('title');
   const required=[name,phone,title,pf('city'),pf('area'),pf('rooms'),pf('m2'),pf('price'),pf('finish'),pf('type')];
   if(required.some(v=>!v)){alert('Iltimos, barcha majburiy maydonlarni to‘ldiring.');return;}
@@ -3268,30 +3353,31 @@ async function submitPublicSell(){
 
   const submit=document.querySelector('#publicForm button.public-submit:not(.back)');
   publicSellSubmitting=true;
+  const submitStartedAt=Date.now();
   if(submit){
     submit.disabled=true;
     submit.textContent='⏳ Yuborilmoqda...';
     submit.style.opacity='.7';
     submit.style.pointerEvents='none';
   }
-  const submitStartedAt=Date.now();
+
+  let createdSellerId=null;
 
   try{
-    let sellerData=null;
-    const sellerLookup=await client.from('sellers').select('id,name,phone,note').eq('phone',phone).limit(1);
-    if(sellerLookup.error) throw sellerLookup.error;
-    sellerData=sellerLookup.data?.[0]||null;
+    // Bir telefon raqami = bitta sotuvchi. Mavjud bo‘lsa, yangi dublikat yaratmaymiz.
+    const phoneDigits=normalizePhoneForCRM(phone);
+    let existingSeller=null;
+    if(phoneDigits){
+      const sellersRes=await client.from('sellers').select('*').limit(1000);
+      if(sellersRes.error)throw sellersRes.error;
+      existingSeller=(sellersRes.data||[]).find(s=>normalizePhoneForCRM(s.phone)===phoneDigits)||null;
+    }
 
-    if(!sellerData){
+    if(!existingSeller){
       const sellerRow={name,phone,note:'Instagram ariza'};
-      const sellerRes=await client.from('sellers').insert(sellerRow).select('id,name,phone,note').single();
-      if(sellerRes.error){
-        const retry=await client.from('sellers').select('id,name,phone,note').eq('phone',phone).limit(1);
-        if(retry.error||!retry.data?.length) throw sellerRes.error;
-        sellerData=retry.data[0];
-      }else{
-        sellerData=sellerRes.data;
-      }
+      const sellerRes=await client.from('sellers').insert(sellerRow).select().single();
+      if(sellerRes.error) throw sellerRes.error;
+      createdSellerId=sellerRes.data?.id||null;
     }
 
     let imageUrls=[];
@@ -3310,16 +3396,18 @@ async function submitPublicSell(){
       m2:Number(pf('m2'))||0,
       price:parseMoneyInput(pf('price'))||0,
       finish:pf('finish'),
-      seller:sellerData?.name||name,
-      phone:sellerData?.phone||phone,
+      type:pf('type'),
+      seller:name,
+      phone,
       status:'Faol',
       note:(note?note+'\n\n':'')+'[CRM_HOME]\nfloor='+Math.max(0,Number(pf('floor')||0))+'\n[/CRM_HOME]'
     };
-    const homeRes=await client.from('homes').insert(homeRow);
+    const homeRes=await client.from('homes').insert(homeRow).select().single();
     if(homeRes.error) throw homeRes.error;
 
     const elapsed=Date.now()-submitStartedAt;
     if(elapsed<800) await new Promise(r=>setTimeout(r,800-elapsed));
+
     if(submit){
       submit.textContent='✅ Yuborildi';
       submit.disabled=true;
@@ -3333,9 +3421,18 @@ async function submitPublicSell(){
       : 'Uy ma’lumotlaringiz qabul qilindi. Tez orada siz bilan bog‘lanamiz.'
     );
   }catch(err){
-    alert('Saqlashda xatolik: '+(err.message||err));
+    // Agar yangi sotuvchi yaratilib, uy saqlanmagan bo‘lsa, yetim sotuvchini o‘chiramiz.
+    if(createdSellerId){
+      try{ await client.from('sellers').delete().eq('id',createdSellerId); }catch(e){}
+    }
     publicSellSubmitting=false;
-    if(submit){submit.disabled=false;submit.textContent='Yuborish';submit.style.opacity='';submit.style.pointerEvents='';}
+    alert('Saqlashda xatolik: '+(err.message||err));
+    if(submit){
+      submit.disabled=false;
+      submit.textContent='Yuborish';
+      submit.style.opacity='';
+      submit.style.pointerEvents='';
+    }
   }
 }
 
