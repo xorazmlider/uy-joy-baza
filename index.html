@@ -1239,8 +1239,52 @@ function dealsPage(){
     <td><b>${esc(b?.name||'—')}</b><br><span class="muted">${esc(b?.phone||'')}</span></td>
     <td>${esc(h?.title||'—')}</td><td>${money(d.price)}</td><td>${money(dealCommission(d))}</td>
     <td><span class="badge">${esc(d.stage||'Yangi')}</span></td>
-    <td style="white-space:nowrap">${h?`<button class="small" onclick="openContractForSellerHome(${h.id})">📄 Shartnoma</button> <button class="small primary" onclick="openActForHome(${h.id})">📋 AKT</button>`:''} <button class="small" onclick="proDelete('crm_deals','deals','${String(d.id)}')">×</button></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">Bitimlar hali yo‘q.</td></tr>'}
+    <td style="white-space:nowrap"><button class="small primary" onclick="openActForDeal('${String(d.id)}')">📋 AKT</button> <button class="small" onclick="proDelete('crm_deals','deals','${String(d.id)}')">×</button></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">Bitimlar hali yo‘q.</td></tr>'}
   </table></div></div>`;
+}
+
+function openActForDeal(dealId){
+  if(!requirePage('deals'))return;
+  const d=(db.deals||[]).find(x=>String(x.id)===String(dealId));
+  if(!d)return alert('Bitim topilmadi.');
+  const b=db.buyers.find(x=>Number(x.id)===Number(d.buyer_id));
+  const h=db.homes.find(x=>Number(x.id)===Number(d.home_id));
+  if(!b||!h)return alert('Bitimdagi xaridor yoki uy topilmadi.');
+  const actNo='XAK-'+String(Math.trunc(Number(d.id)||0)).padStart(6,'0');
+  const v=x=>esc(x===undefined||x===null||x===''?'—':String(x));
+  const floor=homeFloor(h)||b.floor||'—';
+  const buyerInfo=[b.type,b.finish,visibleNote(b.note)].filter(Boolean).join(' | ')||'—';
+  const sellerInfo=[h.seller,h.phone].filter(Boolean).join(' • ')||'—';
+  const html=`<!doctype html><html lang="uz"><head><meta charset="utf-8"><title>XORAZMLIDER — AKT ${actNo}</title>
+  <style>body{font-family:"Times New Roman",serif;color:#111;margin:0}.page{width:190mm;min-height:270mm;margin:0 auto;padding:15mm 12mm;box-sizing:border-box}h1,h2{text-align:center;margin:0 0 10px}h1{font-size:17px}h2{font-size:15px}.meta{font-size:12px;line-height:1.5;margin:8px 0 15px}.data{border:1px solid #111;border-collapse:collapse;width:100%;font-size:11px}.data td{border:1px solid #111;padding:7px;vertical-align:top}.sign{display:flex;justify-content:space-between;gap:30px;margin-top:55px;font-size:12px}.line{display:inline-block;min-width:150px;border-bottom:1px solid #111}@media print{@page{margin:0}.page{margin:0}}</style></head><body><section class="page">
+  <h1>ХИЗМАТ КЎРСАТИШ БЎЙИЧА</h1><h2>ҚАБУЛ ҚИЛИШ — ТОПШИРИШ ДАЛОЛАТНОМАСИ</h2>
+  <div class="meta"><b>AKT №:</b> ${v(actNo)}<br><b>Sana:</b> ${v(new Date().toISOString().slice(0,10))}<br><b>Ташкилот:</b> ЯТТ Худайберганов Алишер Сапарбаевич</div>
+  <p style="font-size:12px;line-height:1.5;text-align:justify">Ушбу далолатнома танланган харидор ва танланган кўчмас мулк бўйича битим маълумотларини қайд этиш мақсадида тузилди. Маълумотлар CRMдаги битим, харидор ва уй карточкаларидан автоматик олинди.</p>
+  <table class="data">
+    <tr><td><b>Харидор / Буюртмачи</b></td><td>${v(b.name)}</td></tr>
+    <tr><td><b>Харидор телефони</b></td><td>${v(b.phone)}</td></tr>
+    <tr><td><b>Харидор маълумотлари</b></td><td>${v(buyerInfo)}</td></tr>
+    <tr><td><b>Харидор ҳудуди</b></td><td>${v([b.city,b.area].filter(Boolean).join(', '))}</td></tr>
+    <tr><td><b>Талаб қилинган майдон</b></td><td>${v(b.m2)} м²</td></tr>
+    <tr><td><b>Талаб қилинган хоналар</b></td><td>${v(b.rooms)}</td></tr>
+    <tr><td><b>Бюджет</b></td><td>${v(b.budget)}</td></tr>
+    <tr><td><b>Объект / Уй</b></td><td>${v(h.title)}</td></tr>
+    <tr><td><b>Уй манзили</b></td><td>${v([h.city,h.area].filter(Boolean).join(', '))}</td></tr>
+    <tr><td><b>Сотувчи</b></td><td>${v(sellerInfo)}</td></tr>
+    <tr><td><b>Хона сони</b></td><td>${v(h.rooms)}</td></tr>
+    <tr><td><b>Қавати</b></td><td>${v(floor)}</td></tr>
+    <tr><td><b>Уй нархи</b></td><td>${v(d.price)}</td></tr>
+    <tr><td><b>Комиссия</b></td><td>${v(dealCommission(d))}</td></tr>
+    <tr><td><b>Битим босқичи</b></td><td>${v(d.stage)}</td></tr>
+    <tr><td><b>Битим изоҳи</b></td><td>${v(d.note)}</td></tr>
+  </table>
+  <p style="font-size:12px;line-height:1.5;text-align:justify;margin-top:14px">Томонлар ушбу далолатномадаги маълумотлар билан танишиб, хизмат натижаси бўйича эътироз ва қўшимча талабларини билдириш имкониятига эга эканликларини тасдиқлайдилар.</p>
+  <div class="sign"><div><b>«БАЖАРУВЧИ»</b><br><br>ЯТТ Худайберганов Алишер Сапарбаевич<br><br>Имзо: <span class="line"></span></div><div><b>«БУЮРТМАЧИ / ХАРИДОР»</b><br><br>${v(b.name)}<br><br>Имзо: <span class="line"></span></div></div>
+  </section></body></html>`;
+  const w=window.open('','_blank');
+  if(!w)return alert('Brauzer yangi oynani blokladi.');
+  w.document.open();w.document.write(html);w.document.close();
+  setTimeout(()=>w.print(),300);
 }
 function reportsPage(){
   if(!canPage('reports'))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2><p>Sizning rolingizda bu bo‘lim yopiq.</p></div>';
