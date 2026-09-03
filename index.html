@@ -2449,55 +2449,54 @@ function contractHtml(){
       @page{margin:0}
     }
   
-/* ===== PUBLIC UY KARTALARI — MODERN V5 ===== */
+/* ===== XORAZMLIDER PUBLIC HOME CARDS — PREMIUM V6 ===== */
 .public-site{
-  background:#f5f7fb!important;
+  background:#f7f9fc!important;
   color:#172033!important;
 }
 .public-homes-page{
-  min-height:100vh;
-  background:#f5f7fb!important;
+  background:#f7f9fc!important;
   color:#172033!important;
 }
 .public-homes-page-inner{width:min(1320px,100%);margin:0 auto}
-.public-homes-page-head{margin-bottom:22px}
 .public-homes-page-head h1{
-  color:#172033!important;
+  color:#101828!important;
   font-size:34px!important;
-  letter-spacing:-.8px;
+  font-weight:900!important;
+  letter-spacing:-1px;
 }
 .public-kicker{
   color:#2563eb!important;
   font-weight:900!important;
-  letter-spacing:1.4px!important;
+  letter-spacing:1.5px!important;
 }
 .public-back-home{
   background:#fff!important;
   color:#172033!important;
   border:1px solid #e4e9f1!important;
-  border-radius:12px!important;
-  box-shadow:0 4px 16px rgba(15,23,42,.06);
+  border-radius:14px!important;
+  box-shadow:0 6px 20px rgba(16,24,40,.07)!important;
 }
 .public-all-filters{
-  background:#fff;
-  border:1px solid #e6ebf2;
-  border-radius:16px;
-  padding:10px;
-  box-shadow:0 6px 24px rgba(15,23,42,.06);
+  background:#fff!important;
+  border:1px solid #e6eaf0!important;
+  border-radius:17px!important;
+  padding:10px!important;
+  box-shadow:0 8px 26px rgba(16,24,40,.06)!important;
 }
 .public-all-filters input,
 .public-all-filters select{
   background:#fff!important;
   color:#172033!important;
-  border:1px solid #e1e7ef!important;
-  border-radius:11px!important;
+  border:1px solid #dfe5ed!important;
+  border-radius:12px!important;
 }
 .public-all-filters button{
   background:#2563eb!important;
   color:#fff!important;
-  border-radius:11px!important;
-  padding:0 20px;
-  box-shadow:0 5px 14px rgba(37,99,235,.22);
+  border-radius:12px!important;
+  padding:0 20px!important;
+  box-shadow:0 6px 16px rgba(37,99,235,.22)!important;
 }
 .public-homes-count{color:#667085!important}
 
@@ -2510,60 +2509,44 @@ function contractHtml(){
   position:relative;
   border:1px solid #e5eaf1!important;
   border-radius:20px!important;
-  overflow:hidden;
+  overflow:hidden!important;
   background:#fff!important;
   color:#172033!important;
-  box-shadow:0 7px 24px rgba(15,23,42,.07)!important;
+  box-shadow:0 7px 24px rgba(16,24,40,.075)!important;
   transition:transform .18s ease,box-shadow .18s ease;
 }
 .public-home-card:hover{
   transform:translateY(-4px);
-  box-shadow:0 15px 35px rgba(15,23,42,.12)!important;
+  box-shadow:0 17px 38px rgba(16,24,40,.13)!important;
 }
 .public-home-pic{
   height:190px!important;
-  background:linear-gradient(135deg,#edf3fb 0%,#e5ecf7 100%)!important;
-  position:relative;
+  background:linear-gradient(135deg,#f1f6fc,#e7eef8)!important;
+  position:relative!important;
+  overflow:hidden!important;
 }
-.public-home-pic img{object-fit:cover!important}
-.public-home-placeholder{
-  width:100%;
-  height:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:
-    radial-gradient(circle at 50% 48%,rgba(37,99,235,.10) 0 31%,transparent 32%),
-    linear-gradient(135deg,#f1f6fd,#e5edf8);
+.public-home-pic img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  display:block!important;
 }
-.public-home-placeholder svg{
-  width:78px;
-  height:78px;
-  opacity:.82;
+.public-home-body{
+  padding:16px!important;
+  background:#fff!important;
 }
-.public-home-placeholder-label{
-  position:absolute;
-  left:12px;
-  bottom:10px;
-  padding:5px 9px;
-  border-radius:999px;
-  background:rgba(255,255,255,.86);
-  color:#667085;
-  font-size:10px;
-  font-weight:800;
-  backdrop-filter:blur(5px);
-}
-.public-home-body{padding:16px!important}
 .public-home-price{
-  color:#159447!important;
+  color:#16824a!important;
   font-size:21px!important;
+  font-weight:900!important;
   letter-spacing:-.35px;
-  margin-bottom:6px!important;
+  margin-bottom:7px!important;
 }
 .public-home-title{
   color:#172033!important;
   font-size:14px!important;
-  line-height:1.35;
+  font-weight:800!important;
+  line-height:1.35!important;
 }
 .public-home-meta{
   color:#667085!important;
@@ -2571,46 +2554,106 @@ function contractHtml(){
   line-height:1.75!important;
   margin-top:9px!important;
 }
-.public-home-meta::first-line{color:#475467}
-.public-view{color:#98a2b3!important;margin-top:9px!important}
+.public-view{
+  color:#98a2b3!important;
+  font-size:10px!important;
+  margin-top:8px!important;
+}
 .public-home-btn{
-  margin-top:13px!important;
-  padding:11px!important;
-  border:1px solid #dce8ff!important;
-  border-radius:11px!important;
-  background:#edf4ff!important;
-  color:#1769d5!important;
+  width:100%!important;
+  order:3!important;
+  margin-top:10px!important;
+  padding:11px 13px!important;
+  border:0!important;
+  border-radius:12px!important;
+  background:#172033!important;
+  color:#fff!important;
   font-size:11px!important;
   font-weight:900!important;
+  letter-spacing:.1px;
+  box-shadow:0 5px 13px rgba(16,24,40,.12);
 }
 .public-home-btn:hover{
-  background:#2563eb!important;
-  color:#fff!important;
+  background:#0f172a!important;
+  transform:translateY(-1px);
 }
 .public-home-contact{
+  display:flex!important;
   gap:8px!important;
-  margin-top:9px!important;
+  margin-top:10px!important;
 }
 .public-home-contact a{
-  min-height:38px;
-  padding:9px 7px!important;
+  min-height:39px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:9px 8px!important;
   border-radius:11px!important;
   font-size:10px!important;
-  box-shadow:0 3px 9px rgba(15,23,42,.06);
+  font-weight:900!important;
+  text-decoration:none!important;
+  box-shadow:0 4px 11px rgba(16,24,40,.08);
   transition:transform .15s ease,filter .15s ease;
 }
-.public-home-contact a:hover{transform:translateY(-1px);filter:brightness(.97)}
+.public-home-contact a:hover{
+  transform:translateY(-1px);
+  filter:brightness(.97);
+}
 .public-home-phone{
-  background:#18a957!important;
-  border-color:#18a957!important;
+  flex:1.15!important;
+  background:#16a765!important;
+  color:#fff!important;
+  border:0!important;
 }
 .public-home-telegram{
+  flex:.85!important;
   background:#229ed9!important;
-  border-color:#229ed9!important;
+  color:#fff!important;
+  border:0!important;
 }
 
-/* If an actual photo fails to load, show the same modern placeholder. */
-.public-home-pic img[src=""]{display:none}
+/* No-photo placeholder: clean premium property illustration instead of emoji. */
+.public-home-placeholder{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 50% 50%,rgba(255,255,255,.92) 0 25%,transparent 26%),
+    linear-gradient(135deg,#f4f8fd 0%,#e7eef8 100%);
+}
+.public-home-placeholder::before,
+.public-home-placeholder::after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  background:rgba(37,99,235,.07);
+}
+.public-home-placeholder::before{width:115px;height:115px;top:-25px;left:-25px}
+.public-home-placeholder::after{width:135px;height:135px;bottom:-50px;right:-30px}
+.public-home-placeholder svg{
+  width:88px!important;
+  height:88px!important;
+  position:relative;
+  z-index:2;
+  filter:drop-shadow(0 5px 10px rgba(16,24,40,.08));
+}
+.public-home-placeholder-label{
+  position:absolute!important;
+  left:12px!important;
+  bottom:10px!important;
+  z-index:3;
+  padding:5px 9px!important;
+  border-radius:999px!important;
+  background:rgba(255,255,255,.88)!important;
+  color:#667085!important;
+  font-size:9px!important;
+  font-weight:800!important;
+  box-shadow:0 3px 9px rgba(16,24,40,.07);
+}
 
 @media(max-width:1050px){
   .public-home-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
@@ -2618,15 +2661,17 @@ function contractHtml(){
 @media(max-width:800px){
   .public-homes-page{padding:88px 12px 30px!important}
   .public-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
-  .public-home-pic{height:160px!important}
+  .public-home-pic{height:165px!important}
   .public-home-body{padding:13px!important}
   .public-home-price{font-size:19px!important}
+  .public-home-contact a{font-size:9px!important}
 }
 @media(max-width:520px){
   .public-home-grid{grid-template-columns:1fr!important}
-  .public-home-pic{height:200px!important}
-  .public-home-body{padding:14px!important}
+  .public-home-pic{height:205px!important}
+  .public-home-body{padding:15px!important}
   .public-home-price{font-size:21px!important}
+  .public-home-contact a{font-size:10px!important}
 }
 
 </style></head><body>
@@ -3599,7 +3644,7 @@ function publicImages(note){
 function publicHomeCards(a){
   return a.map(x=>{
     const imgs=publicImages(x.images_text);
-    const cover=imgs[0] ? `<img src="${esc(imgs[0])}" onerror="this.style.display='none';this.parentElement.querySelector('.public-home-placeholder').style.display='flex'"><div class="public-home-placeholder" style="display:none"><svg viewBox="0 0 96 96" aria-hidden="true"><path d="M16 45 48 19l32 26v31H16Z" fill="#dce8f7"/><path d="M25 43 48 25l23 18v26H25Z" fill="#fff" stroke="#2563eb" stroke-width="3"/><path d="M40 69V51h16v18" fill="#eaf2ff" stroke="#2563eb" stroke-width="3"/><path d="M31 44h34" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/></svg><span class="public-home-placeholder-label">Rasm mavjud emas</span></div>` : `<div class="public-home-placeholder"><svg viewBox="0 0 96 96" aria-hidden="true"><path d="M16 45 48 19l32 26v31H16Z" fill="#dce8f7"/><path d="M25 43 48 25l23 18v26H25Z" fill="#fff" stroke="#2563eb" stroke-width="3"/><path d="M40 69V51h16v18" fill="#eaf2ff" stroke="#2563eb" stroke-width="3"/><path d="M31 44h34" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/></svg><span class="public-home-placeholder-label">Rasm mavjud emas</span></div>`;
+    const cover=imgs[0] ? `<img src="${esc(imgs[0])}" onerror="this.style.display='none';this.parentElement.querySelector('.public-home-placeholder').style.display='flex'"><div class="public-home-placeholder" style="display:none"><svg viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="48" r="29" fill="#eef4fc"/><path d="M25 46 48 27l23 19v25H25Z" fill="#fff" stroke="#263f66" stroke-width="3" stroke-linejoin="round"/><path d="M39 71V53h18v18" fill="#eef4fc" stroke="#263f66" stroke-width="3"/><path d="M34 47h28" stroke="#263f66" stroke-width="3" stroke-linecap="round"/><path d="M48 21v6" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/></svg><span class="public-home-placeholder-label">Rasm mavjud emas</span></div>` : `<div class="public-home-placeholder"><svg viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="48" r="29" fill="#eef4fc"/><path d="M25 46 48 27l23 19v25H25Z" fill="#fff" stroke="#263f66" stroke-width="3" stroke-linejoin="round"/><path d="M39 71V53h18v18" fill="#eef4fc" stroke="#263f66" stroke-width="3"/><path d="M34 47h28" stroke="#263f66" stroke-width="3" stroke-linecap="round"/><path d="M48 21v6" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/></svg><span class="public-home-placeholder-label">Rasm mavjud emas</span></div>`;
     return `<div class="public-home-card">
       <div class="public-home-pic">${cover}</div>
       <div class="public-home-body">
@@ -3607,11 +3652,11 @@ function publicHomeCards(a){
         <div class="public-home-title">${esc(x.title)}</div>
         <div class="public-home-meta">📍 ${esc(x.city)} • ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}</div>
         <div class="public-view">👁️ ${Number(x.view_count||0)} marta ko‘rilgan</div>
-        <button class="public-home-btn" onclick="showPublicHome(${x.id})">Uy haqida batafsil</button>
         <div class="public-home-contact">
           <a class="public-home-phone" href="tel:+998999625454">📞 +998 99 962 54 54</a>
           <a class="public-home-telegram" href="https://t.me/alisher_sotuv" target="_blank" rel="noopener">✈️ Telegram</a>
         </div>
+        <button class="public-home-btn" onclick="showPublicHome(${x.id})">Uy haqida batafsil&nbsp; →</button>
       </div>
     </div>`;
   }).join('')||'<div class="empty">Hozircha sotuvda uylar yo‘q.</div>';
