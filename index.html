@@ -3736,11 +3736,13 @@ async function submitPublicSell(){
       existingSeller=(sellersRes.data||[]).find(s=>normalizePhoneForCRM(s.phone)===phoneDigits)||null;
     }
 
-    if(!existingSeller){
-      const sellerRow={name,phone,note:'Instagram ariza'};
-      const sellerRes=await client.from('sellers').insert(sellerRow).select().single();
-      if(sellerRes.error) throw sellerRes.error;
-      createdSellerId=sellerRes.data?.id||null;
+    // Public forma orqali `sellers` jadvaliga to‘g‘ridan-to‘g‘ri INSERT qilmaymiz.
+    // Supabase RLS anonim/public foydalanuvchiga sellers INSERTni yopgan bo‘lsa,
+    // aynan shu joyda `new row violates row-level security policy` xatosi chiqadi.
+    // Sotuvchi ismi va telefoni quyidagi `homes` yozuviga saqlanadi;
+    // admin/CRM ichidagi sotuvchi qo‘shish funksiyasi o‘zgarishsiz qoladi.
+    if(existingSeller){
+      createdSellerId=null;
     }
 
     let imageUrls=[];
@@ -3784,10 +3786,8 @@ async function submitPublicSell(){
       : 'Uy ma’lumotlaringiz qabul qilindi. Tez orada siz bilan bog‘lanamiz.'
     );
   }catch(err){
-    // Agar yangi sotuvchi yaratilib, uy saqlanmagan bo‘lsa, yetim sotuvchini o‘chiramiz.
-    if(createdSellerId){
-      try{ await client.from('sellers').delete().eq('id',createdSellerId); }catch(e){}
-    }
+    // Public forma endi sellers jadvaliga INSERT qilmaydi, shuning uchun
+    // RLS sababli yarimta/yetim seller yozuvi qolib ketmaydi.
     publicSellSubmitting=false;
     alert('Saqlashda xatolik: '+(err.message||err));
     if(submit){
