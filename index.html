@@ -1521,7 +1521,7 @@ function openActForDeal(dealId){
   const buyerInfo=[b.type,b.finish,visibleNote(b.note)].filter(Boolean).join(' | ')||'—';
   const sellerInfo=[h.seller,h.phone].filter(Boolean).join(' • ')||'—';
   const html=`<!doctype html><html lang="uz"><head><meta charset="utf-8"><title>XORAZMLIDER — AKT ${actNo}</title>
-  <style>body{font-family:"Times New Roman",serif;color:#111;margin:0}.page{width:190mm;min-height:270mm;margin:0 auto;padding:15mm 12mm;box-sizing:border-box}h1,h2{text-align:center;margin:0 0 10px}h1{font-size:17px}h2{font-size:15px}.meta{font-size:12px;line-height:1.5;margin:8px 0 15px}.data{border:1px solid #111;border-collapse:collapse;width:100%;font-size:11px}.data td{border:1px solid #111;padding:7px;vertical-align:top}.sign{display:flex;justify-content:space-between;gap:30px;margin-top:55px;font-size:12px}.line{display:inline-block;min-width:150px;border-bottom:1px solid #111}@media print{@page{margin:0}.page{margin:0}}</style></head><body><section class="page">
+  <style>body{font-family:"Times New Roman",serif;color:#111;margin:0}.page{width:190mm;min-height:270mm;margin:0 auto;padding:15mm 12mm;box-sizing:border-box}h1,h2{text-align:center;margin:0 0 10px}h1{font-size:17px}h2{font-size:15px}.meta{font-size:12px;line-height:1.5;margin:8px 0 15px}.data{border:1px solid #111;border-collapse:collapse;width:100%;font-size:11px}.data td{border:1px solid #111;padding:7px;vertical-align:top}.sign{display:flex;justify-content:space-between;gap:30px;margin-top:55px;font-size:12px}.line{display:inline-block;min-width:150px;border-bottom:1px solid #111}.backbar{position:sticky;top:0;text-align:left;padding:8px 0;background:#fff}.backbtn{border:1px solid #ccc;background:#f5f5f5;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer}@media print{.backbar{display:none}@page{margin:0}.page{margin:0}}</style></head><body><div class="backbar"><button class="backbtn" onclick="window.close()">← Orqaga / Bitimga qaytish</button></div><section class="page">
   <h1>ХИЗМАТ КЎРСАТИШ БЎЙИЧА</h1><h2>ҚАБУЛ ҚИЛИШ — ТОПШИРИШ ДАЛОЛАТНОМАСИ</h2>
   <div class="meta"><b>AKT №:</b> ${v(actNo)}<br><b>Sana:</b> ${v(new Date().toISOString().slice(0,10))}<br><b>Ташкилот:</b> ЯТТ Худайберганов Алишер Сапарбаевич</div>
   <p style="font-size:12px;line-height:1.5;text-align:justify">Ушбу далолатнома танланган харидор ва танланган кўчмас мулк бўйича битим маълумотларини қайд этиш мақсадида тузилди. Маълумотлар CRMдаги битим, харидор ва уй карточкаларидан автоматик олинди.</p>
@@ -2234,7 +2234,7 @@ function openActForHome(homeId){
       ${input('act_buyer_phone','Xaridor telefoni',buyer?.phone||'',0)}
     </div><br>
     <button class="btn primary" onclick="previewAct()">🖨️ AKTni chiqarish</button>
-    <button class="btn light" onclick="closeModal()">Bekor</button>`);
+    <button class="btn light" onclick="closeModal();go('deals')">← Bitimga qaytish</button>`);
 }
 
 function actEsc(v){return esc(v||'—')}
@@ -2259,7 +2259,7 @@ function actHtml(){
   <style>body{font-family:"Times New Roman",serif;color:#111;margin:0}.page{width:190mm;min-height:270mm;margin:0 auto;padding:15mm 12mm;box-sizing:border-box}h1,h2{text-align:center;margin:0 0 10px}h1{font-size:17px}h2{font-size:15px}.meta{font-size:12px;line-height:1.5;margin:8px 0 15px}.data{border:1px solid #111;border-collapse:collapse;width:100%;font-size:11px}.data td{border:1px solid #111;padding:7px;vertical-align:top}.sign{display:flex;justify-content:space-between;gap:30px;margin-top:55px;font-size:12px}.line{display:inline-block;min-width:150px;border-bottom:1px solid #111}@media print{@page{margin:0}.page{margin:0}}</style></head><body><section class="page">
   <h1>ХИЗМАТ КЎРСАТИШ БЎЙИЧА</h1><h2>ҚАБУЛ ҚИЛИШ — ТОПШИРИШ ДАЛОЛАТНОМАСИ</h2>
   <div class="meta"><b>AKT №:</b> ${actNo}<br><b>Sana:</b> ${date}<br><b>Ташкилот:</b> ЯТТ Худайберганов Алишер Сапарбаевич</div>
-  <p style="font-size:12px;line-height:1.5;text-align:justify">Ушбу далолатнома «БАЖАРУВЧИ» томонидан кўрсатилган кўчмас мулкни реклама қилиш, харидор топиш ва битимни ташкил этишга кўмаклашиш хизматлари натижасини қайд этиш мақсадида тузилди. Томонлар қуйидаги маълумотларни тасдиқлайдилар:</p>
+  <p style="font-size:12px;line-height:1.5;text-align:justify">Ушбу қабул қилиш-топшириш далолатномаси харидор томонидан сотиб олинган кўчмас мулкни кўздан кечириб, уни амалда қабул қилиб олганини тасдиқлаш мақсадида тузилди. Харидор объектнинг ҳолати билан танишган, уни кўздан кечирган ва объектни қабул қилиб олган.</p>
   <table class="data">
     <tr><td><b>Буюртмачи / Сотувчи</b></td><td>${customer}</td></tr>
     <tr><td><b>Телефон</b></td><td>${phone}</td></tr>
@@ -2275,12 +2275,13 @@ function actHtml(){
     <tr><td><b>Калит / ҳужжатлар</b></td><td>${keys}</td></tr>
     <tr><td><b>Қўшимча маълумот</b></td><td>${info}</td></tr>
   </table>
-  <p style="font-size:12px;line-height:1.5;text-align:justify;margin-top:14px">Томонлар ушбу далолатномада кўрсатилган маълумотлар билан танишиб, хизмат натижаси бўйича эътироз ва қўшимча талабларини билдириш имкониятига эга эканликларини тасдиқлайдилар. Ушбу шаблон шартнома билан бирга қўллаш учун мўлжалланган бўлиб, имзолашдан олдин ҳуқуқий талабларга мувофиқлиги текширилиши лозим.</p>
+  <p style="font-size:12px;line-height:1.5;text-align:justify;margin-top:14px"><b>Харидор ушбу далолатномани ўқиб, объектни шахсан кўздан кечирган ҳолда қабул қилиб олганини тасдиқлайди. Харидорнинг ушбу объект бўйича мулк эгаси (сотувчи)га ва риелторга нисбатан ҳеч қандай эътирози ва қўшимча талаби йўқ.</b></p>
   <div class="sign"><div><b>«БАЖАРУВЧИ»</b><br><br>ЯТТ Худайберганов Алишер Сапарбаевич<br><br>Имзо: <span class="line"></span></div><div><b>«БУЮРТМАЧИ»</b><br><br>${customer}<br><br>Имзо: <span class="line"></span></div></div>
   </section></body></html>`;
 }
 function previewAct(){
-  if(!val('act_customer')||!val('act_phone')){alert('Buyurtmachi/sotuvchi ismi va telefonini kiriting.');return;}
+  if(!val('act_buyer')||!val('act_buyer_phone')){alert('AKT uchun xaridorning F.I.Sh. va telefonini kiriting.');return;}
+  if(!val('act_customer')||!val('act_phone')){alert('Mulk egasi (sotuvchi) ismi va telefonini kiriting.');return;}
   const html=actHtml();
   const w=window.open('','_blank');
   if(!w){alert('Brauzer yangi oynani blokladi.');return;}
