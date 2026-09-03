@@ -3303,7 +3303,13 @@ async function submitPublicBuy(){
 
   const submit=document.querySelector('#publicForm .public-submit');
   publicBuySubmitting=true;
-  if(submit){submit.disabled=true;submit.textContent='Yuborilmoqda...';submit.style.opacity='.7';submit.style.pointerEvents='none';}
+  const submitStartedAt=Date.now();
+  if(submit){
+    submit.disabled=true;
+    submit.textContent='⏳ Yuborilmoqda...';
+    submit.style.opacity='.7';
+    submit.style.pointerEvents='none';
+  }
 
   const row={
     name,
@@ -3321,7 +3327,12 @@ async function submitPublicBuy(){
   try{
     const res=await client.from('buyers').insert(row);
     if(res.error)throw res.error;
-    publicSuccess('Xarid talabangiz qabul qilindi. Sizga mos uylar topilganda bog‘lanamiz.');
+
+    // Foydalanuvchi yuborilayotganini aniq ko‘rishi uchun kamida 800 ms ko‘rsatamiz.
+    const elapsed=Date.now()-submitStartedAt;
+    if(elapsed<800) await new Promise(r=>setTimeout(r,800-elapsed));
+
+    publicSuccess('Mijoz ma’lumotlari muvaffaqiyatli yuborildi.');
   }catch(err){
     publicBuySubmitting=false;
     if(submit){submit.disabled=false;submit.textContent='Yuborish';submit.style.opacity='';submit.style.pointerEvents='';}
