@@ -1646,28 +1646,16 @@ function openSellerContractChooser(sellerId){
     </div>`);
 }
 
-function normalizeSellerPhone(v){
-  const digits=String(v||'').replace(/\D/g,'');
-  return digits.length>9?digits.slice(-9):digits;
-}
 function sellers(){
   const visibleSellers=sellersVisibleForCurrentUser(db.sellers);
-  const seenPhones=new Set();
-  const uniqueSellers=visibleSellers.filter(x=>{
-    const key=normalizeSellerPhone(x.phone);
-    if(!key)return true;
-    if(seenPhones.has(key))return false;
-    seenPhones.add(key);
-    return true;
-  });
   return header('Sotuvchilar','Uy egalari va realtorlar bazasi','+ Sotuvchi qo‘shish','openSeller()')+
   `<div class="panel">
     <div class="tablewrap"><table class="table">
       <tr><th>Ism</th><th>Telefon</th><th>Uylari</th><th>Izoh</th><th>Amallar</th></tr>
-      ${uniqueSellers.map(x=>{
+      ${visibleSellers.map(x=>{
         const linkedHomes=db.homes.filter(h=>
           String(h.seller||'').trim().toLowerCase()===String(x.name||'').trim().toLowerCase() ||
-          (x.phone && h.phone && normalizeSellerPhone(h.phone)===normalizeSellerPhone(x.phone))
+          (x.phone && h.phone && String(h.phone).replace(/\D/g,'')===String(x.phone).replace(/\D/g,''))
         );
         const homesHtml=linkedHomes.length
           ? linkedHomes.map(h=>`<div style="padding:6px 0;border-bottom:1px solid #eee">
@@ -2382,6 +2370,11 @@ async function addBuyer(){
   if(error)return alert('Saqlashda xatolik: '+error.message);
   db.buyers.unshift(data);closeModal();go('buyers');
 }
+function normalizeSellerPhone(v){
+  const d=String(v||'').replace(/\D/g,'');
+  return d.length>=9 ? d.slice(-9) : d;
+}
+
 async function addSeller(){
   const name=val('name'), phone=val('phone'), title=val('title');
   if(!name||!phone||!title){alert('Iltimos, ism, telefon va uy nomini kiriting.');return;}
@@ -2391,8 +2384,9 @@ async function addSeller(){
   if(files.length>10){alert('Ko‘pi bilan 10 ta rasm yuborish mumkin.');return;}
 
   try{
-    const phoneKey=normalizeSellerPhone(phone);
-    const existingSeller=db.sellers.find(s=>phoneKey && normalizeSellerPhone(s.phone)===phoneKey);
+    const normalizedPhone=normalizeSellerPhone(phone);
+    const existingSeller=(db.sellers||[]).find(s=>normalizeSellerPhone(s.phone)===normalizedPhone);
+
     let sellerData=existingSeller||null;
     if(!sellerData){
       let sellerNote=val('note')||'Uy egasi';
@@ -2422,12 +2416,11 @@ async function addSeller(){
       price:parseMoneyInput(val('price'))||0,
       finish:val('finish'),
       type:val('type'),
-      seller:sellerData.name,
-      phone:sellerData.phone,
+      seller:sellerData.name||name,
+      phone:sellerData.phone||phone,
       status:'Faol',
       note
     };
-
     const homeRes=await client.from('homes').insert(homeRow).select().single();
     if(homeRes.error)throw homeRes.error;
 
@@ -2438,7 +2431,6 @@ async function addSeller(){
     alert('Saqlashda xatolik: '+(err.message||err));
   }
 }
-
 async function editHome(id){
   let x=db.homes.find(a=>a.id===id);if(!x)return;
   if(!requireHomeEdit(x))return;
@@ -3275,6 +3267,7 @@ async function submitPublicSell(){
   if(files.length>10){alert('Ko‘pi bilan 10 ta rasm yuborish mumkin.');return;}
 
   const submit=document.querySelector('#publicForm button.public-submit:not(.back)');
+  publicSellSubmitting=true;
   if(submit){
     submit.disabled=true;
     submit.textContent='⏳ Yuborilmoqda...';
@@ -3284,15 +3277,21 @@ async function submitPublicSell(){
   const submitStartedAt=Date.now();
 
   try{
-    const phoneKey=normalizeSellerPhone(phone);
     let sellerData=null;
-    const sellerLookup=await client.from('sellers').select('id,name,phone,note').limit(1000);
-    if(sellerLookup.error)throw sellerLookup.error;
-    sellerData=(sellerLookup.data||[]).find(s=>phoneKey && normalizeSellerPhone(s.phone)===phoneKey)||null;
+    const sellerLookup=await client.from('sellers').select('id,name,phone,note').eq('phone',phone).limit(1);
+    if(sellerLookup.error) throw sellerLookup.error;
+    sellerData=sellerLookup.data?.[0]||null;
+
     if(!sellerData){
-      const sellerRes=await client.from('sellers').insert({name,phone,note:'Instagram ariza'}).select('id,name,phone,note').single();
-      if(sellerRes.error) throw sellerRes.error;
-      sellerData=sellerRes.data;
+      const sellerRow={name,phone,note:'Instagram ariza'};
+      const sellerRes=await client.from('sellers').insert(sellerRow).select('id,name,phone,note').single();
+      if(sellerRes.error){
+        const retry=await client.from('sellers').select('id,name,phone,note').eq('phone',phone).limit(1);
+        if(retry.error||!retry.data?.length) throw sellerRes.error;
+        sellerData=retry.data[0];
+      }else{
+        sellerData=sellerRes.data;
+      }
     }
 
     let imageUrls=[];
@@ -3311,8 +3310,8 @@ async function submitPublicSell(){
       m2:Number(pf('m2'))||0,
       price:parseMoneyInput(pf('price'))||0,
       finish:pf('finish'),
-      seller:sellerData.name,
-      phone:sellerData.phone,
+      seller:sellerData?.name||name,
+      phone:sellerData?.phone||phone,
       status:'Faol',
       note:(note?note+'\n\n':'')+'[CRM_HOME]\nfloor='+Math.max(0,Number(pf('floor')||0))+'\n[/CRM_HOME]'
     };
@@ -3329,13 +3328,13 @@ async function submitPublicSell(){
     }
     await new Promise(r=>setTimeout(r,600));
 
-    publicSellSubmitting=false;
     publicSuccess(imageUrls.length
       ? `Uy ma’lumotlari va ${imageUrls.length} ta rasm qabul qilindi.`
       : 'Uy ma’lumotlaringiz qabul qilindi. Tez orada siz bilan bog‘lanamiz.'
     );
   }catch(err){
     alert('Saqlashda xatolik: '+(err.message||err));
+    publicSellSubmitting=false;
     if(submit){submit.disabled=false;submit.textContent='Yuborish';submit.style.opacity='';submit.style.pointerEvents='';}
   }
 }
