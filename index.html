@@ -104,14 +104,6 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
   padding:15px;box-shadow:0 18px 50px #000b;
 }
 .public-nav-popover.show{display:block}
-/* V10: Uylar menyusi aynan "Uylar" tugmasining tagidan ochiladi. */
-.homes-popover{
-  right:auto!important;
-  left:0;
-  top:0;
-  transform:none;
-}
-
 .public-nav-popover h3{margin:0 0 10px;font-size:15px}
 .public-contact-row{
   display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #242a31;
@@ -2654,53 +2646,6 @@ function contractHtml(){
   .public-home-btn{font-size:12px!important;padding:12px!important}
 }
 
-
-/* ===== V11: PUBLIC HOME DARK BACKGROUND CONTINUITY ===== */
-.public-homes-page,
-.public-homes-page > *,
-.public-homes-page-inner{
-  background-color:#070a0f!important;
-}
-.public-homes-page{
-  color:#f8fafc!important;
-}
-.public-homes-page .public-homes-count{
-  color:#98a2b3!important;
-}
-.public-homes-page .public-home-grid{
-  background:transparent!important;
-}
-.public-homes-page .public-category-section,
-.public-homes-page .public-categories,
-.public-homes-page .public-social-section,
-.public-homes-page .public-footer,
-.public-homes-page footer{
-  background-color:#070a0f!important;
-}
-/* If the page uses a full-width section immediately before the footer,
-   prevent its default white background from creating the visible stripe. */
-.public-homes-page section,
-.public-homes-page .section,
-.public-homes-page .container{
-  background-color:transparent;
-}
-
-
-/* V12: bosh sahifaning kategoriya va kontaktlar orasidagi body fonini ham dark qilamiz. */
-body:has(#publicApp[style*="display: block"]){
-  background:#070a0f!important;
-}
-#publicApp{
-  background:#070a0f!important;
-  color:#fff;
-}
-#publicApp > div{
-  background:#070a0f;
-}
-.public-social-links{
-  background:#0b0f14!important;
-}
-
 </style></head><body>
   <section class="page">
     <h1>${title}</h1>
@@ -3190,7 +3135,7 @@ function publicShell(content){
 }
 
 async function publicHome(){
-  document.body.style.background='#070a0f';
+  document.body.style.background='#f7f8fb';
   document.querySelector('.app').style.display='none';
   document.querySelector('.mobile-nav').style.display='none';
   document.getElementById('loginScreen').style.display='none';
@@ -3539,32 +3484,11 @@ function setupPublicNavHover(){
   const servicesLink=links.find(a=>a.textContent.trim()==='Xizmatlar');
   const contactsLink=links.find(a=>a.textContent.trim()==='Kontaktlar');
 
-  const positionHomesPopover=()=>{
-    const pop=document.getElementById('homesPopover');
-    if(!homesLink||!pop)return;
-    const r=homesLink.getBoundingClientRect();
-    const wasHidden=!pop.classList.contains('show');
-    if(wasHidden)pop.classList.add('show');
-    const w=pop.offsetWidth||235;
-    const gap=9;
-    const center=r.left+(r.width/2);
-    const minLeft=w/2+8;
-    const maxLeft=window.innerWidth-w/2-8;
-    const left=Math.max(minLeft,Math.min(center,maxLeft));
-    pop.style.position='fixed';
-    pop.style.left=left+'px';
-    pop.style.right='auto';
-    pop.style.top=(r.bottom+gap)+'px';
-    pop.style.transform='translateX(-50%)';
-  };
-
   const bind=(link,id,keep)=>{
     if(!link)return;
     link.addEventListener('mouseenter',()=>{
       closeNavPopovers(keep);
-      const pop=document.getElementById(id);
-      if(pop)pop.classList.add('show');
-      if(id==='homesPopover')positionHomesPopover();
+      document.getElementById(id)?.classList.add('show');
     });
   };
   bind(homesLink,'homesPopover','homes');
@@ -3591,23 +3515,6 @@ function setupPublicNavHover(){
     }
   });
 }
-
-window.addEventListener('resize',()=>{
-  const p=document.getElementById('homesPopover');
-  if(p?.classList.contains('show')){
-    const link=Array.from(document.querySelectorAll('.public-main-nav > a')).find(a=>a.textContent.trim()==='Uylar');
-    if(link){
-      const r=link.getBoundingClientRect();
-      const w=p.offsetWidth||235;
-      const left=Math.max(w/2+8,Math.min(r.left+r.width/2,window.innerWidth-w/2-8));
-      p.style.position='fixed';
-      p.style.left=left+'px';
-      p.style.right='auto';
-      p.style.top=(r.bottom+9)+'px';
-      p.style.transform='translateX(-50%)';
-    }
-  }
-});
 
 function openPublicService(type){
   closePublicDrops();
