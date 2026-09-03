@@ -3253,8 +3253,14 @@ async function submitPublicSell(){
   const files=[...(imageInput?.files||[])];
   if(files.length>10){alert('Ko‘pi bilan 10 ta rasm yuborish mumkin.');return;}
 
-  const submit=document.querySelector('#publicForm .public-submit:last-of-type');
-  if(submit){submit.disabled=true;submit.textContent='Yuklanmoqda...';}
+  const submit=document.querySelector('#publicForm button.public-submit:not(.back)');
+  if(submit){
+    submit.disabled=true;
+    submit.textContent='⏳ Yuborilmoqda...';
+    submit.style.opacity='.7';
+    submit.style.pointerEvents='none';
+  }
+  const submitStartedAt=Date.now();
 
   try{
     const sellerRow={name,phone,note:'Instagram ariza'};
@@ -3285,13 +3291,23 @@ async function submitPublicSell(){
     const homeRes=await client.from('homes').insert(homeRow);
     if(homeRes.error) throw homeRes.error;
 
+    const elapsed=Date.now()-submitStartedAt;
+    if(elapsed<800) await new Promise(r=>setTimeout(r,800-elapsed));
+    if(submit){
+      submit.textContent='✅ Yuborildi';
+      submit.disabled=true;
+      submit.style.opacity='1';
+      submit.style.pointerEvents='none';
+    }
+    await new Promise(r=>setTimeout(r,600));
+
     publicSuccess(imageUrls.length
       ? `Uy ma’lumotlari va ${imageUrls.length} ta rasm qabul qilindi.`
       : 'Uy ma’lumotlaringiz qabul qilindi. Tez orada siz bilan bog‘lanamiz.'
     );
   }catch(err){
     alert('Saqlashda xatolik: '+(err.message||err));
-    if(submit){submit.disabled=false;submit.textContent='Yuborish';}
+    if(submit){submit.disabled=false;submit.textContent='Yuborish';submit.style.opacity='';submit.style.pointerEvents='';}
   }
 }
 
@@ -3349,8 +3365,14 @@ async function submitPublicBuy(){
 }
 
 function publicSuccess(message){
-  document.getElementById('publicForm').style.display='none';
+  const form=document.getElementById('publicForm');
   const s=document.getElementById('publicSuccess');
+  if(form && s){
+    // Natijani aynan forma tugmasining tagiga chiqaramiz:
+    // footer/social bloklaridan keyin emas.
+    form.insertAdjacentElement('afterend',s);
+    form.style.display='none';
+  }
   s.className='public-success show';
   s.innerHTML=`<div style="font-size:50px">✅</div><h2>Qabul qilindi</h2><p>${esc(message)}</p><button class="public-submit" onclick="publicHome()">Bosh sahifaga qaytish</button>`;
 }
