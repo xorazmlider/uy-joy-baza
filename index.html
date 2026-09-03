@@ -104,6 +104,8 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
   padding:15px;box-shadow:0 18px 50px #000b;
 }
 .public-nav-popover.show{display:block}
+.homes-popover{z-index:60;}
+
 .public-nav-popover h3{margin:0 0 10px;font-size:15px}
 .public-contact-row{
   display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #242a31;
@@ -3484,11 +3486,29 @@ function setupPublicNavHover(){
   const servicesLink=links.find(a=>a.textContent.trim()==='Xizmatlar');
   const contactsLink=links.find(a=>a.textContent.trim()==='Kontaktlar');
 
+  const positionHomesPopover=()=>{
+    const pop=document.getElementById('homesPopover');
+    if(!homesLink||!pop)return;
+    const r=homesLink.getBoundingClientRect();
+
+    pop.style.position='fixed';
+    pop.style.right='auto';
+    pop.style.transform='translateX(-50%)';
+    pop.style.top=(r.bottom+8)+'px';
+
+    const w=pop.offsetWidth||300;
+    const center=r.left+(r.width/2);
+    const left=Math.max(w/2+8,Math.min(center,window.innerWidth-w/2-8));
+    pop.style.left=left+'px';
+  };
+
   const bind=(link,id,keep)=>{
     if(!link)return;
     link.addEventListener('mouseenter',()=>{
       closeNavPopovers(keep);
-      document.getElementById(id)?.classList.add('show');
+      const pop=document.getElementById(id);
+      if(pop)pop.classList.add('show');
+      if(id==='homesPopover')positionHomesPopover();
     });
   };
   bind(homesLink,'homesPopover','homes');
@@ -3515,6 +3535,23 @@ function setupPublicNavHover(){
     }
   });
 }
+
+window.addEventListener('resize',()=>{
+  const pop=document.getElementById('homesPopover');
+  if(!pop?.classList.contains('show')) return;
+  const nav=document.querySelector('.public-main-nav');
+  const link=nav ? Array.from(nav.querySelectorAll(':scope > a')).find(a=>a.textContent.trim()==='Uylar') : null;
+  if(!link) return;
+  const r=link.getBoundingClientRect();
+  const w=pop.offsetWidth||300;
+  const center=r.left+(r.width/2);
+  const left=Math.max(w/2+8,Math.min(center,window.innerWidth-w/2-8));
+  pop.style.position='fixed';
+  pop.style.left=left+'px';
+  pop.style.right='auto';
+  pop.style.top=(r.bottom+8)+'px';
+  pop.style.transform='translateX(-50%)';
+});
 
 function openPublicService(type){
   closePublicDrops();
