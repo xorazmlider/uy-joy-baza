@@ -3292,10 +3292,18 @@ async function submitPublicSell(){
   }
 }
 
+let publicBuySubmitting=false;
+
 async function submitPublicBuy(){
+  if(publicBuySubmitting)return;
+
   const name=pf('name'), phone=pf('phone');
   const required=[name,phone,pf('city'),pf('area'),pf('rooms'),pf('m2'),pf('budget'),pf('finish'),pf('type')];
   if(required.some(v=>!v)){alert('Iltimos, barcha majburiy maydonlarni to‘ldiring.');return;}
+
+  const submit=document.querySelector('#publicForm .public-submit');
+  publicBuySubmitting=true;
+  if(submit){submit.disabled=true;submit.textContent='Yuborilmoqda...';submit.style.opacity='.7';submit.style.pointerEvents='none';}
 
   const row={
     name,
@@ -3309,9 +3317,16 @@ async function submitPublicBuy(){
     type:pf('type'),
     note:pf('note')
   };
-  const res=await client.from('buyers').insert(row);
-  if(res.error){alert('Saqlashda xatolik: '+res.error.message);return;}
-  publicSuccess('Xarid talabangiz qabul qilindi. Sizga mos uylar topilganda bog‘lanamiz.');
+
+  try{
+    const res=await client.from('buyers').insert(row);
+    if(res.error)throw res.error;
+    publicSuccess('Xarid talabangiz qabul qilindi. Sizga mos uylar topilganda bog‘lanamiz.');
+  }catch(err){
+    publicBuySubmitting=false;
+    if(submit){submit.disabled=false;submit.textContent='Yuborish';submit.style.opacity='';submit.style.pointerEvents='';}
+    alert('Saqlashda xatolik: '+(err.message||err));
+  }
 }
 
 function publicSuccess(message){
