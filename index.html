@@ -2448,67 +2448,7 @@ function contractHtml(){
       .page{margin:0}
       @page{margin:0}
     }
-  
-/* ===== V5 PUBLIC NO-PHOTO PREMIUM PLACEHOLDER ===== */
-.public-home-pic{
-  position:relative;
-  overflow:hidden;
-  background:linear-gradient(145deg,#eef3f8 0%,#dfe7f1 100%)!important;
-}
-.public-home-pic:has(.premium-no-photo){
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.premium-no-photo{
-  width:100%;
-  height:100%;
-  min-height:150px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  overflow:hidden;
-  background:
-    radial-gradient(circle at 50% 45%,rgba(255,255,255,.95) 0 30%,transparent 31%),
-    linear-gradient(145deg,#f4f7fb,#e3eaf3);
-}
-.premium-no-photo:before,
-.premium-no-photo:after{
-  content:"";
-  position:absolute;
-  border-radius:50%;
-  background:rgba(37,99,235,.07);
-}
-.premium-no-photo:before{width:145px;height:145px;left:-45px;top:-55px}
-.premium-no-photo:after{width:170px;height:170px;right:-65px;bottom:-70px}
-.premium-no-photo:after{
-  box-shadow:0 0 0 1px rgba(37,99,235,.04) inset;
-}
-.premium-no-photo svg{
-  width:105px!important;
-  height:105px!important;
-  position:relative;
-  z-index:2;
-  filter:drop-shadow(0 8px 14px rgba(15,23,42,.12));
-}
-.premium-no-photo span{
-  position:absolute;
-  bottom:10px;
-  left:50%;
-  transform:translateX(-50%);
-  z-index:3;
-  white-space:nowrap;
-  padding:5px 9px;
-  border-radius:999px;
-  background:rgba(255,255,255,.92);
-  border:1px solid rgba(148,163,184,.25);
-  color:#64748b;
-  font-size:9px;
-  font-weight:800;
-}
-
-</style></head><body>
+  </style></head><body>
   <section class="page">
     <h1>${title}</h1>
     <h2>${no} -СОНЛИ ШАРТНОМАСИ</h2>
@@ -3471,33 +3411,14 @@ function clearPublicFilters(){
 
 let publicHomesDb=[];
 
-function publicImages(v){
-  const s=String(v||'').trim();
-  if(!s)return [];
-  const out=[];
-  const add=(u)=>{
-    u=String(u||'').trim();
-    if(!u)return;
-    u=u.replace(/^["']|["']$/g,'').trim();
-    if(/^https?:\/\//i.test(u) || /^data:image\//i.test(u)) out.push(u);
-  };
-
-  // Current/legacy public field.
-  s.split(/\s*[\n,;|]\s*/).forEach(add);
-
-  // Admin-saved images: [PROPERTY_IMAGES] ... [/PROPERTY_IMAGES]
-  const block=s.match(/\[PROPERTY_IMAGES\]([\s\S]*?)\[\/PROPERTY_IMAGES\]/i);
-  if(block){
-    block[1].split(/\r?\n/).forEach(add);
-  }
-
-  // De-duplicate while preserving order.
-  return [...new Set(out)];
+function publicImages(note){
+  const m=String(note||'').match(/\[PROPERTY_IMAGES\]([\s\S]*?)\[\/PROPERTY_IMAGES\]/);
+  return m ? m[1].split(/\r?\n/).map(s=>s.trim()).filter(Boolean) : [];
 }
 function publicHomeCards(a){
   return a.map(x=>{
-    const imgs=(()=>{const a=publicImages(x.images_text);return a.length?a:publicImages(x.note);})();
-    const cover=imgs[0] ? `<img src="${esc(imgs[0])}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="premium-no-photo" style="display:none"><span>Rasm mavjud emas</span></div>` : `<div class="premium-no-photo"><span>Rasm mavjud emas</span></div>`;
+    const imgs=publicImages(x.images_text);
+    const cover=imgs[0] ? `<img src="${esc(imgs[0])}" onerror="this.parentElement.innerHTML='🏠'">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:52px">🏠</div>';
     return `<div class="public-home-card">
       <div class="public-home-pic">${cover}</div>
       <div class="public-home-body">
@@ -3538,7 +3459,7 @@ function filterPublicHomes(q){
 async function showPublicHome(id){
   const x=publicHomesDb.find(a=>a.id===id);
   if(!x)return;
-  const imgs=(()=>{const a=publicImages(x.images_text);return a.length?a:publicImages(x.note);})();
+  const imgs=publicImages(x.images_text);
   const gallery=imgs.length?`<div class="image-preview" style="margin-bottom:12px">${imgs.map(u=>`<img src="${esc(u)}" style="width:120px;height:90px" onclick="window.open('${esc(u)}','_blank')">`).join('')}</div>`:'';
   modal(`<h2>${esc(x.title)}</h2>${gallery}
     <div class="match"><b>${money(x.price)}</b><br>📍 ${esc(x.city)}, ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}</div>
