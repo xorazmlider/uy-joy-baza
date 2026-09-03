@@ -104,6 +104,14 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.app{display:fle
   padding:15px;box-shadow:0 18px 50px #000b;
 }
 .public-nav-popover.show{display:block}
+/* V10: Uylar menyusi aynan "Uylar" tugmasining tagidan ochiladi. */
+.homes-popover{
+  right:auto!important;
+  left:0;
+  top:0;
+  transform:none;
+}
+
 .public-nav-popover h3{margin:0 0 10px;font-size:15px}
 .public-contact-row{
   display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #242a31;
@@ -3484,11 +3492,32 @@ function setupPublicNavHover(){
   const servicesLink=links.find(a=>a.textContent.trim()==='Xizmatlar');
   const contactsLink=links.find(a=>a.textContent.trim()==='Kontaktlar');
 
+  const positionHomesPopover=()=>{
+    const pop=document.getElementById('homesPopover');
+    if(!homesLink||!pop)return;
+    const r=homesLink.getBoundingClientRect();
+    const wasHidden=!pop.classList.contains('show');
+    if(wasHidden)pop.classList.add('show');
+    const w=pop.offsetWidth||235;
+    const gap=9;
+    const center=r.left+(r.width/2);
+    const minLeft=w/2+8;
+    const maxLeft=window.innerWidth-w/2-8;
+    const left=Math.max(minLeft,Math.min(center,maxLeft));
+    pop.style.position='fixed';
+    pop.style.left=left+'px';
+    pop.style.right='auto';
+    pop.style.top=(r.bottom+gap)+'px';
+    pop.style.transform='translateX(-50%)';
+  };
+
   const bind=(link,id,keep)=>{
     if(!link)return;
     link.addEventListener('mouseenter',()=>{
       closeNavPopovers(keep);
-      document.getElementById(id)?.classList.add('show');
+      const pop=document.getElementById(id);
+      if(pop)pop.classList.add('show');
+      if(id==='homesPopover')positionHomesPopover();
     });
   };
   bind(homesLink,'homesPopover','homes');
@@ -3515,6 +3544,23 @@ function setupPublicNavHover(){
     }
   });
 }
+
+window.addEventListener('resize',()=>{
+  const p=document.getElementById('homesPopover');
+  if(p?.classList.contains('show')){
+    const link=Array.from(document.querySelectorAll('.public-main-nav > a')).find(a=>a.textContent.trim()==='Uylar');
+    if(link){
+      const r=link.getBoundingClientRect();
+      const w=p.offsetWidth||235;
+      const left=Math.max(w/2+8,Math.min(r.left+r.width/2,window.innerWidth-w/2-8));
+      p.style.position='fixed';
+      p.style.left=left+'px';
+      p.style.right='auto';
+      p.style.top=(r.bottom+9)+'px';
+      p.style.transform='translateX(-50%)';
+    }
+  }
+});
 
 function openPublicService(type){
   closePublicDrops();
@@ -3624,7 +3670,7 @@ function premiumPublicHouseIcon(){
 }
 function publicHomeCards(a){
   return a.map(x=>{
-    const imgs=publicImages(x.images_text);
+    const imgs=(()=>{const a=publicImages(x.images_text);return a.length?a:getImageUrls(x.note);})();
     const cover=imgs[0]
       ? `<img src="${esc(imgs[0])}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="premium-no-photo" style="display:none">${premiumPublicHouseIcon()}<span>Rasm mavjud emas</span></div>`
       : `<div class="premium-no-photo">${premiumPublicHouseIcon()}<span>Rasm mavjud emas</span></div>`;
@@ -3679,7 +3725,7 @@ function filterPublicHomes(q){
 async function showPublicHome(id){
   const x=publicHomesDb.find(a=>a.id===id);
   if(!x)return;
-  const imgs=publicImages(x.images_text);
+  const imgs=(()=>{const a=publicImages(x.images_text);return a.length?a:getImageUrls(x.note);})();
   const gallery=imgs.length?`<div class="image-preview" style="margin-bottom:12px">${imgs.map(u=>`<img src="${esc(u)}" style="width:120px;height:90px" onclick="window.open('${esc(u)}','_blank')">`).join('')}</div>`:'';
   modal(`<h2>${esc(x.title)}</h2>${gallery}
     <div class="match"><b>${money(x.price)}</b><br>📍 ${esc(x.city)}, ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}</div>
