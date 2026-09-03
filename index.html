@@ -2380,25 +2380,20 @@ async function addBuyer(){
 }
 
 function normalizeSellerPhone(phone){
-  return String(phone||'').replace(/\D/g,'').replace(/^998(?=9\d{8}$)/,'998');
+  const d=String(phone||'').replace(/\D/g,'');
+  return d.length>=9 ? d.slice(-9) : d;
 }
 
 async function findExistingSellerByPhone(phone){
-  const raw=String(phone||'').trim();
-  const digits=normalizeSellerPhone(raw);
-  const last9=digits.length>=9?digits.slice(-9):digits;
-  if(!digits)return null;
-  try{
-    const res=await client.from('sellers').select('*');
-    if(res.error) return null;
-    return (res.data||[]).find(s=>{
-      const sd=normalizeSellerPhone(s.phone);
-      return sd===digits || (last9 && sd.slice(-9)===last9);
-    })||null;
-  }catch(e){return null;}
+  const key=normalizeSellerPhone(phone);
+  if(!key)return null;
+  const res=await client.from('sellers').select('id,name,phone,note,owner_staff_id').limit(1000);
+  if(res.error)throw res.error;
+  return (res.data||[]).find(s=>normalizeSellerPhone(s.phone)===key)||null;
 }
 
 async function addSeller(){
+  if(window.__adminSellerSubmitting)return;
   const name=val('name'), phone=val('phone'), title=val('title');
   if(!name||!phone||!title){alert('Iltimos, ism, telefon va uy nomini kiriting.');return;}
 
@@ -2406,6 +2401,7 @@ async function addSeller(){
   const files=[...(imageInput?.files||[])];
   if(files.length>10){alert('Ko‘pi bilan 10 ta rasm yuborish mumkin.');return;}
 
+  window.__adminSellerSubmitting=true;
   try{
     let sellerNote=val('note')||'Uy egasi';
     sellerNote+=(sellerNote?'\n\n':'')+'[CRM_SELLER_OWNER]\nstaff_id='+String(currentStaff?.id||'')+'\nlogin='+String(currentStaff?.login||'')+'\nemail='+String(currentStaff?.email||currentUser?.email||'')+'\n[/CRM_SELLER_OWNER]';
@@ -2435,8 +2431,9 @@ async function addSeller(){
       price:parseMoneyInput(val('price'))||0,
       finish:val('finish'),
       type:val('type'),
-      seller:name,
-      phone,
+      floor:Number(val('floor'))||0,
+      seller:sellerData.name||name,
+      phone:sellerData.phone||phone,
       status:'Faol',
       note
     };
@@ -2450,6 +2447,8 @@ async function addSeller(){
     go('sellers');
   }catch(err){
     alert('Saqlashda xatolik: '+(err.message||err));
+  }finally{
+    window.__adminSellerSubmitting=false;
   }
 }
 
