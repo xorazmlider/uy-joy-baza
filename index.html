@@ -3624,7 +3624,7 @@ function premiumPublicHouseIcon(){
 }
 function publicHomeCards(a){
   return a.map(x=>{
-    const imgs=(()=>{const a=publicImages(x.images_text);return a.length?a:getImageUrls(x.note);})();
+    const imgs=publicImages(x.images_text);
     const cover=imgs[0]
       ? `<img src="${esc(imgs[0])}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="premium-no-photo" style="display:none">${premiumPublicHouseIcon()}<span>Rasm mavjud emas</span></div>`
       : `<div class="premium-no-photo">${premiumPublicHouseIcon()}<span>Rasm mavjud emas</span></div>`;
@@ -3679,7 +3679,7 @@ function filterPublicHomes(q){
 async function showPublicHome(id){
   const x=publicHomesDb.find(a=>a.id===id);
   if(!x)return;
-  const imgs=(()=>{const a=publicImages(x.images_text);return a.length?a:getImageUrls(x.note);})();
+  const imgs=publicImages(x.images_text);
   const gallery=imgs.length?`<div class="image-preview" style="margin-bottom:12px">${imgs.map(u=>`<img src="${esc(u)}" style="width:120px;height:90px" onclick="window.open('${esc(u)}','_blank')">`).join('')}</div>`:'';
   modal(`<h2>${esc(x.title)}</h2>${gallery}
     <div class="match"><b>${money(x.price)}</b><br>📍 ${esc(x.city)}, ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}</div>
