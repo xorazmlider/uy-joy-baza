@@ -3442,7 +3442,7 @@ function publicHomeCards(a){
         <div class="public-home-price">${money(x.price)}</div>
         <div class="public-home-title">${esc(x.title)}</div>
         <div class="public-home-meta">📍 ${esc(x.city)} • ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}</div>
-        <div class="public-view">👁️ ${Number(x.view_count||0)} marta ko‘rilgan</div>
+        <div class="public-view">👁️ ${Number(x.view_count||0)} marta ko‘rilgan &nbsp;•&nbsp; 🗓️ E'lon qo‘shilgan: ${esc(formatDateTime(x.created_at))}</div>
         <button class="public-home-btn" onclick="showPublicHome(${x.id})">Uy haqida batafsil</button>
         <div class="public-home-contact">
           <a class="public-home-phone" href="tel:+998999625454">📞 +998 99 962 54 54</a>
