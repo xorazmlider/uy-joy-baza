@@ -3126,12 +3126,6 @@ function showPublicForm(type){
     site.insertBefore(box,head.nextSibling);
   }
 
-  // Natija bloki ham forma bilan birga turadi: footer/ijtimoiy tarmoqlardan pastga tushib ketmaydi.
-  const successBox=document.getElementById('publicSuccess');
-  if(successBox && successBox.previousElementSibling!==box){
-    site.insertBefore(successBox,box.nextSibling);
-  }
-
   box.className='public-form show';
   box.style.setProperty('display','block','important');
   box.style.setProperty('width','min(1100px,calc(100% - 36px))','important');
@@ -3156,6 +3150,7 @@ function showPublicForm(type){
         ${publicInput('area','Hudud/mavze','Stadion')}
         ${publicInput('rooms','Xona soni','5','number')}
         ${publicInput('m2','Maydon m²','200','number')}
+        ${publicInput('floor','Qavat','3','number')}
         ${publicInput('price','Narx (so‘m yoki dollar)','700000000 yoki $170000')}
         ${publicInput('finish','Ta’mir holati','Remontli')}
         ${publicSelect('type','Obyekt turi',[{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}])}
@@ -3180,6 +3175,8 @@ function showPublicForm(type){
         ${publicRegionSelect('city','Shahar/tuman')}
         ${publicInput('area','Kerakli hudud','Stadion')}
         ${publicInput('rooms','Xona soni','3','number')}
+        ${publicInput('floor_min','Qavat — minimum','1','number')}
+        ${publicInput('floor_max','Qavat — maksimum','5','number')}
         ${publicInput('m2','Kerakli maydon m²','80','number')}
         ${publicInput('budget','Budjet (so‘m yoki dollar)','800000000 yoki $170000')}
         ${publicInput('finish','Ta’mir talabi','Remontli')}
@@ -3248,9 +3245,6 @@ async function uploadPropertyImages(files, title){
 }
 
 async function submitPublicSell(){
-  // Bir marta bosilgan yuborish qayta ishlamasin.
-  if(window.__publicSellSubmitting)return;
-
   const name=pf('seller_name'), phone=pf('seller_phone'), title=pf('title');
   const required=[name,phone,title,pf('city'),pf('area'),pf('rooms'),pf('m2'),pf('price'),pf('finish'),pf('type')];
   if(required.some(v=>!v)){alert('Iltimos, barcha majburiy maydonlarni to‘ldiring.');return;}
@@ -3259,39 +3253,19 @@ async function submitPublicSell(){
   const files=[...(imageInput?.files||[])];
   if(files.length>10){alert('Ko‘pi bilan 10 ta rasm yuborish mumkin.');return;}
 
-  const submit=document.querySelector('#publicForm .public-submit:last-of-type');
-  window.__publicSellSubmitting=true;
-  if(submit){submit.disabled=true;submit.textContent='Yuborilmoqda...';}
-
-  // Telefonni bir xil ko‘rinishga keltiramiz: faqat raqamlar.
-  const phoneDigits=String(phone).replace(/\D/g,'');
-  const last9=phoneDigits.length>=9?phoneDigits.slice(-9):phoneDigits;
+  const submit=document.querySelector('#publicForm button.public-submit:not(.back)');
+  if(submit){
+    submit.disabled=true;
+    submit.textContent='⏳ Yuborilmoqda...';
+    submit.style.opacity='.7';
+    submit.style.pointerEvents='none';
+  }
+  const submitStartedAt=Date.now();
 
   try{
-    // Bir xil telefon raqamli sotuvchi bo‘lsa, yangi sellers qatori yaratmaymiz.
-    // Avval to‘liq raqamni, keyin oxirgi 9 raqamni tekshiramiz.
-    let existingSeller=null;
-    try{
-      if(phoneDigits){
-        const exact=await client.from('sellers').select('*').eq('phone',phone).limit(1);
-        if(!exact.error && exact.data?.length) existingSeller=exact.data[0];
-      }
-      if(!existingSeller && last9){
-        const byLast9=await client.from('sellers').select('*').ilike('phone','%'+last9).limit(1);
-        if(!byLast9.error && byLast9.data?.length) existingSeller=byLast9.data[0];
-      }
-    }catch(e){
-      // Public SELECT RLS bilan yopiq bo‘lsa, odatdagi INSERT yo‘lida davom etamiz.
-      existingSeller=null;
-    }
-
-    let sellerData=existingSeller;
-    if(!sellerData){
-      const sellerRow={name,phone,note:'Instagram ariza'};
-      const sellerRes=await client.from('sellers').insert(sellerRow).select().single();
-      if(sellerRes.error) throw sellerRes.error;
-      sellerData=sellerRes.data;
-    }
+    const sellerRow={name,phone,note:'Instagram ariza'};
+    const sellerRes=await client.from('sellers').insert(sellerRow);
+    if(sellerRes.error) throw sellerRes.error;
 
     let imageUrls=[];
     if(files.length) imageUrls=await uploadPropertyImages(files,title);
@@ -3309,13 +3283,23 @@ async function submitPublicSell(){
       m2:Number(pf('m2'))||0,
       price:parseMoneyInput(pf('price'))||0,
       finish:pf('finish'),
-      seller:sellerData.name||name,
-      phone:sellerData.phone||phone,
+      seller:name,
+      phone,
       status:'Faol',
-      note
+      note:(note?note+'\n\n':'')+'[CRM_HOME]\nfloor='+Math.max(0,Number(pf('floor')||0))+'\n[/CRM_HOME]'
     };
-    const homeRes=await client.from('homes').insert(homeRow).select().single();
+    const homeRes=await client.from('homes').insert(homeRow);
     if(homeRes.error) throw homeRes.error;
+
+    const elapsed=Date.now()-submitStartedAt;
+    if(elapsed<800) await new Promise(r=>setTimeout(r,800-elapsed));
+    if(submit){
+      submit.textContent='✅ Yuborildi';
+      submit.disabled=true;
+      submit.style.opacity='1';
+      submit.style.pointerEvents='none';
+    }
+    await new Promise(r=>setTimeout(r,600));
 
     publicSuccess(imageUrls.length
       ? `Uy ma’lumotlari va ${imageUrls.length} ta rasm qabul qilindi.`
@@ -3323,22 +3307,31 @@ async function submitPublicSell(){
     );
   }catch(err){
     alert('Saqlashda xatolik: '+(err.message||err));
-    window.__publicSellSubmitting=false;
-    if(submit){submit.disabled=false;submit.textContent='Yuborish';}
+    if(submit){submit.disabled=false;submit.textContent='Yuborish';submit.style.opacity='';submit.style.pointerEvents='';}
   }
 }
 
+let publicBuySubmitting=false;
+
 async function submitPublicBuy(){
-  // Bir marta bosilgandan keyin qayta yuborishni bloklaymiz.
-  if(window.__publicBuySubmitting)return;
+  if(publicBuySubmitting)return;
 
   const name=pf('name'), phone=pf('phone');
   const required=[name,phone,pf('city'),pf('area'),pf('rooms'),pf('m2'),pf('budget'),pf('finish'),pf('type')];
   if(required.some(v=>!v)){alert('Iltimos, barcha majburiy maydonlarni to‘ldiring.');return;}
+  const floorMin=Math.max(0,Number(pf('floor_min')||0));
+  const floorMax=Math.max(0,Number(pf('floor_max')||0));
+  if(floorMin && floorMax && floorMax<floorMin){alert('Qavat minimum va maksimumini to‘g‘ri kiriting.');return;}
 
-  const submit=document.querySelector('#publicForm .public-submit:not(.back)');
-  window.__publicBuySubmitting=true;
-  if(submit){submit.disabled=true;submit.textContent='⏳ Yuborilmoqda...';}
+  const submit=document.querySelector('#publicForm button.public-submit:not(.back)');
+  publicBuySubmitting=true;
+  const submitStartedAt=Date.now();
+  if(submit){
+    submit.disabled=true;
+    submit.textContent='⏳ Yuborilmoqda...';
+    submit.style.opacity='.7';
+    submit.style.pointerEvents='none';
+  }
 
   const row={
     name,
@@ -3350,27 +3343,35 @@ async function submitPublicBuy(){
     budget:parseMoneyInput(pf('budget'))||0,
     finish:pf('finish'),
     type:pf('type'),
-    note:pf('note')
+    note:(pf('note')?pf('note')+'\n\n':'')+'[CRM_BUYER]\nrooms_min='+Number(pf('rooms')||0)+'\nrooms_max='+Number(pf('rooms')||0)+'\nfloor_min='+Math.max(0,Number(pf('floor_min')||0))+'\nfloor_max='+Math.max(0,Number(pf('floor_max')||0))+'\n[/CRM_BUYER]'
   };
+
   try{
     const res=await client.from('buyers').insert(row);
-    if(res.error) throw res.error;
-    if(submit){submit.textContent='✅ Yuborildi';}
-    publicSuccess('Xarid talabangiz qabul qilindi. Sizga mos uylar topilganda bog‘lanamiz.');
+    if(res.error)throw res.error;
+
+    // Foydalanuvchi yuborilayotganini aniq ko‘rishi uchun kamida 800 ms ko‘rsatamiz.
+    const elapsed=Date.now()-submitStartedAt;
+    if(elapsed<800) await new Promise(r=>setTimeout(r,800-elapsed));
+
+    if(submit){submit.textContent='✅ Yuborildi';submit.disabled=true;submit.style.opacity='1';}
+    await new Promise(r=>setTimeout(r,600));
+    publicSuccess('Mijoz ma’lumotlari muvaffaqiyatli yuborildi.');
   }catch(err){
+    publicBuySubmitting=false;
+    if(submit){submit.disabled=false;submit.textContent='Yuborish';submit.style.opacity='';submit.style.pointerEvents='';}
     alert('Saqlashda xatolik: '+(err.message||err));
-    window.__publicBuySubmitting=false;
-    if(submit){submit.disabled=false;submit.textContent='Yuborish';}
   }
 }
 
 function publicSuccess(message){
   const form=document.getElementById('publicForm');
   const s=document.getElementById('publicSuccess');
-  if(form) form.style.display='none';
-  // Natija formaning darhol tagida chiqadi. Footer/aloqa qatoridan pastga tushmaydi.
-  if(form && s && s.parentNode!==form.parentNode){
-    form.parentNode.insertBefore(s,form.nextSibling);
+  if(form && s){
+    // Natijani aynan forma tugmasining tagiga chiqaramiz:
+    // footer/social bloklaridan keyin emas.
+    form.insertAdjacentElement('afterend',s);
+    form.style.display='none';
   }
   s.className='public-success show';
   s.innerHTML=`<div style="font-size:50px">✅</div><h2>Qabul qilindi</h2><p>${esc(message)}</p><button class="public-submit" onclick="publicHome()">Bosh sahifaga qaytish</button>`;
