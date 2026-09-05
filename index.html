@@ -1878,30 +1878,21 @@ function buyers(){
 }
 function buyerRows(a){
   return `<div class="tablewrap"><table class="table">
-    <tr><th>Mijoz</th><th>Talab</th><th>Budjet</th><th>Aloqa</th><th>Ariza sanasi</th><th>Amallar</th></tr>
-    ${a.map(x=>`<tr onclick="showBuyerDetails(${x.id})" style="cursor:pointer" title="Mijoz arizasini ko‘rish">
+    <tr><th>Mijoz</th><th>Talab</th><th>Budjet</th><th>Aloqa</th><th>Amallar</th></tr>
+    ${a.map(x=>`<tr>
       <td><b>${esc(x.name)}</b><br><span class="muted">${esc(visibleNote(x.note))}</span></td>
       <td>${esc(x.type||'Farqi yo‘q')}<br>${esc(x.city||'')} • ${esc(x.area||'')}<br>${buyerReq(x).rmin}–${buyerReq(x).rmax} xona • ${buyerReq(x).fmin||'—'}–${buyerReq(x).fmax||'—'} qavat • ${x.m2||0} m²</td>
-      <td>${x.budget ? money(x.budget)+' gacha' : 'Ko‘rsatilmagan'}</td>
-      <td>${esc(x.phone)}</td><td>${esc(formatDateTime(x.created_at))}</td>
+      <td>${money(x.budget)} gacha</td>
+      <td>${esc(x.phone)}</td>
       <td style="white-space:nowrap">
-        <button class="small primary" onclick="event.stopPropagation();showBuyerMatches(${x.id})">🎯 Mos uylar</button>
-        <button class="small" onclick="event.stopPropagation();showClientHistory(${x.id})">🕘 Tarix</button>
-        <button class="small" onclick="event.stopPropagation();openContractForBuyer(${x.id})">📄 Olib berish shartnomasi</button>
-        <button class="small" onclick="event.stopPropagation();editBuyer(${x.id})">Tahrir</button>
-        ${currentRole()==='Admin'?`<button class="small" onclick="event.stopPropagation();del('buyers',${x.id})">×</button>`:''}
+        <button class="small primary" onclick="showBuyerMatches(${x.id})">🎯 Mos uylar</button>
+        <button class="small" onclick="showClientHistory(${x.id})">🕘 Tarix</button>
+        <button class="small" onclick="openContractForBuyer(${x.id})">📄 Olib berish shartnomasi</button>
+        <button class="small" onclick="editBuyer(${x.id})">Tahrir</button>
+        ${currentRole()==='Admin'?`<button class="small" onclick="del('buyers',${x.id})">×</button>`:''}
       </td>
     </tr>`).join('')}
   </table></div>`;
-}
-function showBuyerDetails(id){
-  const b=db.buyers.find(x=>Number(x.id)===Number(id)); if(!b)return;
-  const rq=buyerReq(b), note=visibleNote(b.note);
-  modal(`<div class="modal-head"><b>👤 Mijoz arizasi</b><button class="icon" onclick="closeModal()">×</button></div><div class="modal-body">
-  <div class="match" style="line-height:1.75"><h3 style="margin-top:0">${esc(b.name||'—')}</h3><div>📞 <b>${esc(b.phone||'—')}</b></div><div>📅 <b>Ariza qoldirilgan:</b> ${esc(formatDateTime(b.created_at))}</div></div>
-  <div class="match" style="line-height:1.8"><div>🏙️ <b>Shahar/tuman:</b> ${esc(b.city||'—')}</div><div>📍 <b>Hudud/mavze:</b> ${esc(b.area||'—')}</div><div>🏷️ <b>Obyekt turi:</b> ${esc(b.type||'Farqi yo‘q')}</div><div>🚪 <b>Xona:</b> ${esc(String(rq.rmin||'—'))}–${esc(String(rq.rmax||'—'))}</div><div>🏢 <b>Qavat:</b> ${esc(String(rq.fmin||'—'))}–${esc(String(rq.fmax||'—'))}</div><div>📐 <b>Kerakli maydon:</b> ${esc(String(b.m2||'—'))} m²</div><div>💰 <b>Maksimal budjet:</b> ${b.budget?esc(money(b.budget)+' gacha'):'Ko‘rsatilmagan'}</div><div>🔨 <b>Ta’mir talabi:</b> ${esc(b.finish||'—')}</div></div>
-  <div class="match"><b>📝 Qo‘shimcha talab</b><br>${note?esc(note).replace(/\n/g,'<br>'):'<span class="muted">Ko‘rsatilmagan</span>'}</div>
-  <div style="margin-top:12px"><button class="btn primary" onclick="closeModal();setTimeout(()=>showBuyerMatches(${b.id}),0)">🎯 Mos uylar</button><button class="btn" onclick="closeModal();setTimeout(()=>editBuyer(${b.id}),0)">✏️ Tahrir</button><button class="btn light" onclick="closeModal()">Yopish</button></div></div>`);
 }
 function filterBuyers(q){
   q=q.toLowerCase();
@@ -2000,7 +1991,7 @@ function sellers(){
   return header('Sotuvchilar','Uy egalari va realtorlar bazasi','+ Sotuvchi qo‘shish','openSeller()')+
   `<div class="panel">
     <div class="tablewrap"><table class="table">
-      <tr><th>Ism</th><th>Telefon</th><th>Uylari</th><th>Ariza sanasi</th><th>Izoh</th><th>Amallar</th></tr>
+      <tr><th>Ism</th><th>Telefon</th><th>Uylari</th><th>Izoh</th><th>Amallar</th></tr>
       ${sellerRows.map(x=>{
         const linkedHomes=db.homes.filter(h=>
           String(h.seller||'').trim().toLowerCase()===String(x.name||'').trim().toLowerCase() ||
@@ -2016,7 +2007,6 @@ function sellers(){
           <td><b>${esc(x.name)}</b></td>
           <td>${esc(x.phone)}</td>
           <td style="min-width:310px">${homesHtml}</td>
-          <td>${esc(formatDateTime(x.created_at))}</td>
           <td>
             <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
               <span>${esc(visibleNote(x.note))}</span>
@@ -3643,25 +3633,14 @@ function showPublicForm(type){
         ${publicInput('m2','Kerakli maydon m²','80','number')}
         ${publicInput('budget','Budjet (so‘m yoki dollar)','800000000 yoki $170000')}
         ${publicInput('finish','Ta’mir talabi','Remontli')}
-        ${publicSelect('type','Obyekt turi',[{value:'',label:'— Obyekt turini tanlang —'},{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}])}
+        ${publicSelect('type','Obyekt turi',[{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}])}
         <div class="public-field public-full"><label>Qo‘shimcha talab</label><textarea id="pf_note" placeholder="Masalan: maktab yaqinidan kerak"></textarea></div>
       </div>
-      <button id="publicBuySubmit" class="public-submit" onclick="submitPublicBuy()" >Yuborish</button>
-      <div class="public-note">* Belgilangan barcha qatorlar majburiy. Yuborishda to‘ldirilmagan qatorlar haqida ogohlantiriladi.</div>
+      <button class="public-submit" onclick="submitPublicBuy()">Yuborish</button>
+      <div class="public-note">Sizning ma’lumotlaringiz faqat CRM bazasiga tushadi.</div>
     `;
-    initPublicBuyValidation();
   }
 }
-
-function publicInput(id,label,ph,type='text'){
-  return `<div class="public-field"><label>${label} *</label><input id="pf_${id}" type="${type}" placeholder="${ph}" required></div>`;
-}
-
-function publicSelect(id,label,options,required=true){
-  return `<div class="public-field"><label>${label}${required?' *':''}</label><select id="pf_${id}" ${required?'required':''}>${options.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('')}</select></div>`;
-}
-
-function publicRegionSelect(id,label){
 
 function publicInput(id,label,ph,type='text'){
   return `<div class="public-field"><label>${label} *</label><input id="pf_${id}" type="${type}" placeholder="${ph}" required></div>`;
@@ -3676,33 +3655,6 @@ function publicRegionSelect(id,label){
     <option value="">— Hududni tanlang —</option>
     ${XORAZM_HUDUDLARI.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('')}
   </select></div>`;
-}
-
-function initPublicBuyValidation(){
-  const ids=['name','phone','city','area','rooms','floor_min','floor_max','m2','budget','finish','type'];
-  const els=ids.map(id=>document.getElementById('pf_'+id)).filter(Boolean);
-  els.forEach(el=>{
-    el.addEventListener('input',updatePublicBuySubmitState);
-    el.addEventListener('change',updatePublicBuySubmitState);
-  });
-  updatePublicBuySubmitState();
-}
-
-function updatePublicBuySubmitState(){
-  const btn=document.getElementById('publicBuySubmit');
-  if(!btn)return;
-  const values={};
-  ['name','phone','city','area','rooms','floor_min','floor_max','m2','budget','finish','type'].forEach(id=>values[id]=pf(id));
-  const allFilled=Object.values(values).every(v=>String(v||'').trim()!=='');
-  const rooms=Number(values.rooms), floorMin=Number(values.floor_min), floorMax=Number(values.floor_max), m2=Number(values.m2);
-  const budget=parseMoneyInput(values.budget);
-  const numericOk=rooms>0 && floorMin>0 && floorMax>0 && m2>0 && budget>0;
-  const floorsOk=floorMax>=floorMin;
-  const valid=allFilled && numericOk && floorsOk && !publicBuySubmitting;
-  btn.disabled=false;
-  btn.style.opacity=publicBuySubmitting?'.7':'1';
-  btn.style.cursor=publicBuySubmitting?'wait':'pointer';
-  btn.title=valid?'Arizani yuborish':'Barcha majburiy qatorlarni to‘ldiring';
 }
 
 function pf(id){
@@ -3853,21 +3805,11 @@ async function submitPublicBuy(){
   if(publicBuySubmitting)return;
 
   const name=pf('name'), phone=pf('phone');
-  const fields=[['name','Mijoz ismi'],['phone','Telefon'],['city','Qaysi hududdan uy olmoqchi'],['area','Kerakli hudud / mavze'],['rooms','Xona soni'],['floor_min','Qavat — minimum'],['floor_max','Qavat — maksimum'],['m2','Kerakli maydon m²'],['budget','Budjet'],['finish','Ta’mir talabi'],['type','Obyekt turi']];
-  const missing=fields.filter(([id])=>!pf(id)).map(([,label])=>label);
-  if(missing.length){alert('Iltimos, barcha majburiy qatorlarni to‘liq to‘ldiring.\n\nTo‘ldirilmagan: '+missing.join(', '));return;}
-  const budgetText=pf('budget');
-  if(/^800000000\s+yoki\s+\$170000$/i.test(budgetText)){alert('Budjet qatoriga haqiqiy summa kiriting. Masalan: 800000000 yoki $170000.');return;}
+  const required=[name,phone,pf('city'),pf('area'),pf('rooms'),pf('m2'),pf('budget'),pf('finish'),pf('type')];
+  if(required.some(v=>!v)){alert('Iltimos, barcha majburiy maydonlarni to‘ldiring.');return;}
   const floorMin=Math.max(0,Number(pf('floor_min')||0));
   const floorMax=Math.max(0,Number(pf('floor_max')||0));
-  const budget=parseMoneyInput(pf('budget'))||0;
-  const numericOk=Number(pf('rooms'))>0 && floorMin>0 && floorMax>0 && Number(pf('m2'))>0 && budget>0;
-  if(required.some(v=>!v) || !numericOk){
-    updatePublicBuySubmitState();
-    alert('Iltimos, barcha majburiy qatorlarni to‘ldiring. Budjetni ham haqiqiy summa bilan kiriting.');
-    return;
-  }
-  if(floorMax<floorMin){updatePublicBuySubmitState();alert('Qavat minimum va maksimumini to‘g‘ri kiriting.');return;}
+  if(floorMin && floorMax && floorMax<floorMin){alert('Qavat minimum va maksimumini to‘g‘ri kiriting.');return;}
 
   const submit=document.querySelector('#publicForm button.public-submit:not(.back)');
   publicBuySubmitting=true;
@@ -3905,8 +3847,7 @@ async function submitPublicBuy(){
     publicSuccess('Mijoz ma’lumotlari muvaffaqiyatli yuborildi.');
   }catch(err){
     publicBuySubmitting=false;
-    if(submit){submit.textContent='Yuborish';submit.style.pointerEvents='';}
-    updatePublicBuySubmitState();
+    if(submit){submit.disabled=false;submit.textContent='Yuborish';submit.style.opacity='';submit.style.pointerEvents='';}
     alert('Saqlashda xatolik: '+(err.message||err));
   }
 }
