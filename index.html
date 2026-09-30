@@ -996,6 +996,47 @@ function applyRoleInterface(){
 // Rieltor: faqat o'zi kiritgan uylarni ko'rish/tahrirlash/sotilgan qilish, o'chirish yo'q.
 // Agent: uylarni faqat ko'rish; qo'shish, tahrirlash va o'chirish yo'q.
 function isRole(r){return currentRole()===r;}
+function activeRealtorOptions(selected=''){
+  const arr=(db.staff||[]).filter(s=>normalizeRole(s.role)==='Rieltor' && s.is_active!==false);
+  return `<option value="">Rieltor tanlang</option>`+
+    arr.map(s=>`<option value="${esc(s.id)}" ${String(selected||'')===String(s.id)?'selected':''}>${esc(s.name||s.login||'Rieltor')}</option>`).join('');
+}
+function assignedRealtorId(note, field='CRM_REALTOR'){
+  return String(crmMeta(note,field).realtor_id||'');
+}
+function assignedRealtorName(note, field='CRM_REALTOR'){
+  const id=assignedRealtorId(note,field);
+  const s=(db.staff||[]).find(x=>String(x.id)===id);
+  return s ? (s.name||s.login||'Rieltor') : '—';
+}
+function realtorAssignmentBlock(note='', field='CRM_REALTOR', selected=''){
+  if(currentRole()!=='Admin'&&currentRole()!=='Menejer')return '';
+  return `<div class="full"><label class="muted">🏠 Rieltor</label><select id="f_realtor_id" class="field" required>${activeRealtorOptions(selected||assignedRealtorId(note,field))}</select><div class="image-help">Qaysi Rieltordan kelganini belgilang.</div></div>`;
+}
+function realtorMeta(note, realtorId){
+  const clean=String(note||'').replace(/\n?\n?\[CRM_REALTOR\][\s\S]*?\[\/CRM_REALTOR\]/g,'').trim();
+  const rid=String(realtorId||'').trim();
+  return rid ? (clean?clean+'\n\n':'')+'[CRM_REALTOR]\nrealtor_id='+rid+'\n[/CRM_REALTOR]' : clean;
+}
+function homeRealtorId(h){return assignedRealtorId(h?.note);}
+function sellerRealtorId(s){return String(s?.owner_staff_id||assignedRealtorId(s?.note));}
+function buyerRealtorId(b){return String(b?.owner_staff_id||assignedRealtorId(b?.note));}
+function homesVisibleForCurrentUserWithAssignment(list){
+  if(currentRole()==='Admin'||currentRole()==='Menejer'||currentRole()==='Agent')return list;
+  if(currentRole()==='Rieltor')return list.filter(h=>homeRealtorId(h)===String(currentStaff?.id));
+  return [];
+}
+function sellersVisibleForCurrentUserWithAssignment(list){
+  if(currentRole()==='Admin'||currentRole()==='Menejer'||currentRole()==='Agent')return list;
+  if(currentRole()==='Rieltor')return list.filter(s=>sellerRealtorId(s)===String(currentStaff?.id));
+  return [];
+}
+function buyersVisibleForCurrentUserWithAssignment(list){
+  if(currentRole()==='Admin'||currentRole()==='Menejer'||currentRole()==='Agent')return list;
+  if(currentRole()==='Rieltor')return list.filter(b=>buyerRealtorId(b)===String(currentStaff?.id));
+  return [];
+}
+
 function canAddHome(){return ['Admin','Menejer','Rieltor'].includes(currentRole());}
 function canDeleteHome(){return currentRole()==='Admin';}
 function canEditHome(h){
@@ -1020,9 +1061,7 @@ function homeOwnedByCurrentStaff(h){
          (email && String(currentStaff.email||currentUser?.email||'').toLowerCase()===email);
 }
 function homesVisibleForCurrentUser(list){
-  if(currentRole()==='Admin'||currentRole()==='Menejer'||currentRole()==='Agent')return list;
-  if(currentRole()==='Rieltor')return list.filter(homeOwnedByCurrentStaff);
-  return [];
+  return homesVisibleForCurrentUserWithAssignment(list);
 }
 function sellerOwnerMeta(s){return crmMeta(s?.note,'CRM_SELLER_OWNER');}
 function sellerOwnedByCurrentStaff(s){
@@ -1036,9 +1075,7 @@ function sellerOwnedByCurrentStaff(s){
          (email && String(currentStaff.email||currentUser?.email||'').toLowerCase()===email);
 }
 function sellersVisibleForCurrentUser(list){
-  if(currentRole()==='Admin'||currentRole()==='Menejer'||currentRole()==='Agent')return list;
-  if(currentRole()==='Rieltor')return list.filter(sellerOwnedByCurrentStaff);
-  return [];
+  return sellersVisibleForCurrentUserWithAssignment(list);
 }
 function canDeleteSeller(){return currentRole()==='Admin';}
 function requireHomeAdd(){if(canAddHome())return true;alert("Sizning rolingizda uy qo'shish huquqi yo'q.");return false;}
@@ -1686,7 +1723,7 @@ function homeCards(a){return `<div class="grid">${a.map(x=>{
   const imgs=getImageUrls(x.note);
   const cover=imgs[0] ? `<img src="${esc(imgs[0])}" style="width:100%;height:155px;object-fit:cover" onerror="this.style.display='none';this.parentElement.innerHTML='🏠'">` : '🏠';
   const floor=homeFloor(x);
-  return `<div class="card"><div class="pic">${cover}</div><div class="cardbody"><div class="price">${money(x.price)}</div><b>${esc(x.title)}</b><div class="muted">📍 ${esc(x.city)} • ${esc(x.area)}</div><div class="muted">🏷️ ${esc(x.type||'—')} • ${x.rooms?`🚪 ${x.rooms} xona • `:''}${x.m2?`📐 ${x.m2} m² • `:''}${floor?`🏢 ${floor}-qavat • `:''}${esc(x.finish||'')}</div><div class="muted">👤 ${esc(x.seller)} • ${esc(x.phone)}</div><div class="muted" style="margin-top:6px;font-weight:800;color:#1683d8">🗓️ Qo‘shilgan: ${esc(formatDateTime(x.created_at))}</div>${imgs.length?`<div class="muted">📷 ${imgs.length} ta rasm</div>`:''}<div class="actions">
+  return `<div class="card"><div class="pic">${cover}</div><div class="cardbody"><div class="price">${money(x.price)}</div><b>${esc(x.title)}</b><div class="muted">📍 ${esc(x.city)} • ${esc(x.area)}</div><div class="muted">🏷️ ${esc(x.type||'—')} • ${x.rooms?`🚪 ${x.rooms} xona • `:''}${x.m2?`📐 ${x.m2} m² • `:''}${floor?`🏢 ${floor}-qavat • `:''}${esc(x.finish||'')}</div><div class="muted">👤 ${esc(x.seller)} • ${esc(x.phone)}</div><div class="muted" style="color:#2563eb">🏠 Rieltor: ${esc(assignedRealtorName(x.note))}</div><div class="muted" style="margin-top:6px;font-weight:800;color:#1683d8">🗓️ Qo‘shilgan: ${esc(formatDateTime(x.created_at))}</div>${imgs.length?`<div class="muted">📷 ${imgs.length} ta rasm</div>`:''}<div class="actions">
 <button class="small primary" onclick="showHomeMatches(${x.id})">🎯 Mos xaridorlar (${findBuyers(x).length})</button>
 <button class="small" onclick="showHomeInquiries(${x.id})">📞 Murojaatlar (${db.inquiries.filter(q=>Number(q.home_id)===Number(x.id)).length})</button>
 <button class="small" onclick="openDocuments(${x.id})">📁 Hujjatlar (${(db.documents||[]).filter(d=>Number(d.home_id)===Number(x.id)).length})</button>
@@ -1867,9 +1904,7 @@ async function deleteHomeInquiry(id){
 }
 
 function buyers(){
-  const visibleBuyers = currentRole()==='Rieltor'
-    ? db.buyers.filter(x=>Number(x.owner_staff_id)===Number(currentStaff?.id))
-    : db.buyers;
+  const visibleBuyers = buyersVisibleForCurrentUserWithAssignment(db.buyers);
   return header('Xaridorlar','Sizga uy qidirayotgan mijozlar','+ Xaridor qo‘shish','openBuyer()')+
   `<div class="panel">
     <div class="toolbar"><input class="search" placeholder="Ism, telefon, hudud..." oninput="filterBuyers(this.value)"></div>
@@ -1896,9 +1931,7 @@ function buyerRows(a){
 }
 function filterBuyers(q){
   q=q.toLowerCase();
-  const base=currentRole()==='Rieltor'
-    ? db.buyers.filter(x=>Number(x.owner_staff_id)===Number(currentStaff?.id))
-    : db.buyers;
+  const base=buyersVisibleForCurrentUserWithAssignment(db.buyers);
   document.getElementById('buyerList').innerHTML=
     buyerRows(base.filter(x=>JSON.stringify(x).toLowerCase().includes(q)));
 }
@@ -2701,8 +2734,8 @@ function showHome(id){
   const cleanNote=String(x.note||'').replace(/\n?\n?\[PROPERTY_IMAGES\][\s\S]*?\[\/PROPERTY_IMAGES\]/g,'').trim();
   modal(`<h2>${esc(x.title)}</h2>${gallery}<div class="match"><b>${money(x.price)}</b><br>📍 ${esc(x.city)}, ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}<br>👤 ${esc(x.seller)} • 📞 ${esc(x.phone)}${cleanNote?`<br>${esc(cleanNote)}`:''}</div><button class="btn light" onclick="closeModal()">Yopish</button>`);
 }
-function openHome(){if(!requireHomeAdd())return;modal(`<h2>🏠 Obyekt qo‘shish</h2><div class="formgrid">${input('title','Obyekt nomi','Masalan: 2 xonali pod klyuch uy',1)}${selectField('type','🏷️ Obyekt turi',[{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}],true)}${selectField('city','🏙️ Uy qayerda joylashgan?',XORAZM_HUDUDLARI,true)}${input('area','Hudud/mavze','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Maydon m²','60',1)}${input('floor','Qavat','1',0)}${input('price','Narx (so‘m yoki dollar)','680000000 yoki $170000',1)}${input('finish','Ta’mir holati','Pod klyuch',1)}${input('seller','Sotuvchi ismi','Sardor',1)}${input('phone','Telefon','+998...',1)}<div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>${input('note','Izoh','Stadion yonida',1,true)}</div><br><button class="btn" onclick="addHome()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
-function openBuyer(){modal(`<h2>👤 Xaridor qo‘shish</h2><div class="formgrid">${input('name','Mijoz ismi','Mijoz 1',1)}${input('phone','Telefon','+998...',1)}${selectField('city','🏙️ Qaysi hududdan uy olmoqchi?',XORAZM_HUDUDLARI,true)}${input('area','Kerakli hudud / mavze','Stadion',0)}${input('rooms_min','Xona — minimum','2',1)}${input('rooms_max','Xona — maksimum','5',1)}${input('floor_min','Qavat — minimum','1',0)}${input('floor_max','Qavat — maksimum','2',0)}${input('m2','Kerakli maydon m²','60',0)}${input('budget','Maksimal budjet (so‘m yoki dollar)','700000000 yoki $170000',1)}${input('finish','Ta’mir talabi (ixtiyoriy)','Pod klyuch',0)}${selectField('type','🏷️ Obyekt turi',[{value:'',label:'Farqi yo‘q'},{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}])}${input('note','Izoh','Stadion yaqinidan kerak',0,true)}</div><br><div class="muted">🎯 Moslashtirish: hudud + narx + xona + qavat + uy turi. Xona va qavat min/max oralig‘ida tekshiriladi. “Farqi yo‘q” tanlansa, barcha obyekt turlari mos keladi.</div><br><button class="btn" onclick="addBuyer()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
+function openHome(){if(!requireHomeAdd())return;modal(`<h2>🏠 Obyekt qo‘shish</h2><div class="formgrid">${input('title','Obyekt nomi','Masalan: 2 xonali pod klyuch uy',1)}${selectField('type','🏷️ Obyekt turi',[{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}],true)}${selectField('city','🏙️ Uy qayerda joylashgan?',XORAZM_HUDUDLARI,true)}${input('area','Hudud/mavze','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Maydon m²','60',1)}${input('floor','Qavat','1',0)}${input('price','Narx (so‘m yoki dollar)','680000000 yoki $170000',1)}${input('finish','Ta’mir holati','Pod klyuch',1)}${input('seller','Sotuvchi ismi','Sardor',1)}${input('phone','Telefon','+998...',1)}${realtorAssignmentBlock()}<div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>${input('note','Izoh','Stadion yonida',1,true)}</div><br><button class="btn" onclick="addHome()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
+function openBuyer(){modal(`<h2>👤 Xaridor qo‘shish</h2><div class="formgrid">${input('name','Mijoz ismi','Mijoz 1',1)}${input('phone','Telefon','+998...',1)}${selectField('city','🏙️ Qaysi hududdan uy olmoqchi?',XORAZM_HUDUDLARI,true)}${input('area','Kerakli hudud / mavze','Stadion',0)}${input('rooms_min','Xona — minimum','2',1)}${input('rooms_max','Xona — maksimum','5',1)}${input('floor_min','Qavat — minimum','1',0)}${input('floor_max','Qavat — maksimum','2',0)}${input('m2','Kerakli maydon m²','60',0)}${input('budget','Maksimal budjet (so‘m yoki dollar)','700000000 yoki $170000',1)}${realtorAssignmentBlock('','CRM_REALTOR')}${input('finish','Ta’mir talabi (ixtiyoriy)','Pod klyuch',0)}${selectField('type','🏷️ Obyekt turi',[{value:'',label:'Farqi yo‘q'},{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}])}${input('note','Izoh','Stadion yaqinidan kerak',0,true)}</div><br><div class="muted">🎯 Moslashtirish: hudud + narx + xona + qavat + uy turi. Xona va qavat min/max oralig‘ida tekshiriladi. “Farqi yo‘q” tanlansa, barcha obyekt turlari mos keladi.</div><br><button class="btn" onclick="addBuyer()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
 function openSeller(){modal(`<h2>🤝 Sotuvchi qo‘shish</h2><div class="formgrid">
 ${input('name','Ism','Sardor',1)}
 ${input('phone','Telefon','+998...',1)}
@@ -2714,6 +2747,7 @@ ${input('m2','Maydon m²','200',1)}
 ${input('price','Narx (so‘m yoki dollar)','700000000 yoki $170000',1)}
 ${input('finish','Ta’mir holati','Remontli',1)}
 ${selectField('type','🏷️ Obyekt turi',[{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}],true)}
+${realtorAssignmentBlock('','CRM_REALTOR_SELLER')}
 <div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>
 ${input('note','Izoh','Uy haqida qo‘shimcha ma’lumot',0,true)}
 </div><br><div class="muted">📍 Hudud tanlovi keyinchalik uylarni hudud bo‘yicha moslashtirish va hisobotlarda ishlatiladi.<br>💡 Sotuvchi va uning uyi bir vaqtda bazaga saqlanadi. Uy avtomatik ravishda shu sotuvchiga bog‘lanadi.</div><br><button class="btn" onclick="addSeller()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`) }
@@ -2768,6 +2802,8 @@ async function addHome(){
     const floor=Number(val('floor')||0);
     note=(note?note+'\n\n':'')+'[CRM_HOME]\nfloor='+floor+'\n[/CRM_HOME]';
     note+=(note?'\n\n':'')+'[CRM_OWNER]\nstaff_id='+String(currentStaff?.id||'')+'\nlogin='+String(currentStaff?.login||'')+'\nemail='+String(currentStaff?.email||currentUser?.email||'')+'\n[/CRM_OWNER]';
+    note=realtorMeta(note,sellerRealtorId);
+    note=realtorMeta(note,currentRole()==='Rieltor'?String(currentStaff?.id||''):String(val('realtor_id')||''));
     if(imageUrls.length) note=(note+'\n')+'[PROPERTY_IMAGES]\n'+imageUrls.join('\n')+'\n[/PROPERTY_IMAGES]';
     const row={title:val('title'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),price:parseMoneyInput(val('price')),finish:val('finish'),seller:val('seller'),phone:val('phone'),status:'Faol',type:val('type'),note};
     const {data,error}=await client.from('homes').insert(row).select().single();
@@ -2791,7 +2827,7 @@ async function addBuyer(){
     finish:val('finish'),
     type:val('type'),
     note,
-    owner_staff_id: currentStaff?.id || null
+    owner_staff_id: currentRole()==='Rieltor' ? (currentStaff?.id||null) : (val('realtor_id') ? Number(val('realtor_id')) : null)
   };
   const {data,error}=await client.from('buyers').insert(row).select().single();
   if(error)return alert('Saqlashda xatolik: '+error.message);
@@ -2808,7 +2844,9 @@ async function addSeller(){
   try{
     let sellerNote=val('note')||'Uy egasi';
     sellerNote+=(sellerNote?'\n\n':'')+'[CRM_SELLER_OWNER]\nstaff_id='+String(currentStaff?.id||'')+'\nlogin='+String(currentStaff?.login||'')+'\nemail='+String(currentStaff?.email||currentUser?.email||'')+'\n[/CRM_SELLER_OWNER]';
-    const sellerRow={name,phone,note:sellerNote,owner_staff_id:currentStaff?.id||null};
+    const sellerRealtorId=currentRole()==='Rieltor'?String(currentStaff?.id||''):String(val('realtor_id')||'');
+    sellerNote=realtorMeta(sellerNote,sellerRealtorId);
+    const sellerRow={name,phone,note:sellerNote,owner_staff_id:sellerRealtorId?Number(sellerRealtorId):null};
     const sellerRes=await client.from('sellers').insert(sellerRow).select().single();
     if(sellerRes.error)throw sellerRes.error;
 
@@ -2853,7 +2891,7 @@ async function editHome(id){
   if(!requireHomeEdit(x))return;
   openHome();
   setTimeout(()=>{
-    ['title','city','area','rooms','m2','finish','seller','phone','type'].forEach(k=>document.getElementById('f_'+k).value=x[k]??''); document.getElementById('f_note').value=visibleNote(x.note); document.getElementById('f_floor').value=homeFloor(x);
+    ['title','city','area','rooms','m2','finish','seller','phone','type'].forEach(k=>document.getElementById('f_'+k).value=x[k]??''); document.getElementById('f_note').value=visibleNote(x.note); document.getElementById('f_floor').value=homeFloor(x); const rsel=document.getElementById('f_realtor_id'); if(rsel)rsel.value=homeRealtorId(x)||'';
      document.getElementById('f_price').value=priceInputValue(x.price);
     const existing=getImageUrls(x.note);
     const preview=document.getElementById('f_image_preview');
@@ -2876,6 +2914,7 @@ async function editHome(id){
         note=(note?'\n\n':'')+'[CRM_HOME]\nfloor='+Number(val('floor')||0)+'\n[/CRM_HOME]';
         const oldOwner=ownerMeta(x);
         note+='\n\n[CRM_OWNER]\nstaff_id='+String(oldOwner.staff_id||currentStaff?.id||'')+'\nlogin='+String(oldOwner.login||currentStaff?.login||'')+'\nemail='+String(oldOwner.email||currentStaff?.email||currentUser?.email||'')+'\n[/CRM_OWNER]';
+        note=realtorMeta(note,currentRole()==='Rieltor'?String(currentStaff?.id||''):String(val('realtor_id')||homeRealtorId(x)||''));
         if(imageUrls.length) note=(note?'\n\n':'')+'[PROPERTY_IMAGES]\n'+imageUrls.join('\n')+'\n[/PROPERTY_IMAGES]';
         const row={title:val('title'),city:val('city'),area:val('area'),rooms:Number(val('rooms')),m2:Number(val('m2')),price:parseMoneyInput(val('price')),finish:val('finish'),seller:val('seller'),phone:val('phone'),type:val('type'),note};
         const {data,error}=await client.from('homes').update(row).eq('id',id).select().single();
@@ -2889,14 +2928,15 @@ async function editBuyer(id){
   let x=db.buyers.find(a=>a.id===id);if(!x)return;
   openBuyer();
   setTimeout(()=>{['name','phone','city','area','m2','finish','type'].forEach(k=>document.getElementById('f_'+k).value=x[k]??''); const rq=buyerReq(x); document.getElementById('f_rooms_min').value=rq.rmin||''; document.getElementById('f_rooms_max').value=rq.rmax||''; document.getElementById('f_floor_min').value=rq.fmin||''; document.getElementById('f_floor_max').value=rq.fmax||''; document.getElementById('f_note').value=visibleNote(x.note);
-     document.getElementById('f_budget').value=priceInputValue(x.budget);
+     document.getElementById('f_budget').value=priceInputValue(x.budget); const rsel=document.getElementById('f_realtor_id'); if(rsel)rsel.value=buyerRealtorId(x)||'';
     const btn=document.querySelector('#modalBox .btn');
     btn.onclick=async()=>{
       const rmin=Math.max(0,Number(val('rooms_min')||0)), rmax=Math.max(0,Number(val('rooms_max')||0)); if(!rmin||!rmax||rmax<rmin){alert('Xona minimum va maksimumini to‘g‘ri kiriting.');return;}
       const oldMeta=crmMeta(x.note,'CRM_BUYER');
       let editBuyerNote=val('note');
       editBuyerNote=(editBuyerNote?editBuyerNote+'\n\n':'')+'[CRM_BUYER]\nrooms_min='+rmin+'\nrooms_max='+rmax+'\nfloor_min='+Number(val('floor_min')||0)+'\nfloor_max='+Number(val('floor_max')||0)+'\n'+(oldMeta.home_id?'home_id='+Number(oldMeta.home_id)+'\n':'')+'[/CRM_BUYER]';
-      const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:rmax,m2:Number(val('m2')||0),budget:parseMoneyInput(val('budget')),finish:val('finish'),type:val('type'),note:editBuyerNote};
+      editBuyerNote=realtorMeta(editBuyerNote,currentRole()==='Rieltor'?String(currentStaff?.id||''):String(val('realtor_id')||buyerRealtorId(x)||''));
+      const row={name:val('name'),phone:val('phone'),city:val('city'),area:val('area'),rooms:rmax,m2:Number(val('m2')||0),budget:parseMoneyInput(val('budget')),finish:val('finish'),type:val('type'),note:editBuyerNote,owner_staff_id:currentRole()==='Rieltor'?(currentStaff?.id||null):(val('realtor_id')?Number(val('realtor_id')):(x.owner_staff_id||null))};
       const {data,error}=await client.from('buyers').update(row).eq('id',id).select().single();
       if(error)return alert('Tahrirlashda xatolik: '+error.message);
       Object.assign(x,data);closeModal();go('buyers');
@@ -3996,13 +4036,3 @@ if(qrPayload){
 }
 </script>
 </body></html>
-
-
-
-
-
-
-
-
-
-
