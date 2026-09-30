@@ -900,6 +900,11 @@ body{background:var(--ui-bg);color:var(--ui-text)}
 
   <link rel="apple-touch-icon" href="logo-tel.PNG">
 <link rel="icon" type="image/png" href="logo-tel.PNG">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="XorazmUylarCRM">
 
 <style>
 /* Uy kartasi tugmalari — ixcham va toliq ko'rinishi uchun */
@@ -929,6 +934,17 @@ body{background:var(--ui-bg);color:var(--ui-text)}
   .card .actions .small{font-size:10px;padding:6px 4px}
 }
 </style>
+<style>
+/* ===== V8 PUSH NOTIFICATIONS ===== */
+#pushNotifyBox{margin-top:10px;padding:10px;border:1px solid #334155;border-radius:10px;background:rgba(15,23,42,.35)}
+#pushNotifyBox .push-title{font-weight:800;color:#f8fafc;font-size:12px;margin-bottom:4px}
+#pushNotifyBox .push-text{color:#cbd5e1;font-size:11px;line-height:1.35;margin-bottom:8px}
+#pushNotifyBox button{width:100%;border:0;border-radius:9px;padding:8px 10px;font-size:11px;font-weight:800;cursor:pointer}
+#pushEnableBtn{background:#2563eb;color:#fff}
+#pushTestBtn{margin-top:6px;background:#fff;color:#111827}
+#pushNotifyBox .push-ok{color:#86efac;font-size:11px;font-weight:700}
+@media(max-width:800px){#pushNotifyBox{display:none!important}}
+</style>
 </head>
 <body>
 
@@ -953,7 +969,7 @@ body{background:var(--ui-bg);color:var(--ui-text)}
 <div class="app">
 <aside class="side"><div class="brand">🏠 Xorazm Uylar CRM</div>
 <button type="button" class="nav active" data-page="dashboard" onclick="go('dashboard');return false;">📊 Bosh sahifa</button><button type="button" class="nav" data-page="homes" onclick="go('homes');return false;">🏠 Uylar</button><button type="button" class="nav" data-page="buyers" onclick="go('buyers');return false;">👤 Xaridorlar</button><button type="button" class="nav" data-page="sellers" onclick="go('sellers');return false;">🤝 Sotuvchilar</button><button type="button" class="nav" data-page="staff" onclick="go('staff');return false;">👥 Xodimlar</button><button type="button" class="nav" data-page="matches" onclick="go('matches');return false;">🎯 Moslashtirish</button><button type="button" class="nav" data-page="deals" onclick="go('deals');return false;">💰 Bitimlar</button><button type="button" class="nav" data-page="tasks" onclick="go('tasks');return false;">⏰ Eslatmalar</button><button type="button" class="nav" data-page="reports" onclick="go('reports');return false;">📈 Hisobot</button><button type="button" class="nav" data-page="documents" onclick="go('documents');return false;">📁 Hujjatlar</button><button type="button" class="nav" data-page="sold" onclick="go('sold');return false;">✅ Sotilgan</button><button type="button" class="nav" onclick="logoutCRM();return false;">🚪 Chiqish</button>
-<div id="currentUserBadge" style="margin-top:20px;padding:10px;border:1px solid #334155;border-radius:10px;color:#e2e8f0;font-size:12px"></div><div style="margin-top:12px;color:#94a3b8;font-size:12px">Online versiya • ma'lumotlar Supabase bazasida saqlanadi</div></aside>
+<div id="currentUserBadge" style="margin-top:20px;padding:10px;border:1px solid #334155;border-radius:10px;color:#e2e8f0;font-size:12px"></div><div id="pushNotifyBox"><div class="push-title">🔔 Telefon bildirishnomalari</div><div id="pushNotifyStatus" class="push-text">Bildirishnomalarni yoqishingiz mumkin.</div><button id="pushEnableBtn" type="button" onclick="enablePushNotifications()">🔔 Bildirishnomani yoqish</button><button id="pushTestBtn" type="button" onclick="testPushNotification()" style="display:none">🧪 Test bildirishnoma</button></div><div style="margin-top:12px;color:#94a3b8;font-size:12px">Online versiya • ma'lumotlar Supabase bazasida saqlanadi</div></aside>
 <main class="main"><div id="page"></div></main>
 </div>
 <div class="mobile-nav"><button onclick="go('dashboard')">📊<br>Bosh</button><button onclick="go('homes')">🏠<br>Uylar</button><button onclick="go('buyers')">👤<br>Xaridor</button><button onclick="go('sellers')">🤝<br>Sotuvchi</button><button data-page="staff" onclick="go('staff')">👥<br>Xodim</button><button onclick="go('matches')">🎯<br>Mos</button><button onclick="go('deals')">💰<br>Bitim</button><button onclick="go('tasks')">⏰<br>Eslatma</button><button class="mobile-page-reports" onclick="go('reports')">📈<br>Hisobot</button><button onclick="go('documents')">📁<br>Hujjat</button><button onclick="go('sold')">✅<br>Sotilgan</button><button class="nav" onclick="logoutCRM()" style="color:#1683d8;">🚪 Chiqish</button></div>
@@ -963,6 +979,8 @@ body{background:var(--ui-bg);color:var(--ui-text)}
 const SUPABASE_URL='https://rmelwwzaagyzdcrdpkva.supabase.co';
 const SUPABASE_KEY='sb_publishable_itMmxW5YPm87O6tADGIEYw_xrs2xNe-';
 const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const PUSH_VAPID_PUBLIC_KEY='BLpJpqMl_x6_TmWJmRNrXJX7uiMAQQs1P3Y0SM8Te9cPiQJTsUh2RSCjuTCTQnka9pnR5cK8N_r1_yQolst8oJA';
+const PUSH_FUNCTION_URL=SUPABASE_URL+'/functions/v1/push-api';
 const KEY='xucrm_v2';
 let db={homes:[],buyers:[],sellers:[],inquiries:[],tasks:[],deals:[],activities:[],documents:[],staff:[]};
 let currentUser=null;
@@ -1145,7 +1163,115 @@ function applyRoleUI(){
   document.querySelectorAll('.mobile-nav [data-page]').forEach(x=>{x.style.display=canPage(x.dataset.page)?'block':'none';});
   const badge=document.getElementById('currentUserBadge');
   if(badge)badge.innerHTML=currentStaff?`👤 ${esc(currentStaff.name||currentUser?.email||'Xodim')}<br><span style="font-size:11px">${esc(currentRole())}</span>`:'';
+  setTimeout(refreshPushUI,0);
 }
+
+// ===== TELEFON PUSH BILDIRISHNOMALARI =====
+function isHomeScreenWebApp(){
+  return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone===true;
+}
+function urlBase64ToUint8Array(base64String){
+  const padding='='.repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const rawData=window.atob(base64);
+  const outputArray=new Uint8Array(rawData.length);
+  for(let i=0;i<rawData.length;i++)outputArray[i]=rawData.charCodeAt(i);
+  return outputArray;
+}
+async function getPushRegistration(){
+  if(!('serviceWorker' in navigator))throw new Error('Bu qurilmada Service Worker ishlamaydi.');
+  return await navigator.serviceWorker.register('/sw.js',{scope:'/'});
+}
+async function callPushApi(payload){
+  const {data:{session}}=await client.auth.getSession();
+  if(!session?.access_token)throw new Error('CRM sessiyasi topilmadi.');
+  const r=await fetch(PUSH_FUNCTION_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
+    body:JSON.stringify(payload)
+  });
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(j.error||'Push server xatosi.');
+  return j;
+}
+async function enablePushNotifications(){
+  try{
+    if(!isHomeScreenWebApp()){
+      alert('iPhone’da push bildirishnoma ishlashi uchun avval Safari orqali CRM’ni “Add to Home Screen / Bosh ekranga qo‘shish” qilib, ikonka orqali oching. Keyin shu tugmani bosing.');
+      return;
+    }
+    if(!('Notification' in window)||!('PushManager' in window)){
+      alert('Bu qurilmada Web Push qo‘llab-quvvatlanmaydi. iOS 16.4+ kerak.');
+      return;
+    }
+    const permission=await Notification.requestPermission();
+    if(permission!=='granted'){
+      refreshPushUI();
+      alert('Bildirishnoma ruxsati berilmadi. iPhone Settings → Notifications orqali CRM uchun ruxsatni yoqing.');
+      return;
+    }
+    const reg=await getPushRegistration();
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub){
+      sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(PUSH_VAPID_PUBLIC_KEY)});
+    }
+    await callPushApi({action:'subscribe',subscription:sub.toJSON(),userAgent:navigator.userAgent});
+    refreshPushUI();
+    try{await callPushApi({action:'test'});}catch(e){console.warn('Push test:',e);}
+    alert('✅ Bildirishnomalar yoqildi. Endi CRM yopiq bo‘lsa ham muhim xabarlar telefoningizga keladi.');
+  }catch(e){
+    console.error('Push enable:',e);
+    alert('Bildirishnomani yoqishda xatolik: '+(e.message||e));
+  }
+}
+async function testPushNotification(){
+  try{await callPushApi({action:'test'});alert('🧪 Test bildirishnoma yuborildi.');}
+  catch(e){alert('Test yuborishda xatolik: '+(e.message||e));}
+}
+async function refreshPushUI(){
+  const box=document.getElementById('pushNotifyBox'),status=document.getElementById('pushNotifyStatus'),btn=document.getElementById('pushEnableBtn'),test=document.getElementById('pushTestBtn');
+  if(!box||!status||!btn)return;
+  if(!currentStaff){box.style.display='none';return;}
+  box.style.display='block';
+  if(!isHomeScreenWebApp()){
+    status.textContent='iPhone: avval CRM’ni Bosh ekranga ilova qilib qo‘ying.';
+    btn.textContent='📱 Bosh ekranga qo‘shish kerak';
+    if(test)test.style.display='none';
+    return;
+  }
+  if(!('Notification' in window)||!('PushManager' in window)){
+    status.textContent='Bu qurilmada Web Push mavjud emas.';
+    btn.style.display='none';
+    return;
+  }
+  const permission=Notification.permission;
+  if(permission==='granted'){
+    try{
+      const reg=await getPushRegistration();
+      const sub=await reg.pushManager.getSubscription();
+      if(sub){
+        status.innerHTML='<span class="push-ok">✅ Bildirishnomalar yoqilgan.</span>';
+        btn.style.display='none';
+        if(test)test.style.display='block';
+      }else{
+        status.textContent='Ruxsat bor, lekin telefon CRM push’iga ulanmagan.';
+        btn.style.display='block';
+        btn.textContent='🔔 Ulanishni yoqish';
+        if(test)test.style.display='none';
+      }
+    }catch(e){console.warn(e);}
+  }else if(permission==='denied'){
+    status.textContent='Bildirishnoma bloklangan. iPhone Settings → Notifications → XorazmUylarCRM orqali yoqing.';
+    btn.style.display='none';
+    if(test)test.style.display='none';
+  }else{
+    status.textContent='Muhim CRM xabarlari telefoningizga kelishi uchun bildirishnomani yoqing.';
+    btn.style.display='block';
+    btn.textContent='🔔 Bildirishnomani yoqish';
+    if(test)test.style.display='none';
+  }
+}
+
 
 const localDb=JSON.parse(localStorage.getItem(KEY)||'null');
 
@@ -1250,6 +1376,12 @@ async function showCRM(){
   document.querySelector('.mobile-nav').style.display='';
   applyRoleUI();
   await refresh();
+  setTimeout(refreshPushUI,250);
+  // CRM ochilganda shu xodimning ko‘rilgan push xabarlari badge’dan tozalanadi.
+  if(typeof Notification!=='undefined' && Notification.permission==='granted') {
+    try{ await callPushApi({action:'mark-read'}); }catch(e){}
+    if('clearAppBadge' in navigator) { try{ await navigator.clearAppBadge(); }catch(e){} }
+  }
 }
 
 async function loadDb(){
