@@ -1,0 +1,15 @@
+{
+  "id": "/?admin=1",
+  "name": "XorazmUylarCRM",
+  "short_name": "XorazmUylarCRM",
+  "description": "XORAZMLIDER ichki CRM",
+  "start_url": "/?admin=1",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#111827",
+  "icons": [
+    {"src":"/logo-tel.PNG","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"/logo-tel.PNG","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}
