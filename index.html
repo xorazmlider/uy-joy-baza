@@ -1185,13 +1185,40 @@ async function getPushRegistration(){
   return await navigator.serviceWorker.register('/sw.js',{scope:'/'});
 }
 async function callPushApi(payload){
-  const {data:{session}}=await client.auth.getSession();
+  let {data:{session}}=await client.auth.getSession();
+
+  // Sessiya eskirgan bo‘lsa, yangi access token olamiz.
+  if(!session?.access_token){
+    const refreshed=await client.auth.refreshSession();
+    session=refreshed?.data?.session||null;
+  }
+
   if(!session?.access_token)throw new Error('CRM sessiyasi topilmadi.');
-  const r=await fetch(PUSH_FUNCTION_URL,{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
-    body:JSON.stringify(payload)
-  });
+
+  const makeRequest=async(accessToken)=>{
+    return await fetch(PUSH_FUNCTION_URL,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+accessToken,
+        'apikey':SUPABASE_KEY
+      },
+      body:JSON.stringify(payload)
+    });
+  };
+
+  let r=await makeRequest(session.access_token);
+
+  // 401 bo‘lsa, access tokenni yangilab bir marta qayta urinib ko‘ramiz.
+  if(r.status===401){
+    const refreshed=await client.auth.refreshSession();
+    const freshSession=refreshed?.data?.session||null;
+    if(freshSession?.access_token){
+      session=freshSession;
+      r=await makeRequest(session.access_token);
+    }
+  }
+
   const j=await r.json().catch(()=>({}));
   if(!r.ok)throw new Error(j.error||'Push server xatosi.');
   return j;
