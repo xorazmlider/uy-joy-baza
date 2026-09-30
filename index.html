@@ -1596,10 +1596,14 @@ function openActForDeal(dealId){
   const floor=homeFloor(h)||b.floor||'—';
   const buyerInfo=[b.type,b.finish,visibleNote(b.note)].filter(Boolean).join(' | ')||'—';
   const sellerInfo=[h.seller,h.phone].filter(Boolean).join(' • ')||'—';
+  const actRealtorId=homeRealtorId(h)||buyerRealtorId(b)||'';
+  const actRealtor=(db.staff||[]).find(s=>String(s.id)===String(actRealtorId));
+  const actRealtorName=actRealtor ? (actRealtor.name||actRealtor.login||'—') : '—';
+  const cleanDealNote=visibleNote(d.note);
   const html=`<!doctype html><html lang="uz"><head><meta charset="utf-8"><title>XORAZMLIDER — AKT ${actNo}</title>
   <style>body{font-family:"Times New Roman",serif;color:#111;margin:0}.page{width:190mm;min-height:270mm;margin:0 auto;padding:15mm 12mm;box-sizing:border-box}h1,h2{text-align:center;margin:0 0 10px}h1{font-size:17px}h2{font-size:15px}.meta{font-size:12px;line-height:1.5;margin:8px 0 15px}.data{border:1px solid #111;border-collapse:collapse;width:100%;font-size:11px}.data td{border:1px solid #111;padding:7px;vertical-align:top}.sign{display:flex;justify-content:space-between;gap:30px;margin-top:55px;font-size:12px}.line{display:inline-block;min-width:150px;border-bottom:1px solid #111}.backbar{position:sticky;top:0;text-align:left;padding:8px 0;background:#fff}.backbtn{border:1px solid #ccc;background:#f5f5f5;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer}@media print{.backbar{display:none}@page{margin:0}.page{margin:0}}</style></head><body><div class="backbar"><button class="backbtn" onclick="window.close()">← Orqaga / Bitimga qaytish</button></div><section class="page">
   <h1>КЎЧМАС МУЛКНИ ҚАБУЛ ҚИЛИШ — ТОПШИРИШ</h1><h2>ДАЛОЛАТНОМАСИ</h2>
-  <div class="meta"><b>AKT №:</b> ${v(actNo)}<br><b>Sana:</b> ${v(new Date().toISOString().slice(0,10))}<br><b>Риелтор:</b> ЯТТ Худайберганов Алишер Сапарбаевич</div>
+  <div class="meta"><b>AKT №:</b> ${v(actNo)}<br><b>Sana:</b> ${v(new Date().toISOString().slice(0,10))}<br><b>Риелтор:</b> ${v(actRealtorName)}</div>
   <p style="font-size:12px;line-height:1.5;text-align:justify">Ушбу далолатнома харидор томонидан сотиб олинган кўчмас мулкни кўздан кечириш, унинг ҳолати билан танишиш ва қабул қилиб олишини тасдиқлаш мақсадида тузилди. Харидор объектни шахсан кўздан кечирган ва уни амалда қабул қилиб олган.</p>
   <table class="data">
     <tr><td><b>Харидор / Буюртмачи</b></td><td>${v(b.name)}</td></tr>
@@ -1617,12 +1621,12 @@ function openActForDeal(dealId){
     <tr><td><b>Уй нархи</b></td><td>${v(d.price)}</td></tr>
     <tr><td><b>Комиссия</b></td><td>${v(dealCommission(d))}</td></tr>
     <tr><td><b>Битим босқичи</b></td><td>${v(d.stage)}</td></tr>
-    <tr><td><b>Битим изоҳи</b></td><td>${v(d.note)}</td></tr>
+    <tr><td><b>Битим изоҳи</b></td><td>${v(cleanDealNote)}</td></tr>
   </table>
   <p style="font-size:12px;line-height:1.5;text-align:justify;margin-top:14px"><b>Харидор ушбу далолатномани ўқиб, сотиб олинган кўчмас мулкни шахсан кўздан кечирган ҳолда қабул қилиб олганини тасдиқлайди. Харидорнинг ушбу объект бўйича мулк эгаси (сотувчи)га ва риелторга нисбатан ҳеч қандай эътирози ва қўшимча талаби йўқ.</b></p>
   <div class="sign">
     <div><b>«МУЛК ЭГАСИ / СОТУВЧИ»</b><br><br>${v(h.seller)}<br><br>Имзо: <span class="line"></span></div>
-    <div><b>«РИЕЛТОР»</b><br><br>ЯТТ Худайберганов Алишер Сапарбаевич<br><br>Имзо: <span class="line"></span></div>
+    <div><b>«РИЕЛТОР»</b><br><br>${v(actRealtorName)}<br><br>Имзо: <span class="line"></span></div>
     <div><b>«ХАРИДОР»</b><br><br>${v(b.name)}<br><br>Имзо: <span class="line"></span></div>
   </div>
   </section></body></html>`;
@@ -2369,6 +2373,9 @@ function openActForHome(homeId){
   if(!requirePage('contracts'))return;
   const h=db.homes.find(x=>Number(x.id)===Number(homeId));
   if(!h)return;
+  const homeActRealtorId=homeRealtorId(h)||'';
+  const homeActRealtor=(db.staff||[]).find(s=>String(s.id)===String(homeActRealtorId));
+  const homeActRealtorName=homeActRealtor ? (homeActRealtor.name||homeActRealtor.login||'—') : '—';
   const linkedDeals=(db.deals||[]).filter(d=>Number(d.home_id)===Number(homeId));
   const deal=linkedDeals.find(d=>d.stage==='Sotildi')||linkedDeals[0];
   const buyer=deal?db.buyers.find(b=>Number(b.id)===Number(deal.buyer_id)):null;
@@ -2391,6 +2398,7 @@ function openActForHome(homeId){
       ${input('act_info','Qo‘shimcha ma’lumot','',0,true)}
       ${input('act_buyer','Xaridor F.I.Sh.',buyer?.name||'',0)}
       ${input('act_buyer_phone','Xaridor telefoni',buyer?.phone||'',0)}
+      <input type="hidden" id="f_act_realtor" value="${esc(homeActRealtorName)}">
     </div><br>
     <button class="btn primary" onclick="previewAct()">🖨️ AKTni chiqarish</button>
     <button class="btn light" onclick="closeModal();go('deals')">← Bitimga qaytish</button>`);
@@ -2414,10 +2422,11 @@ function actHtml(){
   const info=actEsc(v('act_info'));
   const buyer=actEsc(v('act_buyer'));
   const buyerPhone=actEsc(v('act_buyer_phone'));
+  const realtor=actEsc(v('act_realtor'));
   return `<!doctype html><html lang="uz"><head><meta charset="utf-8"><title>XORAZMLIDER — AKT ${actNo}</title>
   <style>body{font-family:"Times New Roman",serif;color:#111;margin:0}.page{width:190mm;min-height:270mm;margin:0 auto;padding:15mm 12mm;box-sizing:border-box}h1,h2{text-align:center;margin:0 0 10px}h1{font-size:17px}h2{font-size:15px}.meta{font-size:12px;line-height:1.5;margin:8px 0 15px}.data{border:1px solid #111;border-collapse:collapse;width:100%;font-size:11px}.data td{border:1px solid #111;padding:7px;vertical-align:top}.sign{display:flex;justify-content:space-between;gap:30px;margin-top:55px;font-size:12px}.line{display:inline-block;min-width:150px;border-bottom:1px solid #111}@media print{@page{margin:0}.page{margin:0}}</style></head><body><section class="page">
   <h1>КЎЧМАС МУЛКНИ ҚАБУЛ ҚИЛИШ — ТОПШИРИШ</h1><h2>ДАЛОЛАТНОМАСИ</h2>
-  <div class="meta"><b>AKT №:</b> ${actNo}<br><b>Sana:</b> ${date}<br><b>Риелтор:</b> ЯТТ Худайберганов Алишер Сапарбаевич</div>
+  <div class="meta"><b>AKT №:</b> ${actNo}<br><b>Sana:</b> ${date}<br><b>Риелтор:</b> ${realtor}</div>
   <p style="font-size:12px;line-height:1.5;text-align:justify">Ушбу қабул қилиш-топшириш далолатномаси харидор томонидан сотиб олинган кўчмас мулкни кўздан кечириб, уни амалда қабул қилиб олганини тасдиқлаш мақсадида тузилди. Харидор объектнинг ҳолати билан танишган, уни кўздан кечирган ва объектни қабул қилиб олган.</p>
   <table class="data">
     <tr><td><b>Буюртмачи / Сотувчи</b></td><td>${customer}</td></tr>
@@ -2437,7 +2446,7 @@ function actHtml(){
   <p style="font-size:12px;line-height:1.5;text-align:justify;margin-top:14px"><b>Харидор ушбу далолатномани ўқиб, объектни шахсан кўздан кечирган ҳолда қабул қилиб олганини тасдиқлайди. Харидорнинг ушбу объект бўйича мулк эгаси (сотувчи)га ва риелторга нисбатан ҳеч қандай эътирози ва қўшимча талаби йўқ.</b></p>
   <div class="sign">
     <div><b>«МУЛК ЭГАСИ / СОТУВЧИ»</b><br><br>${customer}<br><br>Имзо: <span class="line"></span></div>
-    <div><b>«РИЕЛТОР»</b><br><br>ЯТТ Худайберганов Алишер Сапарбаевич<br><br>Имзо: <span class="line"></span></div>
+    <div><b>«РИЕЛТОР»</b><br><br>${realtor}<br><br>Имзо: <span class="line"></span></div>
     <div><b>«ХАРИДОР»</b><br><br>${buyer}<br><br>Имзо: <span class="line"></span></div>
   </div>
   </section></body></html>`;
@@ -2758,6 +2767,7 @@ function visibleNote(note){
     .replace(/\[CRM_OWNER\][\s\S]*?\[\/CRM_OWNER\]/g,'')
     .replace(/\[CRM_SELLER_OWNER\][\s\S]*?\[\/CRM_SELLER_OWNER\]/g,'')
     .replace(/\[CRM_REALTOR\][\s\S]*?\[\/CRM_REALTOR\]/g,'')
+    .replace(/\[CRM_DEAL_OWNER\][\s\S]*?\[\/CRM_DEAL_OWNER\]/g,'')
     .trim();
 }
 function buyerReq(b){
