@@ -1989,7 +1989,7 @@ function buyerRows(a){
   return `<div class="tablewrap"><table class="table">
     <tr><th>Mijoz</th><th>Talab</th><th>Budjet</th><th>Aloqa</th><th>Amallar</th></tr>
     ${a.map(x=>`<tr class="buyer-row" style="cursor:pointer" onclick="showBuyerDetails(${x.id})">
-      <td><b>${esc(x.name)}</b><br><span class="muted">${esc(visibleNote(x.note))}</span></td>
+      <td><b>${esc(x.name)}</b><br><span class="muted">${esc(visibleNote(x.note))}</span><br><span class="muted" style="color:#1683d8;font-weight:700">🗓️ Qo‘shilgan: ${esc(formatDateTime(x.created_at))}</span></td>
       <td>${esc(x.type||'Farqi yo‘q')}<br>${esc(x.city||'')} • ${esc(x.area||'')}<br>${buyerReq(x).rmin}–${buyerReq(x).rmax} xona • ${buyerReq(x).fmin||'—'}–${buyerReq(x).fmax||'—'} qavat • ${x.m2||0} m²</td>
       <td>${money(x.budget)} gacha</td>
       <td>${esc(x.phone)}<br><span class="muted">🏠 ${esc(assignedRealtorName(x.note,'CRM_REALTOR'))}</span></td>
@@ -2014,6 +2014,7 @@ function showBuyerDetails(id){
     <div class="match">
       <b>📞 Telefon:</b> ${esc(b.phone||'—')}<br>
       <b>🏠 Rieltor:</b> ${esc(realtor)}<br>
+      <b>📅 Qo‘shilgan:</b> ${esc(formatDateTime(b.created_at))}<br>
       <b>📍 Hudud:</b> ${esc(b.city||'—')}<br>
       <b>📌 Kerakli hudud / mavze:</b> ${esc(b.area||'—')}<br>
       <b>🏷️ Obyekt turi:</b> ${esc(b.type||'Farqi yo‘q')}<br>
@@ -2356,7 +2357,7 @@ async function deleteStaff(id){
 }
 
 function matches(){return header('Moslashtirish','Xaridor ↔ uy parametrlarini avtomatik solishtirish','+ Xaridor','openBuyer()')+
-  `<div class="panel"><h3>Kimga qanday uy?</h3>${db.buyers.map(b=>{let m=findHomes(b);return `<div class="match"><b>👤 ${esc(b.name)}</b> — ${m.length} ta mos uy<br><span class="muted">${esc(b.city)}, ${esc(b.area)}, ${b.rooms} xona, ${b.m2} m², ${money(b.budget)} gacha</span><div>${m.slice(0,3).map(x=>`<div style="margin-top:8px">🏠 <b>${esc(x.title)}</b> — ${money(x.price)} <button class="small primary" onclick="showHome(${x.id})">Ko‘rish</button></div>`).join('')||'<span class="muted">Mos uy topilmadi.</span>'}</div></div>`}).join('')||'<div class="empty">Xaridor bazasi bo‘sh.</div>'}</div>`}
+  `<div class="panel"><h3>Kimga qanday uy?</h3>${db.buyers.map(b=>{let m=findHomes(b);return `<div class="match"><b>👤 ${esc(b.name)}</b> — ${m.length} ta mos uy<br><span class="muted">🗓️ ${esc(formatDateTime(b.created_at))} • ${esc(b.city)}, ${esc(b.area)}, ${b.rooms} xona, ${b.m2} m², ${money(b.budget)} gacha</span><div>${m.slice(0,3).map(x=>`<div style="margin-top:8px">🏠 <b>${esc(x.title)}</b> — ${money(x.price)} <button class="small primary" onclick="showHome(${x.id})">Ko‘rish</button></div>`).join('')||'<span class="muted">Mos uy topilmadi.</span>'}</div></div>`}).join('')||'<div class="empty">Xaridor bazasi bo‘sh.</div>'}</div>`}
 function contracts(){
   if(!canPage('contracts'))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2><p>Sizning rolingizda bu bo‘lim yopiq.</p></div>';
   return header('Shartnomalar','Sotish va Olib berish shartnomalari','+ Shartnoma yaratish','openContract()')+
