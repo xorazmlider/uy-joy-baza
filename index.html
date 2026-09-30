@@ -1001,6 +1001,22 @@ function activeRealtorOptions(selected=''){
   return `<option value="">Rieltor tanlang</option>`+
     arr.map(s=>`<option value="${esc(s.id)}" ${String(selected||'')===String(s.id)?'selected':''}>${esc(s.name||s.login||'Rieltor')}</option>`).join('');
 }
+async function ensureRealtorsLoaded(){
+  if((db.staff||[]).some(s=>normalizeRole(s.role)==='Rieltor'))return true;
+  const {data,error}=await client.from('staff').select('id,name,login,role,is_active,created_at').order('created_at',{ascending:false});
+  if(error){
+    console.warn('Rieltorlar ro‘yxatini yuklash:',error.message);
+    return false;
+  }
+  db.staff=data||[];
+  return true;
+}
+function realtorSelectHtml(selected='',disabled=false){
+  const arr=(db.staff||[]).filter(s=>normalizeRole(s.role)==='Rieltor' && s.is_active!==false);
+  if(!arr.length)return `<option value="">Faol Rieltor topilmadi</option>`;
+  return `<option value="">Rieltor tanlang</option>`+
+    arr.map(s=>`<option value="${esc(s.id)}" ${String(selected||'')===String(s.id)?'selected':''}>${esc(s.name||s.login||'Rieltor')}</option>`).join('');
+}
 function assignedRealtorId(note, field='CRM_REALTOR'){
   return String(crmMeta(note,field).realtor_id||'');
 }
@@ -1010,8 +1026,12 @@ function assignedRealtorName(note, field='CRM_REALTOR'){
   return s ? (s.name||s.login||'Rieltor') : '—';
 }
 function realtorAssignmentBlock(note='', field='CRM_REALTOR', selected=''){
-  if(currentRole()!=='Admin'&&currentRole()!=='Menejer')return '';
-  return `<div class="full"><label class="muted">🏠 Rieltor</label><select id="f_realtor_id" class="field" required>${activeRealtorOptions(selected||assignedRealtorId(note,field))}</select><div class="image-help">Qaysi Rieltordan kelganini belgilang.</div></div>`;
+  const role=currentRole();
+  if(role!=='Admin'&&role!=='Menejer'&&role!=='Rieltor')return '';
+  const own=role==='Rieltor'?String(currentStaff?.id||''):'';
+  const value=own||selected||assignedRealtorId(note,field);
+  const disabled=role==='Rieltor';
+  return `<div class="full"><label class="muted">🏠 Rieltor</label><select id="f_realtor_id" class="field" ${disabled?'disabled':''} ${role!=='Rieltor'?'required':''}>${realtorSelectHtml(value)}</select><div class="image-help">${disabled?'Rieltor avtomatik o‘ziga biriktiriladi.':'Qaysi Rieltordan kelganini belgilang.'}</div></div>`;
 }
 function realtorMeta(note, realtorId){
   const clean=String(note||'').replace(/\n?\n?\[CRM_REALTOR\][\s\S]*?\[\/CRM_REALTOR\]/g,'').trim();
@@ -2734,9 +2754,9 @@ function showHome(id){
   const cleanNote=String(x.note||'').replace(/\n?\n?\[PROPERTY_IMAGES\][\s\S]*?\[\/PROPERTY_IMAGES\]/g,'').trim();
   modal(`<h2>${esc(x.title)}</h2>${gallery}<div class="match"><b>${money(x.price)}</b><br>📍 ${esc(x.city)}, ${esc(x.area)}<br>🏠 ${x.rooms} xona • 📐 ${x.m2} m²<br>🔑 ${esc(x.finish)}<br>👤 ${esc(x.seller)} • 📞 ${esc(x.phone)}${cleanNote?`<br>${esc(cleanNote)}`:''}</div><button class="btn light" onclick="closeModal()">Yopish</button>`);
 }
-function openHome(){if(!requireHomeAdd())return;modal(`<h2>🏠 Obyekt qo‘shish</h2><div class="formgrid">${input('title','Obyekt nomi','Masalan: 2 xonali pod klyuch uy',1)}${selectField('type','🏷️ Obyekt turi',[{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}],true)}${selectField('city','🏙️ Uy qayerda joylashgan?',XORAZM_HUDUDLARI,true)}${input('area','Hudud/mavze','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Maydon m²','60',1)}${input('floor','Qavat','1',0)}${input('price','Narx (so‘m yoki dollar)','680000000 yoki $170000',1)}${input('finish','Ta’mir holati','Pod klyuch',1)}${input('seller','Sotuvchi ismi','Sardor',1)}${input('phone','Telefon','+998...',1)}${realtorAssignmentBlock()}<div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>${input('note','Izoh','Stadion yonida',1,true)}</div><br><button class="btn" onclick="addHome()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
-function openBuyer(){modal(`<h2>👤 Xaridor qo‘shish</h2><div class="formgrid">${input('name','Mijoz ismi','Mijoz 1',1)}${input('phone','Telefon','+998...',1)}${selectField('city','🏙️ Qaysi hududdan uy olmoqchi?',XORAZM_HUDUDLARI,true)}${input('area','Kerakli hudud / mavze','Stadion',0)}${input('rooms_min','Xona — minimum','2',1)}${input('rooms_max','Xona — maksimum','5',1)}${input('floor_min','Qavat — minimum','1',0)}${input('floor_max','Qavat — maksimum','2',0)}${input('m2','Kerakli maydon m²','60',0)}${input('budget','Maksimal budjet (so‘m yoki dollar)','700000000 yoki $170000',1)}${realtorAssignmentBlock('','CRM_REALTOR')}${input('finish','Ta’mir talabi (ixtiyoriy)','Pod klyuch',0)}${selectField('type','🏷️ Obyekt turi',[{value:'',label:'Farqi yo‘q'},{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}])}${input('note','Izoh','Stadion yaqinidan kerak',0,true)}</div><br><div class="muted">🎯 Moslashtirish: hudud + narx + xona + qavat + uy turi. Xona va qavat min/max oralig‘ida tekshiriladi. “Farqi yo‘q” tanlansa, barcha obyekt turlari mos keladi.</div><br><button class="btn" onclick="addBuyer()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
-function openSeller(){modal(`<h2>🤝 Sotuvchi qo‘shish</h2><div class="formgrid">
+async function openHome(){if(!requireHomeAdd())return;await ensureRealtorsLoaded();modal(`<h2>🏠 Obyekt qo‘shish</h2><div class="formgrid">${input('title','Obyekt nomi','Masalan: 2 xonali pod klyuch uy',1)}${selectField('type','🏷️ Obyekt turi',[{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}],true)}${selectField('city','🏙️ Uy qayerda joylashgan?',XORAZM_HUDUDLARI,true)}${input('area','Hudud/mavze','Stadion',1)}${input('rooms','Xona soni','2',1)}${input('m2','Maydon m²','60',1)}${input('floor','Qavat','1',0)}${input('price','Narx (so‘m yoki dollar)','680000000 yoki $170000',1)}${input('finish','Ta’mir holati','Pod klyuch',1)}${input('seller','Sotuvchi ismi','Sardor',1)}${input('phone','Telefon','+998...',1)}${realtorAssignmentBlock()}<div class="full"><label class="muted">📷 Uy rasmlari</label><input id="f_images" class="field" type="file" accept="image/*" multiple onchange="previewHomeImages(event)"><div class="image-help">Telefondan yoki kompyuterdan 10 tagacha rasm tanlang. Har biri 50 MB gacha.</div><div id="f_image_preview" class="image-preview"></div></div>${input('note','Izoh','Stadion yonida',1,true)}</div><br><button class="btn" onclick="addHome()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
+async function openBuyer(){await ensureRealtorsLoaded();modal(`<h2>👤 Xaridor qo‘shish</h2><div class="formgrid">${input('name','Mijoz ismi','Mijoz 1',1)}${input('phone','Telefon','+998...',1)}${selectField('city','🏙️ Qaysi hududdan uy olmoqchi?',XORAZM_HUDUDLARI,true)}${input('area','Kerakli hudud / mavze','Stadion',0)}${input('rooms_min','Xona — minimum','2',1)}${input('rooms_max','Xona — maksimum','5',1)}${input('floor_min','Qavat — minimum','1',0)}${input('floor_max','Qavat — maksimum','2',0)}${input('m2','Kerakli maydon m²','60',0)}${input('budget','Maksimal budjet (so‘m yoki dollar)','700000000 yoki $170000',1)}${realtorAssignmentBlock('','CRM_REALTOR')}${input('finish','Ta’mir talabi (ixtiyoriy)','Pod klyuch',0)}${selectField('type','🏷️ Obyekt turi',[{value:'',label:'Farqi yo‘q'},{value:'Hovli joy',label:'Hovli joy'},{value:'Kvartira',label:'Kvartira'},{value:'Noturar bino',label:'Noturar bino'},{value:'Yer',label:'Yer'}])}${input('note','Izoh','Stadion yaqinidan kerak',0,true)}</div><br><div class="muted">🎯 Moslashtirish: hudud + narx + xona + qavat + uy turi. Xona va qavat min/max oralig‘ida tekshiriladi. “Farqi yo‘q” tanlansa, barcha obyekt turlari mos keladi.</div><br><button class="btn" onclick="addBuyer()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`)}
+async function openSeller(){await ensureRealtorsLoaded();modal(`<h2>🤝 Sotuvchi qo‘shish</h2><div class="formgrid">
 ${input('name','Ism','Sardor',1)}
 ${input('phone','Telefon','+998...',1)}
 ${input('title','Obyekt nomi','Masalan: 5 xonali hovli',1)}
@@ -2889,6 +2909,7 @@ async function addSeller(){
 async function editHome(id){
   let x=db.homes.find(a=>a.id===id);if(!x)return;
   if(!requireHomeEdit(x))return;
+  await ensureRealtorsLoaded();
   openHome();
   setTimeout(()=>{
     ['title','city','area','rooms','m2','finish','seller','phone','type'].forEach(k=>document.getElementById('f_'+k).value=x[k]??''); document.getElementById('f_note').value=visibleNote(x.note); document.getElementById('f_floor').value=homeFloor(x); const rsel=document.getElementById('f_realtor_id'); if(rsel)rsel.value=homeRealtorId(x)||'';
@@ -2926,6 +2947,7 @@ async function editHome(id){
 }
 async function editBuyer(id){
   let x=db.buyers.find(a=>a.id===id);if(!x)return;
+  await ensureRealtorsLoaded();
   openBuyer();
   setTimeout(()=>{['name','phone','city','area','m2','finish','type'].forEach(k=>document.getElementById('f_'+k).value=x[k]??''); const rq=buyerReq(x); document.getElementById('f_rooms_min').value=rq.rmin||''; document.getElementById('f_rooms_max').value=rq.rmax||''; document.getElementById('f_floor_min').value=rq.fmin||''; document.getElementById('f_floor_max').value=rq.fmax||''; document.getElementById('f_note').value=visibleNote(x.note);
      document.getElementById('f_budget').value=priceInputValue(x.budget); const rsel=document.getElementById('f_realtor_id'); if(rsel)rsel.value=buyerRealtorId(x)||'';
