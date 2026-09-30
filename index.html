@@ -1564,7 +1564,7 @@ async function saveDeal(){
   const buyerId=val('deal_buyer'); const homeId=val('deal_home');
   if(!buyerId||!homeId)return alert('Xaridor va uyni tanlang.');
   if(!Number.isFinite(price)||price===0)return alert('Bitim narxini kiriting.');
-  let dealNote=val('deal_note')||''; dealNote=(dealNote?dealNote+'\n\n':'')+'[CRM_DEAL_OWNER]\nstaff_id='+String(currentStaff?.id||'')+'\n[/CRM_DEAL_OWNER]'; const row={buyer_id:Number(buyerId),home_id:Number(homeId),price,commission,commission_type:val('deal_commission_type'),stage:val('deal_stage'),note:dealNote};
+  let dealNote=val('deal_note')||''; dealNote=(dealNote?dealNote+'\n\n':'')+'[CRM_DEAL_OWNER]\nstaff_id='+String(currentStaff?.id||'')+'\nlogin='+String(currentStaff?.login||'')+'\n[/CRM_DEAL_OWNER]'; const row={buyer_id:Number(buyerId),home_id:Number(homeId),price,commission,commission_type:val('deal_commission_type'),stage:val('deal_stage'),note:dealNote};
   await proInsert('crm_deals','deals',row);closeModal();go('deals');
 }
 function dealCommission(d){
@@ -1578,7 +1578,7 @@ function dealsPage(){
   <tr><th>Xaridor</th><th>Uy</th><th>Narx</th><th>Komissiya</th><th>Bosqich</th><th>Amal</th></tr>
   ${(db.deals||[]).map(d=>{const b=db.buyers.find(x=>Number(x.id)===Number(d.buyer_id));const h=db.homes.find(x=>Number(x.id)===Number(d.home_id));return `<tr>
     <td><b>${esc(b?.name||'—')}</b><br><span class="muted">${esc(b?.phone||'')}</span></td>
-    <td>${esc(h?.title||'—')}</td><td>${money(d.price)}</td><td>${money(dealCommission(d))}</td>
+    <td>${esc(h?.title||'—')}<br><span class="muted">👤 ${esc((()=>{const m=crmMeta(d.note,'CRM_DEAL_OWNER');const s=(db.staff||[]).find(x=>String(x.id)===String(m.staff_id||''));return s?.name||s?.login||m.login||'—'})())}</span></td><td>${money(d.price)}</td><td>${money(dealCommission(d))}</td>
     <td><span class="badge">${esc(d.stage||'Yangi')}</span></td>
     <td style="white-space:nowrap"><button class="small primary" onclick="openActForDeal('${String(d.id)}')">📋 AKT</button> <button class="small" onclick="proDelete('crm_deals','deals','${String(d.id)}')">×</button></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">Bitimlar hali yo‘q.</td></tr>'}
   </table></div></div>`;
@@ -1600,10 +1600,13 @@ function openActForDeal(dealId){
   const actRealtor=(db.staff||[]).find(s=>String(s.id)===String(actRealtorId));
   const actRealtorName=actRealtor ? (actRealtor.name||actRealtor.login||'—') : '—';
   const cleanDealNote=visibleNote(d.note);
+  const dealOwnerMeta=crmMeta(d.note,'CRM_DEAL_OWNER');
+  const dealOwner=(db.staff||[]).find(s=>String(s.id)===String(dealOwnerMeta.staff_id||''));
+  const dealOwnerName=dealOwner ? (dealOwner.name||dealOwner.login||dealOwnerMeta.login||'—') : (dealOwnerMeta.login||'—');
   const html=`<!doctype html><html lang="uz"><head><meta charset="utf-8"><title>XORAZMLIDER — AKT ${actNo}</title>
   <style>body{font-family:"Times New Roman",serif;color:#111;margin:0}.page{width:190mm;min-height:270mm;margin:0 auto;padding:15mm 12mm;box-sizing:border-box}h1,h2{text-align:center;margin:0 0 10px}h1{font-size:17px}h2{font-size:15px}.meta{font-size:12px;line-height:1.5;margin:8px 0 15px}.data{border:1px solid #111;border-collapse:collapse;width:100%;font-size:11px}.data td{border:1px solid #111;padding:7px;vertical-align:top}.sign{display:flex;justify-content:space-between;gap:30px;margin-top:55px;font-size:12px}.line{display:inline-block;min-width:150px;border-bottom:1px solid #111}.backbar{position:sticky;top:0;text-align:left;padding:8px 0;background:#fff}.backbtn{border:1px solid #ccc;background:#f5f5f5;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer}@media print{.backbar{display:none}@page{margin:0}.page{margin:0}}</style></head><body><div class="backbar"><button class="backbtn" onclick="window.close()">← Orqaga / Bitimga qaytish</button></div><section class="page">
   <h1>КЎЧМАС МУЛКНИ ҚАБУЛ ҚИЛИШ — ТОПШИРИШ</h1><h2>ДАЛОЛАТНОМАСИ</h2>
-  <div class="meta"><b>AKT №:</b> ${v(actNo)}<br><b>Sana:</b> ${v(new Date().toISOString().slice(0,10))}<br><b>Риелтор:</b> ${v(actRealtorName)}</div>
+  <div class="meta"><b>AKT №:</b> ${v(actNo)}<br><b>Sana:</b> ${v(new Date().toISOString().slice(0,10))}<br><b>Риелтор:</b> ${v(actRealtorName!=='—'?actRealtorName:dealOwnerName)}</div>
   <p style="font-size:12px;line-height:1.5;text-align:justify">Ушбу далолатнома харидор томонидан сотиб олинган кўчмас мулкни кўздан кечириш, унинг ҳолати билан танишиш ва қабул қилиб олишини тасдиқлаш мақсадида тузилди. Харидор объектни шахсан кўздан кечирган ва уни амалда қабул қилиб олган.</p>
   <table class="data">
     <tr><td><b>Харидор / Буюртмачи</b></td><td>${v(b.name)}</td></tr>
@@ -1626,7 +1629,7 @@ function openActForDeal(dealId){
   <p style="font-size:12px;line-height:1.5;text-align:justify;margin-top:14px"><b>Харидор ушбу далолатномани ўқиб, сотиб олинган кўчмас мулкни шахсан кўздан кечирган ҳолда қабул қилиб олганини тасдиқлайди. Харидорнинг ушбу объект бўйича мулк эгаси (сотувчи)га ва риелторга нисбатан ҳеч қандай эътирози ва қўшимча талаби йўқ.</b></p>
   <div class="sign">
     <div><b>«МУЛК ЭГАСИ / СОТУВЧИ»</b><br><br>${v(h.seller)}<br><br>Имзо: <span class="line"></span></div>
-    <div><b>«РИЕЛТОР»</b><br><br>${v(actRealtorName)}<br><br>Имзо: <span class="line"></span></div>
+    <div><b>«РИЕЛТОР»</b><br><br>${v(actRealtorName!=='—'?actRealtorName:dealOwnerName)}<br><br>Имзо: <span class="line"></span></div>
     <div><b>«ХАРИДОР»</b><br><br>${v(b.name)}<br><br>Имзо: <span class="line"></span></div>
   </div>
   </section></body></html>`;
