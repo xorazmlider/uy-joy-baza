@@ -1730,6 +1730,60 @@ function documentsPage(){
   ${docs.map(d=>{const h=db.homes.find(x=>Number(x.id)===Number(d.home_id));return `<tr><td>${esc(h?.title||'—')}</td><td><b>${esc(d.title)}</b></td><td><a href="${esc(d.url||'#')}" target="_blank" rel="noopener">Ochish</a></td><td>${esc(formatDateTime(d.created_at))}</td><td><button class="small" onclick="proDelete('crm_documents','documents','${String(d.id)}')">×</button></td></tr>`}).join('')||'<tr><td colspan="5" class="empty">Hujjatlar hali yo‘q. Uy kartasidan 📁 Hujjatlar tugmasi orqali qo‘shing.</td></tr>'}
   </table></div></div>`;
 }
+function showHomeDetails(id){
+  const x=db.homes.find(h=>Number(h.id)===Number(id));
+  if(!x)return;
+  const imgs=getImageUrls(x.note);
+  const realtor=assignedRealtorName(x.note);
+  const floor=homeFloor(x);
+  const gallery=imgs.length?`<div class="image-preview" style="margin:10px 0">${imgs.map(u=>`<img src="${esc(u)}" style="width:120px;height:90px;object-fit:cover;border-radius:10px;cursor:pointer" onclick="window.open('${esc(u)}','_blank')">`).join('')}</div>`:'';
+  modal(`<h2>🏠 ${esc(x.title||'Uy ma’lumotlari')}</h2>
+    ${gallery}
+    <div class="match"><b>💰 Narx:</b> ${money(x.price)}</div>
+    <div class="match"><b>🏷️ Obyekt turi:</b> ${esc(x.type||'—')}<br>
+      <b>📍 Hudud:</b> ${esc(x.city||'—')}<br>
+      <b>📌 Mavze:</b> ${esc(x.area||'—')}<br>
+      <b>🚪 Xona:</b> ${esc(x.rooms||'—')}<br>
+      <b>📐 Maydon:</b> ${esc(x.m2||'—')} m²<br>
+      <b>🏢 Qavat:</b> ${esc(floor||'—')}<br>
+      <b>🔑 Ta’mir:</b> ${esc(x.finish||'—')}<br>
+      <b>👤 Sotuvchi:</b> ${esc(x.seller||'—')}<br>
+      <b>📞 Telefon:</b> ${esc(x.phone||'—')}<br>
+      <b>🏠 Rieltor:</b> ${esc(realtor)}<br>
+      <b>📅 Qo‘shilgan:</b> ${esc(formatDateTime(x.created_at))}</div>
+    <div class="match"><b>📝 Izoh:</b><br>${esc(visibleNote(x.note)||'Izoh kiritilmagan')}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+      <button class="btn primary" onclick="closeModal();showHomeMatches(${x.id})">🎯 Mos xaridorlar (${findBuyers(x).length})</button>
+      <button class="btn" onclick="closeModal();showHomeInquiries(${x.id})">📞 Murojaatlar</button>
+      <button class="btn" onclick="closeModal();openDocuments(${x.id})">📁 Hujjatlar</button>
+      ${canEditHome(x)?`<button class="btn" onclick="closeModal();editHome(${x.id})">✏️ Tahrirlash</button>`:''}
+      <button class="btn light" onclick="closeModal()">Yopish</button>
+    </div>`);
+}
+function showSellerDetails(id){
+  const x=db.sellers.find(s=>Number(s.id)===Number(id));
+  if(!x)return;
+  const linkedHomes=db.homes.filter(h=>
+    String(h.seller||'').trim().toLowerCase()===String(x.name||'').trim().toLowerCase() ||
+    (x.phone && h.phone && String(h.phone).replace(/\D/g,'')===String(x.phone).replace(/\D/g,''))
+  );
+  const realtor=sellerRealtorId(x);
+  const realtorStaff=(db.staff||[]).find(s=>String(s.id)===String(realtor));
+  const homesHtml=linkedHomes.length?linkedHomes.map(h=>`<div class="match"><b>🏠 ${esc(h.title)}</b><br>💰 ${money(h.price)}<br>📍 ${esc(h.city||'—')} • ${esc(h.area||'—')}<br>🚪 ${esc(h.rooms||'—')} xona • 📐 ${esc(h.m2||'—')} m²<br><button class="small primary" onclick="closeModal();showHomeDetails(${h.id})">Uy ma’lumotlari</button></div>`).join(''):'<div class="muted">Bu sotuvchiga biriktirilgan uy yo‘q.</div>';
+  modal(`<h2>🤝 ${esc(x.name||'Sotuvchi ma’lumotlari')}</h2>
+    <div class="match"><b>👤 Ism:</b> ${esc(x.name||'—')}<br>
+      <b>📞 Telefon:</b> ${esc(x.phone||'—')}<br>
+      <b>🏠 Rieltor:</b> ${esc(realtorStaff?.name||realtorStaff?.login||'—')}<br>
+      <b>📅 Qo‘shilgan:</b> ${esc(formatDateTime(x.created_at))}</div>
+    <div class="match"><b>📝 Izoh:</b><br>${esc(visibleNote(x.note)||'Izoh kiritilmagan')}</div>
+    <h3>🏠 Sotuvchining uylari (${linkedHomes.length})</h3>
+    ${homesHtml}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+      ${linkedHomes.length?`<button class="btn primary" onclick="closeModal();openSellerContractChooser(${x.id})">📄 Sotish shartnomasi</button>`:''}
+      <button class="btn light" onclick="closeModal()">Yopish</button>
+    </div>`);
+}
+
 function homes(){
   const visible=homesVisibleForCurrentUser(db.homes.filter(x=>x.status!=='Sotildi'));
   return header('Uylar','Faol sotiladigan uylar bazasi',canAddHome()?'+ Uy qo‘shish':null,canAddHome()?'openHome()':null)+
@@ -1743,7 +1797,7 @@ function homeCards(a){return `<div class="grid">${a.map(x=>{
   const imgs=getImageUrls(x.note);
   const cover=imgs[0] ? `<img src="${esc(imgs[0])}" style="width:100%;height:155px;object-fit:cover" onerror="this.style.display='none';this.parentElement.innerHTML='🏠'">` : '🏠';
   const floor=homeFloor(x);
-  return `<div class="card"><div class="pic">${cover}</div><div class="cardbody"><div class="price">${money(x.price)}</div><b>${esc(x.title)}</b><div class="muted">📍 ${esc(x.city)} • ${esc(x.area)}</div><div class="muted">🏷️ ${esc(x.type||'—')} • ${x.rooms?`🚪 ${x.rooms} xona • `:''}${x.m2?`📐 ${x.m2} m² • `:''}${floor?`🏢 ${floor}-qavat • `:''}${esc(x.finish||'')}</div><div class="muted">👤 ${esc(x.seller)} • ${esc(x.phone)}</div><div class="muted" style="color:#2563eb">🏠 Rieltor: ${esc(assignedRealtorName(x.note))}</div><div class="muted" style="margin-top:6px;font-weight:800;color:#1683d8">🗓️ Qo‘shilgan: ${esc(formatDateTime(x.created_at))}</div>${imgs.length?`<div class="muted">📷 ${imgs.length} ta rasm</div>`:''}<div class="actions">
+  return `<div class="card" onclick="showHomeDetails(${x.id})" style="cursor:pointer"><div class="pic">${cover}</div><div class="cardbody"><div class="price">${money(x.price)}</div><b>${esc(x.title)}</b><div class="muted">📍 ${esc(x.city)} • ${esc(x.area)}</div><div class="muted">🏷️ ${esc(x.type||'—')} • ${x.rooms?`🚪 ${x.rooms} xona • `:''}${x.m2?`📐 ${x.m2} m² • `:''}${floor?`🏢 ${floor}-qavat • `:''}${esc(x.finish||'')}</div><div class="muted">👤 ${esc(x.seller)} • ${esc(x.phone)}</div><div class="muted" style="color:#2563eb">🏠 Rieltor: ${esc(assignedRealtorName(x.note))}</div><div class="muted" style="margin-top:6px;font-weight:800;color:#1683d8">🗓️ Qo‘shilgan: ${esc(formatDateTime(x.created_at))}</div>${imgs.length?`<div class="muted">📷 ${imgs.length} ta rasm</div>`:''}<div class="actions" onclick="event.stopPropagation()">
 <button class="small primary" onclick="showHomeMatches(${x.id})">🎯 Mos xaridorlar (${findBuyers(x).length})</button>
 <button class="small" onclick="showHomeInquiries(${x.id})">📞 Murojaatlar (${db.inquiries.filter(q=>Number(q.home_id)===Number(x.id)).length})</button>
 <button class="small" onclick="openDocuments(${x.id})">📁 Hujjatlar (${(db.documents||[]).filter(d=>Number(d.home_id)===Number(x.id)).length})</button>
@@ -1934,20 +1988,48 @@ function buyers(){
 function buyerRows(a){
   return `<div class="tablewrap"><table class="table">
     <tr><th>Mijoz</th><th>Talab</th><th>Budjet</th><th>Aloqa</th><th>Amallar</th></tr>
-    ${a.map(x=>`<tr>
+    ${a.map(x=>`<tr class="buyer-row" style="cursor:pointer" onclick="showBuyerDetails(${x.id})">
       <td><b>${esc(x.name)}</b><br><span class="muted">${esc(visibleNote(x.note))}</span></td>
       <td>${esc(x.type||'Farqi yo‘q')}<br>${esc(x.city||'')} • ${esc(x.area||'')}<br>${buyerReq(x).rmin}–${buyerReq(x).rmax} xona • ${buyerReq(x).fmin||'—'}–${buyerReq(x).fmax||'—'} qavat • ${x.m2||0} m²</td>
       <td>${money(x.budget)} gacha</td>
-      <td>${esc(x.phone)}</td>
+      <td>${esc(x.phone)}<br><span class="muted">🏠 ${esc(assignedRealtorName(x.note,'CRM_REALTOR'))}</span></td>
       <td style="white-space:nowrap">
-        <button class="small primary" onclick="showBuyerMatches(${x.id})">🎯 Mos uylar</button>
-        <button class="small" onclick="showClientHistory(${x.id})">🕘 Tarix</button>
-        <button class="small" onclick="openContractForBuyer(${x.id})">📄 Olib berish shartnomasi</button>
-        <button class="small" onclick="editBuyer(${x.id})">Tahrir</button>
-        ${currentRole()==='Admin'?`<button class="small" onclick="del('buyers',${x.id})">×</button>`:''}
+        <button class="small primary" onclick="event.stopPropagation();showBuyerMatches(${x.id})">🎯 Mos uylar</button>
+        <button class="small" onclick="event.stopPropagation();showClientHistory(${x.id})">🕘 Tarix</button>
+        <button class="small" onclick="event.stopPropagation();openContractForBuyer(${x.id})">📄 Olib berish shartnomasi</button>
+        <button class="small" onclick="event.stopPropagation();editBuyer(${x.id})">Tahrir</button>
+        ${currentRole()==='Admin'?`<button class="small" onclick="event.stopPropagation();del('buyers',${x.id})">×</button>`:''}
       </td>
     </tr>`).join('')}
   </table></div>`;
+}
+function showBuyerDetails(id){
+  const b=db.buyers.find(x=>Number(x.id)===Number(id));
+  if(!b)return;
+  const req=buyerReq(b);
+  const realtor=assignedRealtorName(b.note,'CRM_REALTOR');
+  const meta=crmMeta(b.note,'CRM_BUYER');
+  const note=visibleNote(b.note);
+  modal(`<h2>👤 ${esc(b.name||'Xaridor')}</h2>
+    <div class="match">
+      <b>📞 Telefon:</b> ${esc(b.phone||'—')}<br>
+      <b>🏠 Rieltor:</b> ${esc(realtor)}<br>
+      <b>📍 Hudud:</b> ${esc(b.city||'—')}<br>
+      <b>📌 Kerakli hudud / mavze:</b> ${esc(b.area||'—')}<br>
+      <b>🏷️ Obyekt turi:</b> ${esc(b.type||'Farqi yo‘q')}<br>
+      <b>🚪 Xonalar:</b> ${esc(req.rmin||'—')} – ${esc(req.rmax||'—')}<br>
+      <b>🏢 Qavat:</b> ${esc(req.fmin||'—')} – ${esc(req.fmax||'—')}<br>
+      <b>📐 Kerakli maydon:</b> ${esc(b.m2||0)} m²<br>
+      <b>💰 Maksimal budjet:</b> ${money(b.budget)}<br>
+      <b>🔑 Ta’mir talabi:</b> ${esc(b.finish||'—')}
+    </div>
+    <div class="match"><b>📝 Izoh:</b><br>${esc(note||'Izoh kiritilmagan.')}</div>
+    <div class="match"><b>🎯 Mos uylar:</b> ${findHomes(b).length} ta</div>
+    <div style="margin-top:10px">
+      <button class="btn primary" onclick="showBuyerMatches(${b.id})">🎯 Mos uylar</button>
+      <button class="btn" onclick="editBuyer(${b.id})">✏️ Tahrirlash</button>
+      <button class="btn light" onclick="closeModal()">Yopish</button>
+    </div>`);
 }
 function filterBuyers(q){
   q=q.toLowerCase();
@@ -2056,7 +2138,7 @@ function sellers(){
               <br><span class="muted">📍 ${esc(h.city||'')} ${h.area?'• '+esc(h.area):''} • ${h.rooms||0} xona • ${h.m2||0} m²</span>
             </div>`).join('')
           : '<span class="muted">Uy biriktirilmagan</span>';
-        return `<tr>
+        return `<tr onclick="showSellerDetails(${x.id})" style="cursor:pointer">
           <td><b>${esc(x.name)}</b></td>
           <td>${esc(x.phone)}</td>
           <td style="min-width:310px">${homesHtml}</td>
@@ -2068,7 +2150,7 @@ function sellers(){
                 : ''}
             </div>
           </td>
-          <td style="white-space:nowrap">
+          <td style="white-space:nowrap" onclick="event.stopPropagation()">
             ${canDeleteSeller()?`<button class="small" onclick="del('sellers',${x.id})">O‘chirish</button>`:''}
           </td>
         </tr>`;
