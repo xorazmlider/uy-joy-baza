@@ -942,8 +942,10 @@ body{background:var(--ui-bg);color:var(--ui-text)}
 #pushNotifyBox button{width:100%;border:0;border-radius:9px;padding:8px 10px;font-size:11px;font-weight:800;cursor:pointer}
 #pushEnableBtn{background:#2563eb;color:#fff}
 #pushTestBtn{margin-top:6px;background:#fff;color:#111827}
-#pushNotifyBox .push-ok{color:#86efac;font-size:11px;font-weight:700}
-@media(max-width:800px){#pushNotifyBox{display:none!important}}
+#pushNotifyBox .push-ok{color:#15803d;font-size:11px;font-weight:700}
+#pushNotifyBox{background:#fff;color:#111827;border:1px solid #e5e7eb;box-shadow:0 4px 14px rgba(15,23,42,.06)}
+#pushNotifyBox .push-title{color:#111827}
+#pushNotifyBox .push-text{color:#64748b}
 </style>
 </head>
 <body>
@@ -969,8 +971,8 @@ body{background:var(--ui-bg);color:var(--ui-text)}
 <div class="app">
 <aside class="side"><div class="brand">🏠 Xorazm Uylar CRM</div>
 <button type="button" class="nav active" data-page="dashboard" onclick="go('dashboard');return false;">📊 Bosh sahifa</button><button type="button" class="nav" data-page="homes" onclick="go('homes');return false;">🏠 Uylar</button><button type="button" class="nav" data-page="buyers" onclick="go('buyers');return false;">👤 Xaridorlar</button><button type="button" class="nav" data-page="sellers" onclick="go('sellers');return false;">🤝 Sotuvchilar</button><button type="button" class="nav" data-page="staff" onclick="go('staff');return false;">👥 Xodimlar</button><button type="button" class="nav" data-page="matches" onclick="go('matches');return false;">🎯 Moslashtirish</button><button type="button" class="nav" data-page="deals" onclick="go('deals');return false;">💰 Bitimlar</button><button type="button" class="nav" data-page="tasks" onclick="go('tasks');return false;">⏰ Eslatmalar</button><button type="button" class="nav" data-page="reports" onclick="go('reports');return false;">📈 Hisobot</button><button type="button" class="nav" data-page="documents" onclick="go('documents');return false;">📁 Hujjatlar</button><button type="button" class="nav" data-page="sold" onclick="go('sold');return false;">✅ Sotilgan</button><button type="button" class="nav" onclick="logoutCRM();return false;">🚪 Chiqish</button>
-<div id="currentUserBadge" style="margin-top:20px;padding:10px;border:1px solid #334155;border-radius:10px;color:#e2e8f0;font-size:12px"></div><div id="pushNotifyBox"><div class="push-title">🔔 Telefon bildirishnomalari</div><div id="pushNotifyStatus" class="push-text">Bildirishnomalarni yoqishingiz mumkin.</div><button id="pushEnableBtn" type="button" onclick="enablePushNotifications()">🔔 Bildirishnomani yoqish</button><button id="pushTestBtn" type="button" onclick="testPushNotification()" style="display:none">🧪 Test bildirishnoma</button></div><div style="margin-top:12px;color:#94a3b8;font-size:12px">Online versiya • ma'lumotlar Supabase bazasida saqlanadi</div></aside>
-<main class="main"><div id="page"></div></main>
+<div id="currentUserBadge" style="margin-top:20px;padding:10px;border:1px solid #334155;border-radius:10px;color:#e2e8f0;font-size:12px"></div><div style="margin-top:12px;color:#94a3b8;font-size:12px">Online versiya • ma'lumotlar Supabase bazasida saqlanadi</div></aside>
+<main class="main"><div id="pushNotifyBox" style="margin-bottom:14px"><div class="push-title">🔔 Telefon bildirishnomalari</div><div id="pushNotifyStatus" class="push-text">Bildirishnomalarni yoqishingiz mumkin.</div><button id="pushEnableBtn" type="button" onclick="enablePushNotifications()">🔔 Bildirishnomani yoqish</button><button id="pushTestBtn" type="button" onclick="testPushNotification()" style="display:none">🧪 Test bildirishnoma</button></div><div id="page"></div></main>
 </div>
 <div class="mobile-nav"><button onclick="go('dashboard')">📊<br>Bosh</button><button onclick="go('homes')">🏠<br>Uylar</button><button onclick="go('buyers')">👤<br>Xaridor</button><button onclick="go('sellers')">🤝<br>Sotuvchi</button><button data-page="staff" onclick="go('staff')">👥<br>Xodim</button><button onclick="go('matches')">🎯<br>Mos</button><button onclick="go('deals')">💰<br>Bitim</button><button onclick="go('tasks')">⏰<br>Eslatma</button><button class="mobile-page-reports" onclick="go('reports')">📈<br>Hisobot</button><button onclick="go('documents')">📁<br>Hujjat</button><button onclick="go('sold')">✅<br>Sotilgan</button><button class="nav" onclick="logoutCRM()" style="color:#1683d8;">🚪 Chiqish</button></div>
 <div id="modal" class="modal"><div class="box" id="modalBox"></div></div>
