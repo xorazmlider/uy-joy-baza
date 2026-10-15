@@ -2395,7 +2395,7 @@ function openStaffPayroll(staffId){
       <div><label class="muted">Reklama mukofoti (USD)</label><input id="pay_ad_usd" class="field" readonly value="$${ad.usd.toLocaleString('en-US',{maximumFractionDigits:2})}"></div>
       <div><label class="muted">Reklama mukofoti (so‘m)</label><input id="pay_ad_uzs" class="field" readonly value="${ad.uzs.toLocaleString('uz-UZ')} so‘m"></div>
       <div class="full"><div id="pay_total_preview" class="stat"><div class="num">${(base+kpi+ad.uzs+ad.usd*12500).toLocaleString('uz-UZ')} so‘m</div><div class="label">Taxminiy jami oylik</div></div></div>
-    </div><br><button class="btn" onclick="saveStaffPayroll(${JSON.stringify(String(s.id))})">Maoshni saqlash</button> <button class="btn primary" onclick="downloadPayrollExcel('${esc(month)}')">📊 Excel yuklab olish</button> <button class="btn light" onclick="closeModal()">Yopish</button>`);
+    </div><br><button class="btn" onclick="saveStaffPayroll(${JSON.stringify(String(s.id))})">Maoshni saqlash</button> <button class="btn primary" onclick="downloadPayrollExcel('${esc(month)}',${JSON.stringify(String(s.id))})">📊 Excel yuklab olish</button> <button class="btn light" onclick="closeModal()">Yopish</button>`);
 }
 function previewStaffPayroll(staffId){
   const s=(db.staff||[]).find(x=>String(x.id)===String(staffId));if(!s)return;
@@ -2415,10 +2415,22 @@ async function saveStaffPayroll(staffId){
   if(error)return alert('Maoshni saqlashda xatolik: '+error.message);
   Object.assign(s,data);alert('Asosiy oylik maoshi saqlandi.');openStaffPayroll(s.id);
 }
-function downloadPayrollExcel(month=kpiCurrentMonth){
+async function downloadPayrollExcel(month=kpiCurrentMonth,staffId=null){
   if(currentRole()!=='Admin')return alert('Oylik hisobotini faqat Admin yuklab oladi.');
   const rate=Math.max(1,Number(document.getElementById('pay_rate')?.value||12500));
   const selectedMonth=document.getElementById('pay_month')?.value||month||kpiCurrentMonth;
+  // Excel bosilganda oynaga kiritilgan maosh avval bazaga saqlanadi; shunda eksportda yo‘qolmaydi.
+  if(staffId!==null && document.getElementById('pay_base')){
+    const s=(db.staff||[]).find(x=>String(x.id)===String(staffId));
+    if(s){
+      const base=Math.max(0,Number(document.getElementById('pay_base').value||0));
+      const settings=payrollSettings(s.note);settings[selectedMonth]={...(settings[selectedMonth]||{}),baseSalary:base};
+      const note=setPayrollSettings(s.note,settings);
+      const {data:updated,error}=await client.from('staff').update({note}).eq('id',s.id).select().single();
+      if(error)return alert('Excelga chiqarishdan oldin asosiy maoshni saqlab bo‘lmadi: '+error.message);
+      Object.assign(s,updated);
+    }
+  }
   const rows=payrollRows(selectedMonth,rate);
   const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
   const data=[['Oy','Xodim','Lavozim','Asosiy maosh (UZS)','KPI bonusi (UZS)','Reklama mukofoti (USD)','Reklama mukofoti (UZS)','USD kursi','Jami oylik (UZS)','To‘langan reklama buyurtmalari'],...rows.map(r=>[selectedMonth,r.name,r.role,Math.round(r.base),Math.round(r.kpi),Number(r.adUsd.toFixed(2)),Math.round(r.adUzs),rate,Math.round(r.total),r.adOrders])];
