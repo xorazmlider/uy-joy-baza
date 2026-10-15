@@ -2453,10 +2453,10 @@ function staffRows(a){
   </table></div>`;
 }
 
-function openStaffPayroll(staffId){
+function openStaffPayroll(staffId, monthOverride=null){
   if(currentRole()!=='Admin')return alert('Oylik maoshini faqat Admin boshqaradi.');
   const s=(db.staff||[]).find(x=>String(x.id)===String(staffId));if(!s)return;
-  const month=kpiCurrentMonth,base=staffBaseSalary(s,month),kpi=staffKpiBonus(s,month),ad=staffAdReward(s.id,month),deal=staffDealCommission(s.id,month);
+  const month=String(monthOverride||kpiCurrentMonth),base=staffBaseSalary(s,month),kpi=staffKpiBonus(s,month),ad=staffAdReward(s.id,month),deal=staffDealCommission(s.id,month);
   modal(`<h2>💵 ${esc(s.name||s.login||'Xodim')} — oylik hisob-kitobi</h2>
     <p class="muted">${esc(monthLabel(month))}. Umumiy summa = asosiy maosh + KPI bonusi + bitim komissiyasi + to‘langan reklama mukofoti. USD mukofoti kurs orqali so‘mga aylantiriladi.</p>
     <div class="formgrid">
@@ -2480,13 +2480,35 @@ function previewStaffPayroll(staffId){
 }
 async function saveStaffPayroll(staffId){
   if(currentRole()!=='Admin')return alert('Oylik maoshini faqat Admin saqlaydi.');
-  const s=(db.staff||[]).find(x=>String(x.id)===String(staffId));if(!s)return;
-  const month=document.getElementById('pay_month')?.value||kpiCurrentMonth,base=Math.max(0,Number(document.getElementById('pay_base')?.value||0));
+  const s=(db.staff||[]).find(x=>String(x.id)===String(staffId));if(!s)return alert('Xodim topilmadi.');
+  const month=document.getElementById('pay_month')?.value||kpiCurrentMonth;
+  const rawBase=document.getElementById('pay_base')?.value;
+  const base=Math.max(0,Number(rawBase===''?0:rawBase));
   if(!/^\d{4}-\d{2}$/.test(month))return alert('Oyni to‘g‘ri tanlang.');
-  const settings=payrollSettings(s.note);settings[month]={...(settings[month]||{}),baseSalary:base};
-  const note=setPayrollSettings(s.note,settings),{data,error}=await client.from('staff').update({note}).eq('id',s.id).select().single();
-  if(error)return alert('Maoshni saqlashda xatolik: '+error.message);
-  Object.assign(s,data);alert('Asosiy oylik maoshi saqlandi.');openStaffPayroll(s.id);
+  if(!Number.isFinite(base))return alert('Asosiy maosh summasini tekshiring.');
+  try{
+    // Bazadagi eng so‘nggi note qiymatini olib, KPI va boshqa meta ma’lumotlarni saqlagan holda maoshni yangilaymiz.
+    const fresh=await client.from('staff').select('id,note').eq('id',s.id).single();
+    if(fresh.error)throw fresh.error;
+    const settings=payrollSettings(fresh.data?.note ?? s.note);
+    settings[month]={...(settings[month]||{}),baseSalary:base};
+    const note=setPayrollSettings(fresh.data?.note ?? s.note,settings);
+    const saved=await client.from('staff').update({note}).eq('id',s.id).select().single();
+    if(saved.error)throw saved.error;
+    if(!saved.data)throw new Error('Bazadan saqlangan ma’lumot qaytmadi.');
+    Object.assign(s,saved.data);
+    // Saqlangan qiymatni bazadan qayta o‘qib tasdiqlaymiz.
+    const verify=await client.from('staff').select('id,note').eq('id',s.id).single();
+    if(verify.error)throw verify.error;
+    const verified=Number(payrollSettings(verify.data?.note)[month]?.baseSalary);
+    if(verified!==base)throw new Error('Maosh bazaga yozildi, lekin qayta o‘qilganda qiymat mos kelmadi. RLS ruxsatlarini tekshirish kerak.');
+    Object.assign(s,verify.data);
+    alert('Asosiy oylik maoshi saqlandi: '+base.toLocaleString('uz-UZ')+' so‘m.');
+    openStaffPayroll(s.id,month);
+  }catch(e){
+    console.error('saveStaffPayroll error:',e);
+    alert('Maoshni saqlashda xatolik: '+(e?.message||String(e)));
+  }
 }
 async function downloadPayrollExcel(month=kpiCurrentMonth,staffId=null){
   if(currentRole()!=='Admin')return alert('Oylik hisobotini faqat Admin yuklab oladi.');
