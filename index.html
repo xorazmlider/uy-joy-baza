@@ -1691,7 +1691,7 @@ function adSalesPage(){
   `<div class="stats"><div class="stat"><div class="num">${rows.length}</div><div class="label">Jami buyurtmalar</div></div><div class="stat"><div class="num">${paid.length}</div><div class="label">To‘langan buyurtmalar</div></div><div class="stat"><div class="num">${pending.length}</div><div class="label">To‘lov kutilmoqda</div></div><div class="stat"><div class="num" style="font-size:20px">${fmt(earnedUSD,'USD')}<br>${fmt(earnedUZS,'UZS')}</div><div class="label">Hisoblangan mukofotlar — valyutalar alohida</div></div></div>
   <div class="panel"><h3>📣 Reklama buyurtmalari</h3><p class="muted">Mukofot faqat mijoz to‘lovi “To‘landi” bo‘lgach hisoblanadi. Mukofot KPI bonusi va bitim komissiyasidan alohida.</p>
   <div class="tablewrap" style="overflow-x:auto"><table class="table"><thead><tr><th>Mijoz</th><th>Reklama</th><th>Narx</th><th>Mijozni birinchi topgan xodim</th><th>To‘lov</th><th>Mukofot</th><th>Amal</th></tr></thead><tbody>
-  ${rows.map(x=>{const reward=adReward(x);return `<tr><td><b>${esc(x.client_name||'—')}</b><br><span class="muted">${esc(x.phone||'')}</span><br><span class="muted">${esc(x.created_at?String(x.created_at).slice(0,10):'')}</span></td><td>${esc(x.ad_type||'—')}<br><span class="muted">${esc(x.platform||'—')}</span></td><td>${fmt(x.amount,x.currency)}</td><td>${esc(adStaffName(x.referral_staff_id))}</td><td>${esc(x.payment_status||'Kutilmoqda')}${x.paid_at?'<br><span class="muted">'+esc(String(x.paid_at).slice(0,10))+'</span>':''}</td><td><b>${x.payment_status==='To‘landi'?fmt(reward,x.currency):'To‘lovdan keyin'}</b><br><span class="muted">${Number(x.reward_rate||0)}%</span></td><td>${['Admin','Menejer'].includes(currentRole())&&x.payment_status!=='To‘landi'&&x.payment_status!=='Bekor qilindi'?`<button class="small primary" onclick='markAdSalePaid(${JSON.stringify(String(x.id))})'>To‘landi</button> <button class="small" onclick='cancelAdSale(${JSON.stringify(String(x.id))})'>Bekor</button>`:''}${['Admin','Menejer'].includes(currentRole())?` <button class="small" onclick='editAdSale(${JSON.stringify(String(x.id))})'>Tahrir</button>`:''}</td></tr>`}).join('')||'<tr><td colspan="7" class="empty">Hali reklama buyurtmasi kiritilmagan.</td></tr>'}
+  ${rows.map(x=>{const reward=adReward(x);return `<tr><td><b>${esc(x.client_name||'—')}</b><br><span class="muted">${esc(x.phone||'')}</span><br><span class="muted">${esc(x.created_at?String(x.created_at).slice(0,10):'')}</span></td><td>${esc(x.ad_type||'—')}<br><span class="muted">${esc(x.platform||'—')}</span></td><td>${fmt(x.amount,x.currency)}</td><td>${esc(adStaffName(x.referral_staff_id))}</td><td>${esc(x.payment_status||'Kutilmoqda')}${x.paid_at?'<br><span class="muted">'+esc(String(x.paid_at).slice(0,10))+'</span>':''}</td><td><b>${x.payment_status==='To‘landi'?fmt(reward,x.currency):'To‘lovdan keyin'}</b><br><span class="muted">${Number(x.reward_rate||0)}%</span></td><td>${['Admin','Menejer'].includes(currentRole())&&x.payment_status!=='To‘landi'&&x.payment_status!=='Bekor qilindi'?`<button class="small primary" onclick='markAdSalePaid(${JSON.stringify(String(x.id))})'>To‘landi</button> <button class="small" onclick='cancelAdSale(${JSON.stringify(String(x.id))})'>Bekor</button>`:''}${(['Admin','Menejer'].includes(currentRole())&&(x.payment_status!=='To‘landi'||currentRole()==='Admin'))?` <button class="small" onclick='editAdSale(${JSON.stringify(String(x.id))})'>Tahrir</button>`:''}${currentRole()==='Admin'?` <button class="small danger" onclick='deleteAdSale(${JSON.stringify(String(x.id))})'>O‘chirish</button>`:''}</td></tr>`}).join('')||'<tr><td colspan="7" class="empty">Hali reklama buyurtmasi kiritilmagan.</td></tr>'}
   </tbody></table></div></div>
   <div class="panel" style="margin-top:14px"><h3>📊 Xodimlar bo‘yicha reklama mukofoti</h3><div class="tablewrap" style="overflow-x:auto"><table class="table"><thead><tr><th>Xodim</th><th>To‘langan buyurtma</th><th>Mukofot USD</th><th>Mukofot so‘m</th></tr></thead><tbody>${[...new Set(paid.map(x=>String(x.referral_staff_id||'')))].map(sid=>{const own=paid.filter(x=>String(x.referral_staff_id||'')===sid);const usd=own.filter(x=>x.currency==='USD').reduce((sum,x)=>sum+adReward(x),0);const uzs=own.filter(x=>x.currency==='UZS').reduce((sum,x)=>sum+adReward(x),0);return `<tr><td><b>${esc(adStaffName(sid))}</b></td><td>${own.length}</td><td>${fmt(usd,'USD')}</td><td>${fmt(uzs,'UZS')}</td></tr>`}).join('')||'<tr><td colspan="4" class="empty">Hali to‘langan buyurtma yo‘q.</td></tr>'}</tbody></table></div></div>
   <div class="panel" style="margin-top:14px"><h3>ℹ️ Mukofot qoidasi</h3><div class="muted">Kvartira va hovli joy reklamasi — 20%; qurilish kompaniyasi va boshqa biznes reklamasi — 15%. Xodim mukofoti mijozni birinchi topgan xodimga biriktiriladi. Narx va foiz har bir buyurtmada tekshirilishi/tahrirlanishi mumkin.</div></div>`;
@@ -1700,6 +1700,7 @@ function openAdSale(id=''){
   if(!requirePage('adSales'))return;
   const x=id?(db.adSales||[]).find(a=>String(a.id)===String(id)):null;
   if(x&&!['Admin','Menejer'].includes(currentRole()))return alert('Buyurtmani tahrirlash huquqi yo‘q.');
+  if(x&&x.payment_status==='To‘landi'&&currentRole()!=='Admin')return alert('To‘langan buyurtmani faqat Admin tahrirlashi mumkin.');
   const defaultType=x?.ad_type||'Kvartira',defaultPlatform=x?.platform||'Instagram';
   const d=adDefault(defaultType,defaultPlatform);
   const staffOptions=(db.staff||[]).filter(a=>a.is_active!==false).map(a=>`<option value="${esc(a.id)}" ${String(x?.referral_staff_id||currentStaff?.id)===String(a.id)?'selected':''}>${esc(a.name||a.login||'Xodim')}</option>`).join('');
@@ -1747,6 +1748,17 @@ async function cancelAdSale(id){
   db.adSales=db.adSales.map(a=>String(a.id)===String(id)?r.data:a);go('adSales');
 }
 function editAdSale(id){openAdSale(id)}
+async function deleteAdSale(id){
+  if(currentRole()!=='Admin')return alert('Reklama buyurtmalarini faqat Admin o‘chira oladi.');
+  const row=(db.adSales||[]).find(a=>String(a.id)===String(id));
+  if(!row)return alert('Buyurtma topilmadi. Sahifani yangilang.');
+  const label=(row.client_name||'Mijoz')+' — '+adMoney(row.amount,row.currency);
+  if(!confirm('DIQQAT! “'+label+'” buyurtmasini butunlay o‘chirasizmi? Bu amalni qaytarib bo‘lmaydi.'))return;
+  const r=await client.from('crm_ad_sales').delete().eq('id',id).select().single();
+  if(r.error)return alert('O‘chirishda xatolik: '+r.error.message+'\nSupabase SQL faylidagi DELETE policy qo‘shilganini tekshiring.');
+  db.adSales=(db.adSales||[]).filter(a=>String(a.id)!==String(id));
+  go('adSales');
+}
 
 function reportsPage(){
   if(!canPage('reports'))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2><p>Sizning rolingizda bu bo‘lim yopiq.</p></div>';
