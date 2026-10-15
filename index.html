@@ -1362,6 +1362,32 @@ function setKpiPlans(note,plans){
   const clean=String(note||'').replace(/\n?\n?\[CRM_KPI_PLANS\][\s\S]*?\[\/CRM_KPI_PLANS\]/g,'').trim();
   return (clean?clean+'\n\n':'')+'[CRM_KPI_PLANS]\n'+JSON.stringify(plans||{})+'\n[/CRM_KPI_PLANS]';
 }
+
+// Xodimning oylik maoshi CRM staff.note ichida saqlanadi; alohida SQL jadvali talab qilinmaydi.
+function payrollSettings(note){
+  const m=String(note||'').match(/\[CRM_PAYROLL\]([\s\S]*?)\[\/CRM_PAYROLL\]/);
+  if(!m)return {};
+  try{return JSON.parse(m[1].trim()||'{}')||{}}catch(e){return {}}
+}
+function setPayrollSettings(note,settings){
+  const clean=String(note||'').replace(/\n?\n?\[CRM_PAYROLL\][\s\S]*?\[\/CRM_PAYROLL\]/g,'').trim();
+  return (clean?clean+'\n\n':'')+'[CRM_PAYROLL]\n'+JSON.stringify(settings||{})+'\n[/CRM_PAYROLL]';
+}
+function staffBaseSalary(staff,month=kpiCurrentMonth){return Math.max(0,Number(payrollSettings(staff?.note)[month]?.baseSalary||0));}
+function staffKpiBonus(staff,month=kpiCurrentMonth){
+  if(!['Rieltor','Menejer'].includes(normalizeRole(staff?.role)))return 0;
+  const old=kpiCurrentMonth;kpiCurrentMonth=month;const out=kpiSummary(staff).bonus;kpiCurrentMonth=old;return out;
+}
+function staffAdReward(staffId,month=kpiCurrentMonth){
+  const rows=(db.adSales||[]).filter(a=>String(a.referral_staff_id||'')===String(staffId)&&a.payment_status==='To‘landi'&&monthKey(a.paid_at||a.created_at)===month);
+  return {usd:rows.filter(a=>a.currency==='USD').reduce((n,a)=>n+adReward(a),0),uzs:rows.filter(a=>a.currency==='UZS').reduce((n,a)=>n+adReward(a),0),orders:rows.length};
+}
+function payrollRows(month=kpiCurrentMonth,usdRate=12500){
+  return (db.staff||[]).filter(s=>normalizeRole(s.role)!=='Admin').map(s=>{
+    const kpi=staffKpiBonus(s,month),ad=staffAdReward(s.id,month),base=staffBaseSalary(s,month),total=base+kpi+ad.uzs+ad.usd*usdRate;
+    return {id:s.id,name:s.name||s.login||'Xodim',role:staffRoleLabel(s.role),base,kpi,adUsd:ad.usd,adUzs:ad.uzs,adOrders:ad.orders,usdRate,total};
+  });
+}
 function monthKey(date){return String(date||new Date().toISOString()).slice(0,7)}
 function monthLabel(key){
   const [y,m]=String(key||'').split('-');
@@ -2347,13 +2373,60 @@ function staffRows(a){
     <td>${esc(staffManagerName(x.manager_id))}</td>
     <td>${x.is_active===false?'🔴 Faol emas':'🟢 Faol'}</td>
     <td>
-      <button class="small" onclick="editStaff(${x.id})">Tahrir</button> ${currentRole()==='Admin'&&['Rieltor','Menejer'].includes(normalizeRole(x.role))?`<button class="small primary" onclick="openKpiPlan(${x.id})">🎯 KPI</button>`:''}
+      <button class="small" onclick="editStaff(${x.id})">Tahrir</button> ${currentRole()==='Admin'&&['Rieltor','Menejer'].includes(normalizeRole(x.role))?`<button class="small primary" onclick="openKpiPlan(${x.id})">🎯 KPI</button>`:''} ${currentRole()==='Admin'&&normalizeRole(x.role)!=='Admin'?`<button class="small success" onclick="openStaffPayroll(${x.id})">💵 Oylik</button>`:''}
       ${String(x.role||'').toLowerCase()==='admin'?'<span class="muted">🔒 Admin</span>':`<button class="small" onclick="toggleStaff(${x.id},${x.is_active===false?'true':'false'})">${x.is_active===false?'Faollashtirish':'O‘chirish'}</button>`}
       ${String(x.role||'').toLowerCase()==='admin'?'':`<button class="small" onclick="deleteStaff(${x.id})">🗑</button>`}
     </td>
   </tr>`).join('')||'<tr><td colspan="6" class="empty">Hali xodim qo‘shilmagan.</td></tr>'}
   </table></div>`;
 }
+
+function openStaffPayroll(staffId){
+  if(currentRole()!=='Admin')return alert('Oylik maoshini faqat Admin boshqaradi.');
+  const s=(db.staff||[]).find(x=>String(x.id)===String(staffId));if(!s)return;
+  const month=kpiCurrentMonth,base=staffBaseSalary(s,month),kpi=staffKpiBonus(s,month),ad=staffAdReward(s.id,month);
+  modal(`<h2>💵 ${esc(s.name||s.login||'Xodim')} — oylik hisob-kitobi</h2>
+    <p class="muted">${esc(monthLabel(month))}. Umumiy summa = asosiy maosh + KPI bonusi + to‘langan reklama mukofoti. USD mukofoti kurs orqali so‘mga aylantiriladi.</p>
+    <div class="formgrid">
+      <div><label class="muted">Hisoblanadigan oy</label><input id="pay_month" class="field" type="month" value="${esc(month)}" onchange="previewStaffPayroll(${JSON.stringify(String(s.id))})"></div>
+      <div><label class="muted">Asosiy oylik maoshi (so‘m)</label><input id="pay_base" class="field" type="number" min="0" step="1000" value="${base}" oninput="previewStaffPayroll(${JSON.stringify(String(s.id))})"></div>
+      <div><label class="muted">1 USD kursi (so‘m)</label><input id="pay_rate" class="field" type="number" min="1" step="1" value="12500" oninput="previewStaffPayroll(${JSON.stringify(String(s.id))})"></div>
+      <div><label class="muted">KPI bonusi</label><input id="pay_kpi" class="field" readonly value="${kpi.toLocaleString('uz-UZ')} so‘m"></div>
+      <div><label class="muted">Reklama mukofoti (USD)</label><input id="pay_ad_usd" class="field" readonly value="$${ad.usd.toLocaleString('en-US',{maximumFractionDigits:2})}"></div>
+      <div><label class="muted">Reklama mukofoti (so‘m)</label><input id="pay_ad_uzs" class="field" readonly value="${ad.uzs.toLocaleString('uz-UZ')} so‘m"></div>
+      <div class="full"><div id="pay_total_preview" class="stat"><div class="num">${(base+kpi+ad.uzs+ad.usd*12500).toLocaleString('uz-UZ')} so‘m</div><div class="label">Taxminiy jami oylik</div></div></div>
+    </div><br><button class="btn" onclick="saveStaffPayroll(${JSON.stringify(String(s.id))})">Maoshni saqlash</button> <button class="btn primary" onclick="downloadPayrollExcel('${esc(month)}')">📊 Excel yuklab olish</button> <button class="btn light" onclick="closeModal()">Yopish</button>`);
+}
+function previewStaffPayroll(staffId){
+  const s=(db.staff||[]).find(x=>String(x.id)===String(staffId));if(!s)return;
+  const month=document.getElementById('pay_month')?.value||kpiCurrentMonth,rate=Math.max(1,Number(document.getElementById('pay_rate')?.value||12500)),base=Math.max(0,Number(document.getElementById('pay_base')?.value||0));
+  const kpi=staffKpiBonus(s,month),ad=staffAdReward(s.id,month),total=base+kpi+ad.uzs+ad.usd*rate;
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v};
+  set('pay_kpi',kpi.toLocaleString('uz-UZ')+' so‘m');set('pay_ad_usd','$'+ad.usd.toLocaleString('en-US',{maximumFractionDigits:2}));set('pay_ad_uzs',ad.uzs.toLocaleString('uz-UZ')+' so‘m');
+  const box=document.getElementById('pay_total_preview');if(box)box.innerHTML='<div class="num">'+Math.round(total).toLocaleString('uz-UZ')+' so‘m</div><div class="label">Taxminiy jami oylik</div>';
+}
+async function saveStaffPayroll(staffId){
+  if(currentRole()!=='Admin')return alert('Oylik maoshini faqat Admin saqlaydi.');
+  const s=(db.staff||[]).find(x=>String(x.id)===String(staffId));if(!s)return;
+  const month=document.getElementById('pay_month')?.value||kpiCurrentMonth,base=Math.max(0,Number(document.getElementById('pay_base')?.value||0));
+  if(!/^\d{4}-\d{2}$/.test(month))return alert('Oyni to‘g‘ri tanlang.');
+  const settings=payrollSettings(s.note);settings[month]={...(settings[month]||{}),baseSalary:base};
+  const note=setPayrollSettings(s.note,settings),{data,error}=await client.from('staff').update({note}).eq('id',s.id).select().single();
+  if(error)return alert('Maoshni saqlashda xatolik: '+error.message);
+  Object.assign(s,data);alert('Asosiy oylik maoshi saqlandi.');openStaffPayroll(s.id);
+}
+function downloadPayrollExcel(month=kpiCurrentMonth){
+  if(currentRole()!=='Admin')return alert('Oylik hisobotini faqat Admin yuklab oladi.');
+  const rate=Math.max(1,Number(document.getElementById('pay_rate')?.value||12500));
+  const selectedMonth=document.getElementById('pay_month')?.value||month||kpiCurrentMonth;
+  const rows=payrollRows(selectedMonth,rate);
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const data=[['Oy','Xodim','Lavozim','Asosiy maosh (UZS)','KPI bonusi (UZS)','Reklama mukofoti (USD)','Reklama mukofoti (UZS)','USD kursi','Jami oylik (UZS)','To‘langan reklama buyurtmalari'],...rows.map(r=>[selectedMonth,r.name,r.role,Math.round(r.base),Math.round(r.kpi),Number(r.adUsd.toFixed(2)),Math.round(r.adUzs),rate,Math.round(r.total),r.adOrders])];
+  const csv='\ufeff'+data.map(row=>row.map(q).join(';')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='XORAZMLIDER_Oylik_'+selectedMonth+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+}
+
 function filterStaff(q){
   q=String(q||'').toLowerCase();
   const box=document.getElementById('staffList');
