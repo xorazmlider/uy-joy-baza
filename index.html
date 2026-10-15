@@ -1382,10 +1382,40 @@ function staffAdReward(staffId,month=kpiCurrentMonth){
   const rows=(db.adSales||[]).filter(a=>String(a.referral_staff_id||'')===String(staffId)&&a.payment_status==='To‘landi'&&monthKey(a.paid_at||a.created_at)===month);
   return {usd:rows.filter(a=>a.currency==='USD').reduce((n,a)=>n+adReward(a),0),uzs:rows.filter(a=>a.currency==='UZS').reduce((n,a)=>n+adReward(a),0),orders:rows.length};
 }
+// Bitim rieltori ulushi kompaniya oladigan komissiyadan hisoblanadi.
+// Qoidalar: rieltor topgan xaridor = 30%; Admin xaridor + rieltor topgan uy = 20%;
+// xaridor va uy Adminniki bo‘lsa, bitimni yakunlagan rieltor = 10%.
+function dealAttribution(note){return crmMeta(note,'CRM_DEAL_ATTRIBUTION')||{};}
+function dealPayoutForStaff(d,staffId){
+  if(!d||d.stage!=='Sotildi')return 0;
+  const a=dealAttribution(d.note),sid=String(staffId);
+  const buyerSource=String(a.buyer_source||'admin'),homeSource=String(a.home_source||'admin');
+  const buyerStaff=String(a.buyer_staff_id||''),homeStaff=String(a.home_staff_id||''),closer=String(a.closing_staff_id||ownerStaffIdFromNote(d.note,'CRM_DEAL_OWNER')||'');
+  const companyCommission=dealCommission(d);
+  if(buyerSource==='realtor'&&homeSource==='realtor'&&buyerStaff&&homeStaff&&buyerStaff!==homeStaff){
+    if(buyerStaff===sid)return companyCommission*0.20;
+    if(homeStaff===sid)return companyCommission*0.10;
+    return 0;
+  }
+  if(buyerSource==='realtor'&&buyerStaff===sid)return companyCommission*0.30;
+  if(buyerSource==='admin'&&homeSource==='realtor'&&homeStaff===sid)return companyCommission*0.20;
+  if(buyerSource==='admin'&&homeSource==='admin'&&closer===sid)return companyCommission*0.10;
+  // Eski bitimlarda manba belgilanmagan bo‘lsa, bitimni yuritgan xodimga standart 10%.
+  if(!a.buyer_source&&!a.home_source&&closer===sid)return companyCommission*0.10;
+  return 0;
+}
+function staffDealCommission(staffId,month=kpiCurrentMonth){
+  return (db.deals||[]).filter(d=>{
+    if(d.stage!=='Sotildi')return false;
+    const meta=crmMeta(d.note,'CRM_DEAL_SOLD');
+    const completedAt=meta.completed_at||d.updated_at||d.created_at;
+    return monthKey(completedAt)===month;
+  }).reduce((sum,d)=>sum+dealPayoutForStaff(d,staffId),0);
+}
 function payrollRows(month=kpiCurrentMonth,usdRate=12500){
   return (db.staff||[]).filter(s=>normalizeRole(s.role)!=='Admin').map(s=>{
-    const kpi=staffKpiBonus(s,month),ad=staffAdReward(s.id,month),base=staffBaseSalary(s,month),total=base+kpi+ad.uzs+ad.usd*usdRate;
-    return {id:s.id,name:s.name||s.login||'Xodim',role:staffRoleLabel(s.role),base,kpi,adUsd:ad.usd,adUzs:ad.uzs,adOrders:ad.orders,usdRate,total};
+    const kpi=staffKpiBonus(s,month),ad=staffAdReward(s.id,month),deal=staffDealCommission(s.id,month),base=staffBaseSalary(s,month),total=base+kpi+deal+ad.uzs+ad.usd*usdRate;
+    return {id:s.id,name:s.name||s.login||'Xodim',role:staffRoleLabel(s.role),base,kpi,deal,adUsd:ad.usd,adUzs:ad.uzs,adOrders:ad.orders,usdRate,total};
   });
 }
 function monthKey(date){return String(date||new Date().toISOString()).slice(0,7)}
@@ -1598,6 +1628,7 @@ async function completeTask(id){
   const note=(clean?clean+'\n\n':'')+'[CRM_TASK_DONE]\ncompleted_at='+now+'\n[/CRM_TASK_DONE]';
   await proUpdate('crm_tasks','tasks',id,{status:'Bajarildi',note});go('tasks');
 }
+function dealStaffOptions(label){return `<option value="">${label}</option>`+(db.staff||[]).filter(s=>['Rieltor','Menejer','Agent'].includes(normalizeRole(s.role))).map(s=>`<option value="${s.id}">${esc(s.name||s.login||'Xodim')}</option>`).join('');}
 function openDeal(prefBuyer=null,prefHome=null){
   if(!requirePage('deals'))return;
   const buyerOpts=`<option value="">Xaridor tanlang</option>`+db.buyers.map(x=>`<option value="${x.id}">${esc(x.name)} — ${esc(x.phone)}</option>`).join('');
@@ -1605,23 +1636,48 @@ function openDeal(prefBuyer=null,prefHome=null){
   modal(`<h2>💰 Bitim qo‘shish</h2>
     <label>Xaridor</label><select id="f_deal_buyer" class="field">${buyerOpts}</select>
     <label>Uy</label><select id="f_deal_home" class="field">${homeOpts}</select>
+    <div class="formgrid">
+      <div><label>Xaridorni kim topgan?</label><select id="f_deal_buyer_source" class="field" onchange="updateDealPayoutHint()"><option value="admin">Admin topgan</option><option value="realtor">Rieltor topgan</option></select></div>
+      <div><label>Xaridorni topgan rieltor</label><select id="f_deal_buyer_staff" class="field" onchange="updateDealPayoutHint()">${dealStaffOptions('Rieltorni tanlang')}</select></div>
+      <div><label>Uyni kim topgan?</label><select id="f_deal_home_source" class="field" onchange="updateDealPayoutHint()"><option value="admin">Admin topgan</option><option value="realtor">Rieltor topgan</option></select></div>
+      <div><label>Uyni topgan rieltor</label><select id="f_deal_home_staff" class="field" onchange="updateDealPayoutHint()">${dealStaffOptions('Rieltorni tanlang')}</select></div>
+      <div class="full"><label>Bitimni yakunlagan rieltor</label><select id="f_deal_closing_staff" class="field" onchange="updateDealPayoutHint()">${dealStaffOptions('Rieltordan tanlang')}</select></div>
+    </div>
+    <div class="notice" id="deal_payout_hint">Rieltor ulushi kompaniya komissiyasidan hisoblanadi: xaridorni rieltor topsa 30%; Admin xaridor + rieltor topgan uy bo‘lsa 20%; ikkalasi ham Adminniki bo‘lsa yakunlovchi rieltorga 10%. Xaridor va uyni ikki xil rieltor topgan bo‘lsa 20%/10% taqsimlanadi.</div>
     ${input('deal_price','Bitim narxi','500000000',1)}
-    ${input('deal_commission','Komissiya','1',1)}
-    <label>Komissiya turi</label><select id="f_deal_commission_type" class="field"><option value="percent">Foiz (%)</option><option value="sum">Summa</option></select>
+    ${input('deal_commission','Kompaniya komissiyasi (so‘m)','1',1)}
+    <label>Komissiya turi</label><select id="f_deal_commission_type" class="field"><option value="percent">Uy narxidan foiz (%)</option><option value="sum">Tayyor summa (so‘m)</option></select>
     <label>Bosqich</label><select id="f_deal_stage" class="field"><option>Yangi</option><option>Ko‘rish</option><option>Muzokara</option><option>Shartnoma</option><option>Sotildi</option><option>Bekor qilindi</option></select>
     ${input('deal_note','Izoh','',0,true)}
-    <br><button class="btn" onclick="saveDeal()">Saqlash</button><button class="btn light" onclick="closeModal()">Bekor</button>`);
-  setTimeout(()=>{if(prefBuyer)document.getElementById('f_deal_buyer').value=prefBuyer;if(prefHome)document.getElementById('f_deal_home').value=prefHome},0);
+    <br><button type="button" class="btn" onclick="saveDeal()">Saqlash</button><button type="button" class="btn light" onclick="closeModal()">Bekor</button>`);
+  setTimeout(()=>{if(prefBuyer)document.getElementById('f_deal_buyer').value=prefBuyer;if(prefHome)document.getElementById('f_deal_home').value=prefHome;updateDealPayoutHint()},0);
+}
+function updateDealPayoutHint(){
+  const bs=document.getElementById('f_deal_buyer_source')?.value||'admin',hs=document.getElementById('f_deal_home_source')?.value||'admin';
+  const b=document.getElementById('f_deal_buyer_staff'),h=document.getElementById('f_deal_home_staff'),c=document.getElementById('f_deal_closing_staff');
+  if(b)b.disabled=bs!=='realtor';if(h)h.disabled=hs!=='realtor';
+  const hint=document.getElementById('deal_payout_hint');if(!hint)return;
+  hint.textContent=bs==='realtor'?'Xaridorni topgan rieltorga kompaniya komissiyasining 30% hisoblanadi; uyni boshqa rieltor topgan bo‘lsa, 20%/10% taqsimlanadi.':hs==='realtor'?'Admin topgan xaridor + rieltor topgan uy: uyni topgan rieltorga kompaniya komissiyasining 20% hisoblanadi.':'Xaridor va uy Adminniki: bitimni yakunlagan rieltorga kompaniya komissiyasining 10% hisoblanadi.';
 }
 async function saveDeal(){
   const price=parseMoneyInput(val('deal_price'));const commission=Number(val('deal_commission')||0);
   const buyerId=val('deal_buyer'); const homeId=val('deal_home');
+  const buyerSource=val('deal_buyer_source')||'admin',homeSource=val('deal_home_source')||'admin';
+  const buyerStaff=val('deal_buyer_staff'),homeStaff=val('deal_home_staff'),closingStaff=val('deal_closing_staff')||String(currentStaff?.id||'');
   if(!buyerId||!homeId)return alert('Xaridor va uyni tanlang.');
-  if(!Number.isFinite(price)||price===0)return alert('Bitim narxini kiriting.');
-  let dealNote=val('deal_note')||''; dealNote=(dealNote?dealNote+'\n\n':'')+'[CRM_DEAL_OWNER]\nstaff_id='+String(currentStaff?.id||'')+'\nlogin='+String(currentStaff?.login||'')+'\n[/CRM_DEAL_OWNER]';
+  if(!Number.isFinite(price)||price<=0)return alert('Bitim narxini to‘g‘ri kiriting.');
+  if(!Number.isFinite(commission)||commission<0)return alert('Kompaniya komissiyasini to‘g‘ri kiriting.');
+  if(buyerSource==='realtor'&&!buyerStaff)return alert('Xaridorni topgan rieltorni tanlang.');
+  if(homeSource==='realtor'&&!homeStaff)return alert('Uyni topgan rieltorni tanlang.');
+  if(!closingStaff)return alert('Bitimni yakunlagan rieltordan tanlang.');
+  let dealNote=val('deal_note')||'';
+  dealNote=(dealNote?dealNote+'\n\n':'')+'[CRM_DEAL_OWNER]\nstaff_id='+closingStaff+'\nlogin='+String(currentStaff?.login||'')+'\n[/CRM_DEAL_OWNER]';
+  dealNote+='\n\n[CRM_DEAL_ATTRIBUTION]\nbuyer_source='+buyerSource+'\nbuyer_staff_id='+(buyerSource==='realtor'?buyerStaff:'')+'\nhome_source='+homeSource+'\nhome_staff_id='+(homeSource==='realtor'?homeStaff:'')+'\nclosing_staff_id='+closingStaff+'\n[/CRM_DEAL_ATTRIBUTION]';
   if(val('deal_stage')==='Sotildi')dealNote+='\n\n[CRM_DEAL_SOLD]\ncompleted_at='+new Date().toISOString()+'\n[/CRM_DEAL_SOLD]';
   const row={buyer_id:Number(buyerId),home_id:Number(homeId),price,commission,commission_type:val('deal_commission_type'),stage:val('deal_stage'),note:dealNote};
-  await proInsert('crm_deals','deals',row);closeModal();go('deals');
+  const result=await proInsert('crm_deals','deals',row);
+  if(result===false)return;
+  closeModal();go('deals');
 }
 function dealCommission(d){
   const p=Math.abs(Number(d.price)||0),c=Number(d.commission)||0;
@@ -1634,7 +1690,7 @@ function dealsPage(){
   <tr><th>Xaridor</th><th>Uy</th><th>Narx</th><th>Komissiya</th><th>Bosqich</th><th>Amal</th></tr>
   ${(db.deals||[]).map(d=>{const b=db.buyers.find(x=>Number(x.id)===Number(d.buyer_id));const h=db.homes.find(x=>Number(x.id)===Number(d.home_id));return `<tr>
     <td><b>${esc(b?.name||'—')}</b><br><span class="muted">${esc(b?.phone||'')}</span></td>
-    <td>${esc(h?.title||'—')}<br><span class="muted">👤 ${esc((()=>{const m=crmMeta(d.note,'CRM_DEAL_OWNER');const s=(db.staff||[]).find(x=>String(x.id)===String(m.staff_id||''));return s?.name||s?.login||m.login||'—'})())}</span></td><td>${money(d.price)}</td><td>${money(dealCommission(d))}</td>
+    <td>${esc(h?.title||'—')}<br><span class="muted">👤 Yakunlovchi: ${esc((()=>{const a=dealAttribution(d.note),m=crmMeta(d.note,'CRM_DEAL_OWNER');const s=(db.staff||[]).find(x=>String(x.id)===String(a.closing_staff_id||m.staff_id||''));return s?.name||s?.login||m.login||'—'})())}</span></td><td>${money(d.price)}</td><td>${money(dealCommission(d))}<br><span class="muted">Rieltor ulushi: ${money((db.staff||[]).reduce((n,st)=>n+dealPayoutForStaff(d,st.id),0))}</span></td>
     <td><span class="badge">${esc(d.stage||'Yangi')}</span></td>
     <td style="white-space:nowrap"><button class="small primary" onclick="openActForDeal('${String(d.id)}')">📋 AKT</button> <button class="small" onclick="proDelete('crm_deals','deals','${String(d.id)}')">×</button></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">Bitimlar hali yo‘q.</td></tr>'}
   </table></div></div>`;
@@ -2400,25 +2456,26 @@ function staffRows(a){
 function openStaffPayroll(staffId){
   if(currentRole()!=='Admin')return alert('Oylik maoshini faqat Admin boshqaradi.');
   const s=(db.staff||[]).find(x=>String(x.id)===String(staffId));if(!s)return;
-  const month=kpiCurrentMonth,base=staffBaseSalary(s,month),kpi=staffKpiBonus(s,month),ad=staffAdReward(s.id,month);
+  const month=kpiCurrentMonth,base=staffBaseSalary(s,month),kpi=staffKpiBonus(s,month),ad=staffAdReward(s.id,month),deal=staffDealCommission(s.id,month);
   modal(`<h2>💵 ${esc(s.name||s.login||'Xodim')} — oylik hisob-kitobi</h2>
-    <p class="muted">${esc(monthLabel(month))}. Umumiy summa = asosiy maosh + KPI bonusi + to‘langan reklama mukofoti. USD mukofoti kurs orqali so‘mga aylantiriladi.</p>
+    <p class="muted">${esc(monthLabel(month))}. Umumiy summa = asosiy maosh + KPI bonusi + bitim komissiyasi + to‘langan reklama mukofoti. USD mukofoti kurs orqali so‘mga aylantiriladi.</p>
     <div class="formgrid">
       <div><label class="muted">Hisoblanadigan oy</label><input id="pay_month" class="field" type="month" value="${esc(month)}" onchange="previewStaffPayroll('${esc(String(s.id))}')"></div>
       <div><label class="muted">Asosiy oylik maoshi (so‘m)</label><input id="pay_base" class="field" type="number" min="0" step="1000" value="${base}" oninput="previewStaffPayroll('${esc(String(s.id))}')"></div>
       <div><label class="muted">1 USD kursi (so‘m)</label><input id="pay_rate" class="field" type="number" min="1" step="1" value="12500" oninput="previewStaffPayroll('${esc(String(s.id))}')"></div>
       <div><label class="muted">KPI bonusi</label><input id="pay_kpi" class="field" readonly value="${kpi.toLocaleString('uz-UZ')} so‘m"></div>
+      <div><label class="muted">Bitim komissiyasi (so‘m)</label><input id="pay_deal" class="field" readonly value="${deal.toLocaleString('uz-UZ')} so‘m"></div>
       <div><label class="muted">Reklama mukofoti (USD)</label><input id="pay_ad_usd" class="field" readonly value="$${ad.usd.toLocaleString('en-US',{maximumFractionDigits:2})}"></div>
       <div><label class="muted">Reklama mukofoti (so‘m)</label><input id="pay_ad_uzs" class="field" readonly value="${ad.uzs.toLocaleString('uz-UZ')} so‘m"></div>
-      <div class="full"><div id="pay_total_preview" class="stat"><div class="num">${(base+kpi+ad.uzs+ad.usd*12500).toLocaleString('uz-UZ')} so‘m</div><div class="label">Taxminiy jami oylik</div></div></div>
+      <div class="full"><div id="pay_total_preview" class="stat"><div class="num">${(base+kpi+deal+ad.uzs+ad.usd*12500).toLocaleString('uz-UZ')} so‘m</div><div class="label">Taxminiy jami oylik</div></div></div>
     </div><br><button class="btn" onclick="saveStaffPayroll('${esc(String(s.id))}')">Maoshni saqlash</button> <button class="btn primary" onclick="downloadPayrollExcel('${esc(month)}','${esc(String(s.id))}')">📊 Excel yuklab olish</button> <button class="btn light" onclick="closeModal()">Yopish</button>`);
 }
 function previewStaffPayroll(staffId){
   const s=(db.staff||[]).find(x=>String(x.id)===String(staffId));if(!s)return;
   const month=document.getElementById('pay_month')?.value||kpiCurrentMonth,rate=Math.max(1,Number(document.getElementById('pay_rate')?.value||12500)),base=Math.max(0,Number(document.getElementById('pay_base')?.value||0));
-  const kpi=staffKpiBonus(s,month),ad=staffAdReward(s.id,month),total=base+kpi+ad.uzs+ad.usd*rate;
+  const kpi=staffKpiBonus(s,month),ad=staffAdReward(s.id,month),deal=staffDealCommission(s.id,month),total=base+kpi+deal+ad.uzs+ad.usd*rate;
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v};
-  set('pay_kpi',kpi.toLocaleString('uz-UZ')+' so‘m');set('pay_ad_usd','$'+ad.usd.toLocaleString('en-US',{maximumFractionDigits:2}));set('pay_ad_uzs',ad.uzs.toLocaleString('uz-UZ')+' so‘m');
+  set('pay_kpi',kpi.toLocaleString('uz-UZ')+' so‘m');set('pay_deal',deal.toLocaleString('uz-UZ')+' so‘m');set('pay_ad_usd','$'+ad.usd.toLocaleString('en-US',{maximumFractionDigits:2}));set('pay_ad_uzs',ad.uzs.toLocaleString('uz-UZ')+' so‘m');
   const box=document.getElementById('pay_total_preview');if(box)box.innerHTML='<div class="num">'+Math.round(total).toLocaleString('uz-UZ')+' so‘m</div><div class="label">Taxminiy jami oylik</div>';
 }
 async function saveStaffPayroll(staffId){
@@ -2450,7 +2507,7 @@ async function downloadPayrollExcel(month=kpiCurrentMonth,staffId=null){
   const rows=payrollRows(selectedMonth,rate).filter(r=>staffId===null||String(r.id)===String(staffId));
   if(staffId!==null&&!rows.length)return alert('Tanlangan xodim uchun oylik qatori topilmadi.');
   const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
-  const data=[['Oy','Xodim','Lavozim','Asosiy maosh (UZS)','KPI bonusi (UZS)','Reklama mukofoti (USD)','Reklama mukofoti (UZS)','USD kursi','Jami oylik (UZS)','To‘langan reklama buyurtmalari'],...rows.map(r=>[selectedMonth,r.name,r.role,Math.round(r.base),Math.round(r.kpi),Number(r.adUsd.toFixed(2)),Math.round(r.adUzs),rate,Math.round(r.total),r.adOrders])];
+  const data=[['Oy','Xodim','Lavozim','Asosiy maosh (UZS)','KPI bonusi (UZS)','Bitim komissiyasi (UZS)','Reklama mukofoti (USD)','Reklama mukofoti (UZS)','USD kursi','Jami oylik (UZS)','To‘langan reklama buyurtmalari'],...rows.map(r=>[selectedMonth,r.name,r.role,Math.round(r.base),Math.round(r.kpi),Math.round(r.deal),Number(r.adUsd.toFixed(2)),Math.round(r.adUzs),rate,Math.round(r.total),r.adOrders])];
   const csv='\ufeff'+data.map(row=>row.map(q).join(';')).join('\r\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download='XORAZMLIDER_Oylik_'+selectedMonth+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
