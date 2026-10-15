@@ -1407,8 +1407,16 @@ function kpiFact(staffId,key){
   const ids=isManager ? kpiTeamIds(staffId) : [sid];
   if(key==='homes')return db.homes.filter(h=>ids.includes(ownerStaffIdFromHome(h))&&monthKey(h.created_at)===monthKey(kpiCurrentMonth)).length;
   if(key==='buyers')return db.buyers.filter(b=>ids.includes(String(b.owner_staff_id||''))&&monthKey(b.created_at)===monthKey(kpiCurrentMonth)).length;
-  if(key==='deals')return (db.deals||[]).filter(d=>ids.includes(String(ownerStaffIdFromNote(d.note,'CRM_DEAL_OWNER')))&&d.stage==='Sotildi'&&monthKey(d.created_at)===monthKey(kpiCurrentMonth)).length;
-  if(key==='tasks')return (db.tasks||[]).filter(t=>ids.includes(String(ownerStaffIdFromNote(t.note,'CRM_TASK_OWNER')))&&t.status==='Bajarildi'&&monthKey(t.created_at)===monthKey(kpiCurrentMonth)).length;
+  if(key==='deals')return (db.deals||[]).filter(d=>{
+    const meta=crmMeta(d.note,'CRM_DEAL_SOLD');
+    const completedAt=meta.completed_at||((d.stage==='Sotildi')?d.updated_at||d.created_at:'');
+    return ids.includes(String(ownerStaffIdFromNote(d.note,'CRM_DEAL_OWNER')))&&d.stage==='Sotildi'&&monthKey(completedAt)===monthKey(kpiCurrentMonth);
+  }).length;
+  if(key==='tasks')return (db.tasks||[]).filter(t=>{
+    const meta=crmMeta(t.note,'CRM_TASK_DONE');
+    const completedAt=meta.completed_at||t.updated_at||t.created_at;
+    return ids.includes(String(ownerStaffIdFromNote(t.note,'CRM_TASK_OWNER')))&&t.status==='Bajarildi'&&monthKey(completedAt)===monthKey(kpiCurrentMonth);
+  }).length;
   return 0;
 }
 let kpiCurrentMonth=monthKey(new Date());
@@ -1583,7 +1591,13 @@ function tasksPage(){
       <button class="small" onclick="proDelete('crm_tasks','tasks','${String(x.id)}')">×</button></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Eslatma yo‘q.</td></tr>'}
     </table></div></div>`;
 }
-async function completeTask(id){await proUpdate('crm_tasks','tasks',id,{status:'Bajarildi'});go('tasks')}
+async function completeTask(id){
+  const task=(db.tasks||[]).find(t=>String(t.id)===String(id));if(!task)return;
+  const now=new Date().toISOString();
+  const clean=String(task.note||'').replace(/\n?\n?\[CRM_TASK_DONE\][\s\S]*?\[\/CRM_TASK_DONE\]/g,'').trim();
+  const note=(clean?clean+'\n\n':'')+'[CRM_TASK_DONE]\ncompleted_at='+now+'\n[/CRM_TASK_DONE]';
+  await proUpdate('crm_tasks','tasks',id,{status:'Bajarildi',note});go('tasks');
+}
 function openDeal(prefBuyer=null,prefHome=null){
   if(!requirePage('deals'))return;
   const buyerOpts=`<option value="">Xaridor tanlang</option>`+db.buyers.map(x=>`<option value="${x.id}">${esc(x.name)} — ${esc(x.phone)}</option>`).join('');
@@ -1604,7 +1618,9 @@ async function saveDeal(){
   const buyerId=val('deal_buyer'); const homeId=val('deal_home');
   if(!buyerId||!homeId)return alert('Xaridor va uyni tanlang.');
   if(!Number.isFinite(price)||price===0)return alert('Bitim narxini kiriting.');
-  let dealNote=val('deal_note')||''; dealNote=(dealNote?dealNote+'\n\n':'')+'[CRM_DEAL_OWNER]\nstaff_id='+String(currentStaff?.id||'')+'\nlogin='+String(currentStaff?.login||'')+'\n[/CRM_DEAL_OWNER]'; const row={buyer_id:Number(buyerId),home_id:Number(homeId),price,commission,commission_type:val('deal_commission_type'),stage:val('deal_stage'),note:dealNote};
+  let dealNote=val('deal_note')||''; dealNote=(dealNote?dealNote+'\n\n':'')+'[CRM_DEAL_OWNER]\nstaff_id='+String(currentStaff?.id||'')+'\nlogin='+String(currentStaff?.login||'')+'\n[/CRM_DEAL_OWNER]';
+  if(val('deal_stage')==='Sotildi')dealNote+='\n\n[CRM_DEAL_SOLD]\ncompleted_at='+new Date().toISOString()+'\n[/CRM_DEAL_SOLD]';
+  const row={buyer_id:Number(buyerId),home_id:Number(homeId),price,commission,commission_type:val('deal_commission_type'),stage:val('deal_stage'),note:dealNote};
   await proInsert('crm_deals','deals',row);closeModal();go('deals');
 }
 function dealCommission(d){
@@ -2431,7 +2447,8 @@ async function downloadPayrollExcel(month=kpiCurrentMonth,staffId=null){
       Object.assign(s,updated);
     }
   }
-  const rows=payrollRows(selectedMonth,rate);
+  const rows=payrollRows(selectedMonth,rate).filter(r=>staffId===null||String(r.id)===String(staffId));
+  if(staffId!==null&&!rows.length)return alert('Tanlangan xodim uchun oylik qatori topilmadi.');
   const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
   const data=[['Oy','Xodim','Lavozim','Asosiy maosh (UZS)','KPI bonusi (UZS)','Reklama mukofoti (USD)','Reklama mukofoti (UZS)','USD kursi','Jami oylik (UZS)','To‘langan reklama buyurtmalari'],...rows.map(r=>[selectedMonth,r.name,r.role,Math.round(r.base),Math.round(r.kpi),Number(r.adUsd.toFixed(2)),Math.round(r.adUzs),rate,Math.round(r.total),r.adOrders])];
   const csv='\ufeff'+data.map(row=>row.map(q).join(';')).join('\r\n');
