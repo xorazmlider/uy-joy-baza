@@ -1755,7 +1755,7 @@ function openAdSale(id=''){
   <div><label class="muted">Xodim mukofoti (%)</label><input id="f_ad_rate" class="field" type="number" min="0" max="100" step="0.5" required value="${esc(x?.reward_rate??d.rate)}"></div>
   <div><label class="muted">Mijozni birinchi topgan xodim</label><select id="f_ad_referrer" class="field" ${canChoose?'':'disabled'}>${canChoose?staffOptions:`<option value="${esc(currentStaff?.id||'')}">${esc(currentStaff?.name||'Mening profilim')}</option>`}</select></div>
   <div class="full"><label class="muted">Izoh</label><textarea id="f_ad_note" class="field" rows="2">${esc(x?.note||'')}</textarea></div></div><br>
-  <button class="btn" onclick='saveAdSale(${x?JSON.stringify(String(x.id)):"''"})'>Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`);
+  <button class="btn" onclick='saveAdSale(${x?JSON.stringify(String(x.id)):""})'>Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`);
 }
 function updateAdDefaults(){
   const type=document.getElementById('f_ad_type')?.value,platform=document.getElementById('f_ad_platform')?.value,d=adDefault(type,platform);
