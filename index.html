@@ -952,11 +952,11 @@ body{background:var(--ui-bg);color:var(--ui-text)}
 
 <div class="app">
 <aside class="side"><div class="brand">🏠 Xorazm Uylar CRM</div>
-<button type="button" class="nav active" data-page="dashboard" onclick="go('dashboard');return false;">📊 Bosh sahifa</button><button type="button" class="nav" data-page="homes" onclick="go('homes');return false;">🏠 Uylar</button><button type="button" class="nav" data-page="buyers" onclick="go('buyers');return false;">👤 Xaridorlar</button><button type="button" class="nav" data-page="sellers" onclick="go('sellers');return false;">🤝 Sotuvchilar</button><button type="button" class="nav" data-page="staff" onclick="go('staff');return false;">👥 Xodimlar</button><button type="button" class="nav" data-page="matches" onclick="go('matches');return false;">🎯 Moslashtirish</button><button type="button" class="nav" data-page="deals" onclick="go('deals');return false;">💰 Bitimlar</button><button type="button" class="nav" data-page="tasks" onclick="go('tasks');return false;">⏰ Eslatmalar</button><button type="button" class="nav" data-page="reports" onclick="go('reports');return false;">📈 Hisobot</button><button type="button" class="nav" data-page="documents" onclick="go('documents');return false;">📁 Hujjatlar</button><button type="button" class="nav" data-page="sold" onclick="go('sold');return false;">✅ Sotilgan</button><button type="button" class="nav" onclick="logoutCRM();return false;">🚪 Chiqish</button>
+<button type="button" class="nav active" data-page="dashboard" onclick="go('dashboard');return false;">📊 Bosh sahifa</button><button type="button" class="nav" data-page="homes" onclick="go('homes');return false;">🏠 Uylar</button><button type="button" class="nav" data-page="buyers" onclick="go('buyers');return false;">👤 Xaridorlar</button><button type="button" class="nav" data-page="sellers" onclick="go('sellers');return false;">🤝 Sotuvchilar</button><button type="button" class="nav" data-page="staff" onclick="go('staff');return false;">👥 Xodimlar</button><button type="button" class="nav" data-page="matches" onclick="go('matches');return false;">🎯 Moslashtirish</button><button type="button" class="nav" data-page="deals" onclick="go('deals');return false;">💰 Bitimlar</button><button type="button" class="nav" data-page="adSales" onclick="go('adSales');return false;">📣 Reklama savdosi</button><button type="button" class="nav" data-page="tasks" onclick="go('tasks');return false;">⏰ Eslatmalar</button><button type="button" class="nav" data-page="reports" onclick="go('reports');return false;">📈 Hisobot</button><button type="button" class="nav" data-page="documents" onclick="go('documents');return false;">📁 Hujjatlar</button><button type="button" class="nav" data-page="sold" onclick="go('sold');return false;">✅ Sotilgan</button><button type="button" class="nav" onclick="logoutCRM();return false;">🚪 Chiqish</button>
 <div id="currentUserBadge" style="margin-top:20px;padding:10px;border:1px solid #334155;border-radius:10px;color:#e2e8f0;font-size:12px"></div><div style="margin-top:12px;color:#94a3b8;font-size:12px">Online versiya • ma'lumotlar Supabase bazasida saqlanadi</div></aside>
 <main class="main"><div id="page"></div></main>
 </div>
-<div class="mobile-nav"><button onclick="go('dashboard')">📊<br>Bosh</button><button onclick="go('homes')">🏠<br>Uylar</button><button onclick="go('buyers')">👤<br>Xaridor</button><button onclick="go('sellers')">🤝<br>Sotuvchi</button><button data-page="staff" onclick="go('staff')">👥<br>Xodim</button><button onclick="go('matches')">🎯<br>Mos</button><button onclick="go('deals')">💰<br>Bitim</button><button onclick="go('tasks')">⏰<br>Eslatma</button><button class="mobile-page-reports" onclick="go('reports')">📈<br>Hisobot</button><button onclick="go('documents')">📁<br>Hujjat</button><button onclick="go('sold')">✅<br>Sotilgan</button><button class="nav" onclick="logoutCRM()" style="color:#1683d8;">🚪 Chiqish</button></div>
+<div class="mobile-nav"><button onclick="go('dashboard')">📊<br>Bosh</button><button onclick="go('homes')">🏠<br>Uylar</button><button onclick="go('buyers')">👤<br>Xaridor</button><button onclick="go('sellers')">🤝<br>Sotuvchi</button><button data-page="staff" onclick="go('staff')">👥<br>Xodim</button><button onclick="go('matches')">🎯<br>Mos</button><button onclick="go('deals')">💰<br>Bitim</button><button data-page="adSales" onclick="go('adSales')">📣<br>Reklama</button><button onclick="go('tasks')">⏰<br>Eslatma</button><button class="mobile-page-reports" onclick="go('reports')">📈<br>Hisobot</button><button onclick="go('documents')">📁<br>Hujjat</button><button onclick="go('sold')">✅<br>Sotilgan</button><button class="nav" onclick="logoutCRM()" style="color:#1683d8;">🚪 Chiqish</button></div>
 <div id="modal" class="modal"><div class="box" id="modalBox"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -964,15 +964,15 @@ const SUPABASE_URL='https://rmelwwzaagyzdcrdpkva.supabase.co';
 const SUPABASE_KEY='sb_publishable_itMmxW5YPm87O6tADGIEYw_xrs2xNe-';
 const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const KEY='xucrm_v2';
-let db={homes:[],buyers:[],sellers:[],inquiries:[],tasks:[],deals:[],activities:[],documents:[],staff:[]};
+let db={homes:[],buyers:[],sellers:[],inquiries:[],tasks:[],deals:[],activities:[],documents:[],staff:[],adSales:[]};
 let currentUser=null;
 let currentStaff=null;
 
 const ROLE_PAGES={
-  Admin:['dashboard','homes','buyers','sellers','staff','matches','deals','tasks','reports','documents','contracts','sold'],
-  Menejer:['dashboard','homes','buyers','sellers','matches','deals','tasks','reports','documents','contracts','sold'],
-  Rieltor:['dashboard','homes','buyers','sellers','matches','deals','tasks','documents','contracts','sold'],
-  Agent:['dashboard','homes','buyers','sellers','matches','deals','tasks','reports','documents','contracts','sold']
+  Admin:['dashboard','homes','buyers','sellers','staff','matches','deals','adSales','tasks','reports','documents','contracts','sold'],
+  Menejer:['dashboard','homes','buyers','sellers','matches','deals','adSales','tasks','reports','documents','contracts','sold'],
+  Rieltor:['dashboard','homes','buyers','sellers','matches','deals','adSales','tasks','documents','contracts','sold'],
+  Agent:['dashboard','homes','buyers','sellers','matches','deals','adSales','tasks','reports','documents','contracts','sold']
 };
 
 function normalizeRole(role){
@@ -1294,7 +1294,8 @@ async function loadDb(){
     ['tasks','crm_tasks'],
     ['deals','crm_deals'],
     ['activities','crm_activities'],
-    ['documents','crm_documents']
+    ['documents','crm_documents'],
+    ['adSales','crm_ad_sales']
   ];
   await Promise.all(extraTables.map(async ([key,table])=>{
     try{
@@ -1302,7 +1303,7 @@ async function loadDb(){
       if(!r.error) db[key]=r.data||[];
     }catch(e){}
   }));
-  ['tasks','deals','activities','documents'].forEach(k=>{
+  ['tasks','deals','activities','documents','adSales'].forEach(k=>{
     const local=proLocalGet(k);
     if(local.length) db[k]=[...db[k],...local.filter(l=>!db[k].some(x=>String(x.id)===String(l.id)))];
   });
@@ -1388,12 +1389,24 @@ let kpiCurrentMonth=monthKey(new Date());
 function kpiSummary(staff){
   const plans=kpiPlans(staff?.note)[kpiCurrentMonth]||{};
   const isManager=normalizeRole(staff?.role)==='Menejer';
-  const rows=isManager
-    ? [['homes','Jamoa yangi uylari'],['buyers','Jamoa yangi mijozlari'],['deals','Jamoa sotuvlari'],['tasks','Jamoa bajarilgan vazifalari']]
-    : [['homes','Yangi uylar'],['buyers','Yangi mijozlar'],['deals','Sotuvlar'],['tasks','Bajarilgan vazifalar']];
-  let sum=0,count=0;
-  const out=rows.map(([key,label])=>{const plan=Math.max(0,Number(plans[key]||0));const fact=kpiFact(staff.id,key);const pct=plan?Math.round(fact/plan*100):0;if(plan){sum+=Math.min(pct,100);count++;}return {key,label,plan,fact,pct};});
-  return {rows:out,pct:count?Math.round(sum/count):0,isManager};
+  const service=Math.max(0,Math.min(100,Number(plans.service??0)));
+  const rows=[
+    {key:'homes',label:isManager?'Jamoa obyektlari':'Sifatli obyektlar',weight:25,plan:Math.max(0,Number(plans.homes||0)),fact:kpiFact(staff.id,'homes')},
+    {key:'buyers',label:isManager?'Jamoa mijozlari':'Yangi mijozlar',weight:20,plan:Math.max(0,Number(plans.buyers||0)),fact:kpiFact(staff.id,'buyers')},
+    {key:'deals',label:isManager?'Jamoa sotuvlari':'Yakunlangan bitimlar',weight:30,plan:Math.max(0,Number(plans.deals||0)),fact:kpiFact(staff.id,'deals')},
+    {key:'service',label:'Mijozlarga xizmat sifati',weight:15,plan:100,fact:service,manual:true},
+    {key:'tasks',label:'CRM intizomi / vazifalar',weight:10,plan:Math.max(0,Number(plans.tasks||0)),fact:kpiFact(staff.id,'tasks')}
+  ];
+  let points=0;
+  const out=rows.map(r=>{
+    const pct=r.manual?r.fact:(r.plan?Math.min(100,r.fact/r.plan*100):0);
+    const earned=Math.round((pct/100*r.weight)*10)/10;
+    if(r.plan||r.manual)points+=earned;
+    return {...r,pct:Math.round(pct),earned:Math.round(earned*10)/10};
+  });
+  points=Math.round(points*10)/10;
+  const bonus=points<60?0:points<75?250000:points<90?500000:points<100?750000:1000000;
+  return {rows:out,pct:Math.round(points),points,bonus,isManager};
 }
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function go(p){if(!requirePage(p))return;document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.page===p));document.querySelectorAll('.mobile-nav [data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render(p)}
@@ -1408,6 +1421,7 @@ function render(p='dashboard'){
   if(p==='staff')h=staff();
   if(p==='matches')h=matches();
   if(p==='deals')h=dealsPage();
+  if(p==='adSales')h=adSalesPage();
   if(p==='tasks')h=tasksPage();
   if(p==='reports')h=reportsPage();
   if(p==='documents')h=documentsPage();
@@ -1638,6 +1652,102 @@ function openActForDeal(dealId){
   w.document.open();w.document.write(html);w.document.close();
   setTimeout(()=>w.print(),300);
 }
+// ===== REKLAMA SAVDOSI VA XODIM MUKOFOTI =====
+const AD_TYPES=[
+  {value:'Kvartira',label:'Kvartira'},
+  {value:'Hovli joy',label:'Hovli joy'},
+  {value:'Qurilish kompaniyasi',label:'Qurilish kompaniyasi'},
+  {value:'Boshqa biznes',label:'Boshqa biznes'}
+];
+function adDefault(type,platform){
+  if(type==='Kvartira'&&platform==='Instagram')return {amount:100,currency:'USD',rate:20};
+  if(type==='Kvartira'&&platform==='YouTube')return {amount:1000000,currency:'UZS',rate:20};
+  if(type==='Hovli joy'&&platform==='Instagram')return {amount:150,currency:'USD',rate:20};
+  if(type==='Hovli joy'&&platform==='YouTube')return {amount:100,currency:'USD',rate:20};
+  if(type==='Qurilish kompaniyasi'&&platform==='Instagram')return {amount:500,currency:'USD',rate:15};
+  if(type==='Qurilish kompaniyasi'&&platform==='YouTube')return {amount:300,currency:'USD',rate:15};
+  if(type==='Boshqa biznes'&&platform==='Instagram')return {amount:200,currency:'USD',rate:15};
+  return {amount:'',currency:'USD',rate:15};
+}
+function adMoney(amount,currency){
+  const n=Number(amount||0);
+  return currency==='USD'?'$'+n.toLocaleString('en-US',{maximumFractionDigits:2}):n.toLocaleString('uz-UZ')+' so‘m';
+}
+function adReward(row){return row.payment_status==='To‘landi'?Number(row.amount||0)*Number(row.reward_rate||0)/100:0}
+function adStaffName(id){const s=(db.staff||[]).find(x=>String(x.id)===String(id));if(s)return s.name||s.login||'Xodim';if(String(currentStaff?.id)===String(id))return currentStaff.name||currentStaff.login||'Men';return 'Xodim #'+String(id||'—')}
+function adVisibleRows(){
+  const all=db.adSales||[];
+  if(['Admin','Menejer'].includes(currentRole()))return all;
+  return all.filter(x=>String(x.referral_staff_id)===String(currentStaff?.id)||String(x.created_by_staff_id)===String(currentStaff?.id));
+}
+function adSalesPage(){
+  const rows=adVisibleRows();
+  const paid=rows.filter(x=>x.payment_status==='To‘landi');
+  const pending=rows.filter(x=>x.payment_status!=='To‘landi'&&x.payment_status!=='Bekor qilindi');
+  const earnedUSD=paid.filter(x=>x.currency==='USD').reduce((sum,x)=>sum+adReward(x),0);
+  const earnedUZS=paid.filter(x=>x.currency==='UZS').reduce((sum,x)=>sum+adReward(x),0);
+  const fmt=(n,c)=>adMoney(n,c);
+  return header('Reklama savdosi','Reklama mijozlari, to‘lovlar va alohida xodim mukofotlari', '＋ Reklama buyurtmasi','openAdSale()')+
+  `<div class="stats"><div class="stat"><div class="num">${rows.length}</div><div class="label">Jami buyurtmalar</div></div><div class="stat"><div class="num">${paid.length}</div><div class="label">To‘langan buyurtmalar</div></div><div class="stat"><div class="num">${pending.length}</div><div class="label">To‘lov kutilmoqda</div></div><div class="stat"><div class="num" style="font-size:20px">${fmt(earnedUSD,'USD')}<br>${fmt(earnedUZS,'UZS')}</div><div class="label">Hisoblangan mukofotlar — valyutalar alohida</div></div></div>
+  <div class="panel"><h3>📣 Reklama buyurtmalari</h3><p class="muted">Mukofot faqat mijoz to‘lovi “To‘landi” bo‘lgach hisoblanadi. Mukofot KPI bonusi va bitim komissiyasidan alohida.</p>
+  <div class="tablewrap" style="overflow-x:auto"><table class="table"><thead><tr><th>Mijoz</th><th>Reklama</th><th>Narx</th><th>Mijozni birinchi topgan xodim</th><th>To‘lov</th><th>Mukofot</th><th>Amal</th></tr></thead><tbody>
+  ${rows.map(x=>{const reward=adReward(x);return `<tr><td><b>${esc(x.client_name||'—')}</b><br><span class="muted">${esc(x.phone||'')}</span><br><span class="muted">${esc(x.created_at?String(x.created_at).slice(0,10):'')}</span></td><td>${esc(x.ad_type||'—')}<br><span class="muted">${esc(x.platform||'—')}</span></td><td>${fmt(x.amount,x.currency)}</td><td>${esc(adStaffName(x.referral_staff_id))}</td><td>${esc(x.payment_status||'Kutilmoqda')}${x.paid_at?'<br><span class="muted">'+esc(String(x.paid_at).slice(0,10))+'</span>':''}</td><td><b>${x.payment_status==='To‘landi'?fmt(reward,x.currency):'To‘lovdan keyin'}</b><br><span class="muted">${Number(x.reward_rate||0)}%</span></td><td>${['Admin','Menejer'].includes(currentRole())&&x.payment_status!=='To‘landi'&&x.payment_status!=='Bekor qilindi'?`<button class="small primary" onclick="markAdSalePaid(${JSON.stringify(String(x.id))})">To‘landi</button> <button class="small" onclick="cancelAdSale(${JSON.stringify(String(x.id))})">Bekor</button>`:''}${['Admin','Menejer'].includes(currentRole())?` <button class="small" onclick="editAdSale(${JSON.stringify(String(x.id))})">Tahrir</button>`:''}</td></tr>`}).join('')||'<tr><td colspan="7" class="empty">Hali reklama buyurtmasi kiritilmagan.</td></tr>'}
+  </tbody></table></div></div>
+  <div class="panel" style="margin-top:14px"><h3>📊 Xodimlar bo‘yicha reklama mukofoti</h3><div class="tablewrap" style="overflow-x:auto"><table class="table"><thead><tr><th>Xodim</th><th>To‘langan buyurtma</th><th>Mukofot USD</th><th>Mukofot so‘m</th></tr></thead><tbody>${[...new Set(paid.map(x=>String(x.referral_staff_id||'')))].map(sid=>{const own=paid.filter(x=>String(x.referral_staff_id||'')===sid);const usd=own.filter(x=>x.currency==='USD').reduce((sum,x)=>sum+adReward(x),0);const uzs=own.filter(x=>x.currency==='UZS').reduce((sum,x)=>sum+adReward(x),0);return `<tr><td><b>${esc(adStaffName(sid))}</b></td><td>${own.length}</td><td>${fmt(usd,'USD')}</td><td>${fmt(uzs,'UZS')}</td></tr>`}).join('')||'<tr><td colspan="4" class="empty">Hali to‘langan buyurtma yo‘q.</td></tr>'}</tbody></table></div></div>
+  <div class="panel" style="margin-top:14px"><h3>ℹ️ Mukofot qoidasi</h3><div class="muted">Kvartira va hovli joy reklamasi — 20%; qurilish kompaniyasi va boshqa biznes reklamasi — 15%. Xodim mukofoti mijozni birinchi topgan xodimga biriktiriladi. Narx va foiz har bir buyurtmada tekshirilishi/tahrirlanishi mumkin.</div></div>`;
+}
+function openAdSale(id=''){
+  if(!requirePage('adSales'))return;
+  const x=id?(db.adSales||[]).find(a=>String(a.id)===String(id)):null;
+  if(x&&!['Admin','Menejer'].includes(currentRole()))return alert('Buyurtmani tahrirlash huquqi yo‘q.');
+  const defaultType=x?.ad_type||'Kvartira',defaultPlatform=x?.platform||'Instagram';
+  const d=adDefault(defaultType,defaultPlatform);
+  const staffOptions=(db.staff||[]).filter(a=>a.is_active!==false).map(a=>`<option value="${esc(a.id)}" ${String(x?.referral_staff_id||currentStaff?.id)===String(a.id)?'selected':''}>${esc(a.name||a.login||'Xodim')}</option>`).join('');
+  const canChoose=['Admin','Menejer'].includes(currentRole());
+  modal(`<h2>📣 ${x?'Reklama buyurtmasini tahrirlash':'Yangi reklama buyurtmasi'}</h2><p class="muted">Mijozni birinchi bo‘lib topgan xodimni tanlang. Mukofot mijoz to‘lovidan keyin hisoblanadi.</p>
+  <div class="formgrid"><div><label class="muted">Mijoz / kompaniya nomi</label><input id="f_ad_client" class="field" required value="${esc(x?.client_name||'')}"></div><div><label class="muted">Telefon</label><input id="f_ad_phone" class="field" value="${esc(x?.phone||'')}"></div>
+  <div><label class="muted">Reklama turi</label><select id="f_ad_type" class="field" onchange="updateAdDefaults()">${AD_TYPES.map(a=>`<option value="${a.value}" ${defaultType===a.value?'selected':''}>${a.label}</option>`).join('')}</select></div>
+  <div><label class="muted">Platforma</label><select id="f_ad_platform" class="field" onchange="updateAdDefaults()"><option ${defaultPlatform==='Instagram'?'selected':''}>Instagram</option><option ${defaultPlatform==='YouTube'?'selected':''}>YouTube</option><option ${defaultPlatform==='Boshqa'?'selected':''}>Boshqa</option></select></div>
+  <div><label class="muted">Reklama narxi</label><input id="f_ad_amount" class="field" type="number" min="0" step="0.01" required value="${esc(x?.amount??d.amount)}"></div><div><label class="muted">Valyuta</label><select id="f_ad_currency" class="field"><option value="USD" ${(x?.currency||d.currency)==='USD'?'selected':''}>USD ($)</option><option value="UZS" ${(x?.currency||d.currency)==='UZS'?'selected':''}>So‘m (UZS)</option></select></div>
+  <div><label class="muted">Xodim mukofoti (%)</label><input id="f_ad_rate" class="field" type="number" min="0" max="100" step="0.5" required value="${esc(x?.reward_rate??d.rate)}"></div>
+  <div><label class="muted">Mijozni birinchi topgan xodim</label><select id="f_ad_referrer" class="field" ${canChoose?'':'disabled'}>${canChoose?staffOptions:`<option value="${esc(currentStaff?.id||'')}">${esc(currentStaff?.name||'Mening profilim')}</option>`}</select></div>
+  <div class="full"><label class="muted">Izoh</label><textarea id="f_ad_note" class="field" rows="2">${esc(x?.note||'')}</textarea></div></div><br>
+  <button class="btn" onclick="saveAdSale(${x?JSON.stringify(String(x.id)):"''"})">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`);
+}
+function updateAdDefaults(){
+  const type=document.getElementById('f_ad_type')?.value,platform=document.getElementById('f_ad_platform')?.value,d=adDefault(type,platform);
+  const amount=document.getElementById('f_ad_amount'),currency=document.getElementById('f_ad_currency'),rate=document.getElementById('f_ad_rate');
+  if(amount)amount.value=d.amount;
+  if(currency)currency.value=d.currency;
+  if(rate)rate.value=d.rate;
+}
+async function saveAdSale(id=''){
+  if(!requirePage('adSales'))return;
+  const clientName=document.getElementById('f_ad_client')?.value.trim()||'';
+  const amount=Number(document.getElementById('f_ad_amount')?.value||0),rate=Number(document.getElementById('f_ad_rate')?.value||0);
+  if(!clientName||!Number.isFinite(amount)||amount<=0||!Number.isFinite(rate)||rate<0||rate>100)return alert('Mijoz nomi, narx va 0–100 oralig‘idagi mukofot foizini to‘g‘ri kiriting.');
+  const existing=id?(db.adSales||[]).find(a=>String(a.id)===String(id)):null;
+  const payload={client_name:clientName,phone:document.getElementById('f_ad_phone')?.value.trim()||'',ad_type:document.getElementById('f_ad_type').value,platform:document.getElementById('f_ad_platform').value,amount,currency:document.getElementById('f_ad_currency').value,reward_rate:rate,referral_staff_id:['Admin','Menejer'].includes(currentRole())?document.getElementById('f_ad_referrer').value:(currentStaff?.id||null),note:document.getElementById('f_ad_note')?.value.trim()||''};
+  if(existing){const r=await client.from('crm_ad_sales').update(payload).eq('id',id).select().single();if(r.error)return alert('Tahrirlashda xatolik: '+r.error.message);db.adSales=db.adSales.map(a=>String(a.id)===String(id)?r.data:a);}
+  else {payload.created_by_staff_id=currentStaff?.id||null;payload.payment_status='Kutilmoqda';const r=await client.from('crm_ad_sales').insert(payload).select().single();if(r.error)return alert('Saqlashda xatolik. Supabase SQL faylini ishga tushirganingizni tekshiring: '+r.error.message);db.adSales=[r.data,...(db.adSales||[])];}
+  closeModal();go('adSales');
+}
+async function markAdSalePaid(id){
+  if(!['Admin','Menejer'].includes(currentRole()))return alert('To‘lov holatini faqat Admin yoki Menejer o‘zgartiradi.');
+  if(!confirm('Mijoz to‘lovni to‘liq amalga oshirdimi? Shundan keyin xodim mukofoti hisoblanadi.'))return;
+  const r=await client.from('crm_ad_sales').update({payment_status:'To‘landi',paid_at:new Date().toISOString()}).eq('id',id).select().single();
+  if(r.error)return alert('To‘lov holatini saqlashda xatolik: '+r.error.message);
+  db.adSales=db.adSales.map(a=>String(a.id)===String(id)?r.data:a);go('adSales');
+}
+async function cancelAdSale(id){
+  if(!['Admin','Menejer'].includes(currentRole()))return;
+  if(!confirm('Bu reklama buyurtmasini bekor qilasizmi?'))return;
+  const r=await client.from('crm_ad_sales').update({payment_status:'Bekor qilindi'}).eq('id',id).select().single();
+  if(r.error)return alert('Bekor qilishda xatolik: '+r.error.message);
+  db.adSales=db.adSales.map(a=>String(a.id)===String(id)?r.data:a);go('adSales');
+}
+function editAdSale(id){openAdSale(id)}
+
 function reportsPage(){
   if(!canPage('reports'))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2><p>Sizning rolingizda bu bo‘lim yopiq.</p></div>';
   const active=db.homes.filter(x=>x.status!=='Sotildi').length,sold=db.homes.filter(x=>x.status==='Sotildi').length;
@@ -1645,7 +1755,7 @@ function reportsPage(){
   const totalValue=(db.deals||[]).filter(d=>d.stage==='Sotildi').reduce((s,d)=>s+Math.abs(Number(d.price)||0),0);
   const byCity={};db.homes.forEach(h=>byCity[h.city||'Noma’lum']=(byCity[h.city||'Noma’lum']||0)+1);
   const allKpiStaff=(db.staff||[]).filter(s=>['Rieltor','Menejer'].includes(normalizeRole(s.role)));
-  const renderKpiCards=(arr,empty)=>arr.map(s=>{const k=kpiSummary(s);return `<div class="match"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><b>👤 ${esc(s.name||'—')}</b><b>${k.pct}%</b></div>${k.rows.map(r=>`<div class="muted" style="margin-top:4px">${r.label}: <b>${r.fact}</b> / ${r.plan||'—'} ${r.plan?`(${r.pct}%)`:''}</div>`).join('')}</div>`}).join('')||`<div class="muted">${empty}</div>`;
+  const renderKpiCards=(arr,empty)=>arr.map(s=>{const k=kpiSummary(s);return `<div class="match"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><b>👤 ${esc(s.name||'—')}</b><b>${k.points}/100 ball</b></div><div class="muted" style="margin-top:4px">KPI bonusi: <b>${k.bonus.toLocaleString('uz-UZ')} so‘m</b></div>${k.rows.map(r=>`<div class="muted" style="margin-top:4px">${r.label} (${r.weight} ball): <b>${r.fact}${r.key==='service'?' / 100':r.plan?' / '+r.plan:''}</b> — ${r.earned} ball</div>`).join('')}</div>`}).join('')||`<div class="muted">${empty}</div>`;
   const realtorKpi=allKpiStaff.filter(s=>normalizeRole(s.role)==='Rieltor');
   const managerKpi=allKpiStaff.filter(s=>normalizeRole(s.role)==='Menejer');
   return header('Hisobot','Sotuv, inventar, daromad va xodim KPI ko‘rsatkichlari')+
@@ -1656,7 +1766,7 @@ function reportsPage(){
     <div class="stat"><div class="kpi">${money(totalValue)}</div><div class="label">Sotilgan uylar qiymati</div></div>
     <div class="stat"><div class="kpi">${money(revenue)}</div><div class="label">Komissiya daromadi</div></div>
   </div>
-  <div class="panel" style="margin-bottom:14px"><h3>🎯 ${esc(monthLabel(kpiCurrentMonth))} — Rieltor KPI</h3>${renderKpiCards(realtorKpi,'Rieltor KPI rejasi hali berilmagan.')}</div>
+  <div class="panel" style="margin-bottom:14px"><h3>🎯 ${esc(monthLabel(kpiCurrentMonth))} — Rieltor KPI</h3><div class="muted">Bonus: 60–74 ball — 250 000 so‘m; 75–89 — 500 000; 90–99 — 750 000; 100 ball — 1 000 000. 60 balldan past — bonus yo‘q.</div>${renderKpiCards(realtorKpi,'Rieltor KPI rejasi hali berilmagan.')}</div>
   <div class="panel" style="margin-bottom:14px"><h3>👔 ${esc(monthLabel(kpiCurrentMonth))} — Menejer KPI</h3>${renderKpiCards(managerKpi,'Menejer KPI rejasi hali berilmagan.')}</div>
   <div class="pro-grid">
     <div class="panel"><h3>📍 Hududlar</h3>${Object.entries(byCity).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="match"><b>${esc(k)}</b> — ${v} ta obyekt</div>`).join('')||'<div class="empty">Ma’lumot yo‘q.</div>'}</div>
@@ -1668,18 +1778,19 @@ function openKpiPlan(staffId){
   if(currentRole()!=='Admin'){alert('KPI rejasini faqat Admin belgilaydi.');return;}
   const s=db.staff.find(x=>Number(x.id)===Number(staffId));if(!s)return;
   const key=kpiCurrentMonth, old=kpiPlans(s.note)[key]||{};
-  modal(`<h2>🎯 ${esc(s.name)} — KPI rejasi</h2><p class="muted">${esc(monthLabel(key))} uchun reja belgilang. Rieltor KPI shaxsiy natijalardan, Menejer KPI esa unga biriktirilgan jamoa natijalaridan avtomatik hisoblanadi.</p><div class="formgrid">
+  modal(`<h2>🎯 ${esc(s.name)} — KPI rejasi</h2><p class="muted">${esc(monthLabel(key))} uchun reja belgilang. KPI 100 ball: obyektlar 25, mijozlar 20, sotuvlar 30, xizmat sifati 15, CRM intizomi 10 ball. Menejerda birinchi uch ko‘rsatkich jamoa natijalaridan hisoblanadi.</p><div class="formgrid">
     ${input('kpi_homes','Yangi uylar','20',1)}
     ${input('kpi_buyers','Yangi mijozlar','30',1)}
     ${input('kpi_deals','Sotuvlar','3',1)}
-    ${input('kpi_tasks','Bajarilgan vazifalar','20',1)}
+    ${input('kpi_tasks','CRM intizomi uchun bajarilgan vazifalar rejasi','20',1)}
+    <div><label class="muted">Mijozlarga xizmat sifati (0–100)</label><input id="f_kpi_service" class="field" type="number" min="0" max="100" placeholder="100" required></div>
   </div><br><button class="btn" onclick="saveKpiPlan(${s.id})">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`);
-  setTimeout(()=>{document.getElementById('f_kpi_homes').value=old.homes??'';document.getElementById('f_kpi_buyers').value=old.buyers??'';document.getElementById('f_kpi_deals').value=old.deals??'';document.getElementById('f_kpi_tasks').value=old.tasks??'';},20);
+  setTimeout(()=>{document.getElementById('f_kpi_homes').value=old.homes??'';document.getElementById('f_kpi_buyers').value=old.buyers??'';document.getElementById('f_kpi_deals').value=old.deals??'';document.getElementById('f_kpi_tasks').value=old.tasks??'';document.getElementById('f_kpi_service').value=old.service??0;},20);
 }
 async function saveKpiPlan(staffId){
   if(currentRole()!=='Admin')return;
   const s=db.staff.find(x=>Number(x.id)===Number(staffId));if(!s)return;
-  const plans=kpiPlans(s.note);plans[kpiCurrentMonth]={homes:Math.max(0,Number(val('kpi_homes')||0)),buyers:Math.max(0,Number(val('kpi_buyers')||0)),deals:Math.max(0,Number(val('kpi_deals')||0)),tasks:Math.max(0,Number(val('kpi_tasks')||0))};
+  const plans=kpiPlans(s.note);plans[kpiCurrentMonth]={homes:Math.max(0,Number(val('kpi_homes')||0)),buyers:Math.max(0,Number(val('kpi_buyers')||0)),deals:Math.max(0,Number(val('kpi_deals')||0)),tasks:Math.max(0,Number(val('kpi_tasks')||0)),service:Math.max(0,Math.min(100,Number(val('kpi_service')||0)))};
   const note=setKpiPlans(s.note,plans);
   const {data,error}=await client.from('staff').update({note}).eq('id',staffId).select().single();
   if(error)return alert('KPI rejasini saqlashda xatolik: '+error.message);
