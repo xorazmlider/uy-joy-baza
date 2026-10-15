@@ -2388,14 +2388,14 @@ function openStaffPayroll(staffId){
   modal(`<h2>💵 ${esc(s.name||s.login||'Xodim')} — oylik hisob-kitobi</h2>
     <p class="muted">${esc(monthLabel(month))}. Umumiy summa = asosiy maosh + KPI bonusi + to‘langan reklama mukofoti. USD mukofoti kurs orqali so‘mga aylantiriladi.</p>
     <div class="formgrid">
-      <div><label class="muted">Hisoblanadigan oy</label><input id="pay_month" class="field" type="month" value="${esc(month)}" onchange="previewStaffPayroll(${JSON.stringify(String(s.id))})"></div>
-      <div><label class="muted">Asosiy oylik maoshi (so‘m)</label><input id="pay_base" class="field" type="number" min="0" step="1000" value="${base}" oninput="previewStaffPayroll(${JSON.stringify(String(s.id))})"></div>
-      <div><label class="muted">1 USD kursi (so‘m)</label><input id="pay_rate" class="field" type="number" min="1" step="1" value="12500" oninput="previewStaffPayroll(${JSON.stringify(String(s.id))})"></div>
+      <div><label class="muted">Hisoblanadigan oy</label><input id="pay_month" class="field" type="month" value="${esc(month)}" onchange="previewStaffPayroll('${esc(String(s.id))}')"></div>
+      <div><label class="muted">Asosiy oylik maoshi (so‘m)</label><input id="pay_base" class="field" type="number" min="0" step="1000" value="${base}" oninput="previewStaffPayroll('${esc(String(s.id))}')"></div>
+      <div><label class="muted">1 USD kursi (so‘m)</label><input id="pay_rate" class="field" type="number" min="1" step="1" value="12500" oninput="previewStaffPayroll('${esc(String(s.id))}')"></div>
       <div><label class="muted">KPI bonusi</label><input id="pay_kpi" class="field" readonly value="${kpi.toLocaleString('uz-UZ')} so‘m"></div>
       <div><label class="muted">Reklama mukofoti (USD)</label><input id="pay_ad_usd" class="field" readonly value="$${ad.usd.toLocaleString('en-US',{maximumFractionDigits:2})}"></div>
       <div><label class="muted">Reklama mukofoti (so‘m)</label><input id="pay_ad_uzs" class="field" readonly value="${ad.uzs.toLocaleString('uz-UZ')} so‘m"></div>
       <div class="full"><div id="pay_total_preview" class="stat"><div class="num">${(base+kpi+ad.uzs+ad.usd*12500).toLocaleString('uz-UZ')} so‘m</div><div class="label">Taxminiy jami oylik</div></div></div>
-    </div><br><button class="btn" onclick="saveStaffPayroll(${JSON.stringify(String(s.id))})">Maoshni saqlash</button> <button class="btn primary" onclick="downloadPayrollExcel('${esc(month)}',${JSON.stringify(String(s.id))})">📊 Excel yuklab olish</button> <button class="btn light" onclick="closeModal()">Yopish</button>`);
+    </div><br><button class="btn" onclick="saveStaffPayroll('${esc(String(s.id))}')">Maoshni saqlash</button> <button class="btn primary" onclick="downloadPayrollExcel('${esc(month)}','${esc(String(s.id))}')">📊 Excel yuklab olish</button> <button class="btn light" onclick="closeModal()">Yopish</button>`);
 }
 function previewStaffPayroll(staffId){
   const s=(db.staff||[]).find(x=>String(x.id)===String(staffId));if(!s)return;
