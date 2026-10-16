@@ -1720,7 +1720,7 @@ function openActForDeal(dealId){
   const actRealtorName=dealOwnerName;
   const cleanDealNote=visibleNote(d.note);
   const html=`<!doctype html><html lang="uz"><head><meta charset="utf-8"><title>XORAZMLIDER — AKT ${actNo}</title>
-  <style>body{font-family:"Times New Roman",serif;color:#111;margin:0}.page{width:190mm;min-height:270mm;margin:0 auto;padding:15mm 12mm;box-sizing:border-box}h1,h2{text-align:center;margin:0 0 10px}h1{font-size:17px}h2{font-size:15px}.meta{font-size:12px;line-height:1.5;margin:8px 0 15px}.data{border:1px solid #111;border-collapse:collapse;width:100%;font-size:11px}.data td{border:1px solid #111;padding:7px;vertical-align:top}.sign{display:flex;justify-content:space-between;gap:30px;margin-top:55px;font-size:12px}.line{display:inline-block;min-width:150px;border-bottom:1px solid #111}.backbar{position:sticky;top:0;text-align:left;padding:8px 0;background:#fff}.backbtn{border:1px solid #ccc;background:#f5f5f5;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer}@media print{.backbar{display:none}@page{margin:0}.page{margin:0}}</style></head><body><div class="backbar"><button class="backbtn" onclick="window.close()">← Orqaga / Bitimga qaytish</button></div><section class="page">
+  <style>body{font-family:"Times New Roman",serif;color:#111;margin:0}.page{width:190mm;min-height:270mm;margin:0 auto;padding:15mm 12mm;box-sizing:border-box}h1,h2{text-align:center;margin:0 0 10px}h1{font-size:17px}h2{font-size:15px}.meta{font-size:12px;line-height:1.5;margin:8px 0 15px}.data{border:1px solid #111;border-collapse:collapse;width:100%;font-size:11px}.data td{border:1px solid #111;padding:7px;vertical-align:top}.sign{display:grid;grid-template-columns:1fr 1fr;column-gap:22px;row-gap:18px;margin-top:24px;font-size:11px;break-inside:avoid;page-break-inside:avoid}.sign>div{box-sizing:border-box;min-height:82px;border:1px solid #999;border-radius:4px;padding:9px 10px;line-height:1.45;break-inside:avoid;page-break-inside:avoid}.sign>div b{display:block;font-size:10px;min-height:25px}.line{display:inline-block;width:125px;border-bottom:1px solid #111;height:13px;vertical-align:bottom}.backbar{position:sticky;top:0;text-align:left;padding:8px 0;background:#fff}.backbtn{border:1px solid #ccc;background:#f5f5f5;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer}@media print{.backbar{display:none}@page{size:A4;margin:10mm}.page{width:auto;min-height:0;margin:0;padding:5mm 4mm}.sign{margin-top:18px;column-gap:14px;row-gap:12px}.sign>div{min-height:72px}}</style></head><body><div class="backbar"><button class="backbtn" onclick="window.close()">← Orqaga / Bitimga qaytish</button></div><section class="page">
   <h1>КЎЧМАС МУЛКНИ ҚАБУЛ ҚИЛИШ — ТОПШИРИШ</h1><h2>ДАЛОЛАТНОМАСИ</h2>
   <div class="meta"><b>AKT №:</b> ${v(actNo)}<br><b>Sana:</b> ${v(new Date().toISOString().slice(0,10))}<br><b>Риелтор:</b> ${v(actRealtorName!=='—'?actRealtorName:dealOwnerName)}</div>
   <p style="font-size:12px;line-height:1.5;text-align:justify">Ушбу далолатнома харидор томонидан сотиб олинган кўчмас мулкни кўздан кечириш, унинг ҳолати билан танишиш ва қабул қилиб олишини тасдиқлаш мақсадида тузилди. Харидор объектни шахсан кўздан кечирган ва уни амалда қабул қилиб олган.</p>
@@ -1746,7 +1746,7 @@ function openActForDeal(dealId){
     <tr><td><b>Битим изоҳи</b></td><td>${v(cleanDealNote)}</td></tr>
   </table>
   <p style="font-size:12px;line-height:1.5;text-align:justify;margin-top:14px"><b>Харидор ушбу далолатномани ўқиб, сотиб олинган кўчмас мулкни шахсан кўздан кечирган ҳолда қабул қилиб олганини тасдиқлайди. Харидорнинг ушбу объект бўйича мулк эгаси (сотувчи)га ва риелторга нисбатан ҳеч қандай эътирози ва қўшимча талаби йўқ.</b></p>
-  <div class="sign" style="flex-wrap:wrap;align-items:flex-start">
+  <div class="sign">
     <div><b>«МУЛК ЭГАСИ / СОТУВЧИ»</b><br><br>${v(h.seller)}<br><br>Имзо: <span class="line"></span></div>
     <div><b>«ХАРИДОР»</b><br><br>${v(b.name)}<br><br>Имзо: <span class="line"></span></div>
     <div><b>«ХАРИДОРНИ ТОПГАН»</b><br><br>${v(buyerFinderName)}<br><br>Имзо: <span class="line"></span></div>
@@ -3084,6 +3084,8 @@ function visibleNote(note){
     .replace(/\[CRM_SELLER_OWNER\][\s\S]*?\[\/CRM_SELLER_OWNER\]/g,'')
     .replace(/\[CRM_REALTOR\][\s\S]*?\[\/CRM_REALTOR\]/g,'')
     .replace(/\[CRM_DEAL_OWNER\][\s\S]*?\[\/CRM_DEAL_OWNER\]/g,'')
+    .replace(/\[CRM_DEAL_ATTRIBUTION\][\s\S]*?\[\/CRM_DEAL_ATTRIBUTION\]/g,'')
+    .replace(/\n{3,}/g,'\n\n')
     .trim();
 }
 function buyerReq(b){
