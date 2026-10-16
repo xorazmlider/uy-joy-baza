@@ -1690,7 +1690,7 @@ function dealsPage(){
   <tr><th>Xaridor</th><th>Uy</th><th>Narx</th><th>Komissiya</th><th>Bosqich</th><th>Amal</th></tr>
   ${(db.deals||[]).map(d=>{const b=db.buyers.find(x=>Number(x.id)===Number(d.buyer_id));const h=db.homes.find(x=>Number(x.id)===Number(d.home_id));return `<tr>
     <td><b>${esc(b?.name||'—')}</b><br><span class="muted">${esc(b?.phone||'')}</span></td>
-    <td>${esc(h?.title||'—')}<br><span class="muted">👤 Yakunlovchi: ${esc((()=>{const a=dealAttribution(d.note),m=crmMeta(d.note,'CRM_DEAL_OWNER');const s=(db.staff||[]).find(x=>String(x.id)===String(a.closing_staff_id||m.staff_id||''));return s?.name||s?.login||m.login||'—'})())}</span></td><td>${money(d.price)}</td><td>${money(dealCommission(d))}<br><span class="muted">Rieltor ulushi: ${money((db.staff||[]).reduce((n,st)=>n+dealPayoutForStaff(d,st.id),0))}</span></td>
+    <td>${esc(h?.title||'—')}<br><span class="muted">👤 Xaridorni: ${esc((()=>{const a=dealAttribution(d.note);const s=(db.staff||[]).find(x=>String(x.id)===String(a.buyer_staff_id||''));return a.buyer_source==='realtor'?(s?.name||s?.login||'Rieltor'): 'Admin'})())}</span><br><span class="muted">🏠 Uyni: ${esc((()=>{const a=dealAttribution(d.note);const s=(db.staff||[]).find(x=>String(x.id)===String(a.home_staff_id||''));return a.home_source==='realtor'?(s?.name||s?.login||'Rieltor'):'Admin'})())}</span><br><span class="muted">🤝 Yakunlovchi: ${esc((()=>{const a=dealAttribution(d.note),m=crmMeta(d.note,'CRM_DEAL_OWNER');const s=(db.staff||[]).find(x=>String(x.id)===String(a.closing_staff_id||m.staff_id||''));return s?.name||s?.login||m.login||'—'})())}</span></td><td>${money(d.price)}</td><td>${money(dealCommission(d))}<br><span class="muted">Rieltor ulushi: ${money((db.staff||[]).reduce((n,st)=>n+dealPayoutForStaff(d,st.id),0))}</span></td>
     <td><span class="badge">${esc(d.stage||'Yangi')}</span></td>
     <td style="white-space:nowrap"><button class="small primary" onclick="openActForDeal('${String(d.id)}')">📋 AKT</button> <button class="small" onclick="proDelete('crm_deals','deals','${String(d.id)}')">×</button></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">Bitimlar hali yo‘q.</td></tr>'}
   </table></div></div>`;
@@ -1708,13 +1708,17 @@ function openActForDeal(dealId){
   const floor=homeFloor(h)||b.floor||'—';
   const buyerInfo=[b.type,b.finish,visibleNote(b.note)].filter(Boolean).join(' | ')||'—';
   const sellerInfo=[h.seller,h.phone].filter(Boolean).join(' • ')||'—';
-  const actRealtorId=homeRealtorId(h)||buyerRealtorId(b)||'';
-  const actRealtor=(db.staff||[]).find(s=>String(s.id)===String(actRealtorId));
-  const actRealtorName=actRealtor ? (actRealtor.name||actRealtor.login||'—') : '—';
-  const cleanDealNote=visibleNote(d.note);
+  const attribution=dealAttribution(d.note);
+  const staffById=id=>(db.staff||[]).find(s=>String(s.id)===String(id||''));
+  const staffName=id=>{const s=staffById(id);return s?(s.name||s.login||'—'):'—';};
+  const buyerFinderName=attribution.buyer_source==='realtor'?staffName(attribution.buyer_staff_id):'Admin';
+  const homeFinderName=attribution.home_source==='realtor'?staffName(attribution.home_staff_id):'Admin';
+  const closingStaffId=attribution.closing_staff_id||ownerStaffIdFromNote(d.note,'CRM_DEAL_OWNER');
+  const closingStaff=staffById(closingStaffId);
   const dealOwnerMeta=crmMeta(d.note,'CRM_DEAL_OWNER');
-  const dealOwner=(db.staff||[]).find(s=>String(s.id)===String(dealOwnerMeta.staff_id||''));
-  const dealOwnerName=dealOwner ? (dealOwner.name||dealOwner.login||dealOwnerMeta.login||'—') : (dealOwnerMeta.login||'—');
+  const dealOwnerName=closingStaff?(closingStaff.name||closingStaff.login||'—'):(dealOwnerMeta.login||'—');
+  const actRealtorName=dealOwnerName;
+  const cleanDealNote=visibleNote(d.note);
   const html=`<!doctype html><html lang="uz"><head><meta charset="utf-8"><title>XORAZMLIDER — AKT ${actNo}</title>
   <style>body{font-family:"Times New Roman",serif;color:#111;margin:0}.page{width:190mm;min-height:270mm;margin:0 auto;padding:15mm 12mm;box-sizing:border-box}h1,h2{text-align:center;margin:0 0 10px}h1{font-size:17px}h2{font-size:15px}.meta{font-size:12px;line-height:1.5;margin:8px 0 15px}.data{border:1px solid #111;border-collapse:collapse;width:100%;font-size:11px}.data td{border:1px solid #111;padding:7px;vertical-align:top}.sign{display:flex;justify-content:space-between;gap:30px;margin-top:55px;font-size:12px}.line{display:inline-block;min-width:150px;border-bottom:1px solid #111}.backbar{position:sticky;top:0;text-align:left;padding:8px 0;background:#fff}.backbtn{border:1px solid #ccc;background:#f5f5f5;border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer}@media print{.backbar{display:none}@page{margin:0}.page{margin:0}}</style></head><body><div class="backbar"><button class="backbtn" onclick="window.close()">← Orqaga / Bitimga qaytish</button></div><section class="page">
   <h1>КЎЧМАС МУЛКНИ ҚАБУЛ ҚИЛИШ — ТОПШИРИШ</h1><h2>ДАЛОЛАТНОМАСИ</h2>
@@ -1730,7 +1734,10 @@ function openActForDeal(dealId){
     <tr><td><b>Бюджет</b></td><td>${v(b.budget)}</td></tr>
     <tr><td><b>Объект / Уй</b></td><td>${v(h.title)}</td></tr>
     <tr><td><b>Уй манзили</b></td><td>${v([h.city,h.area].filter(Boolean).join(', '))}</td></tr>
-    <tr><td><b>Сотувчи</b></td><td>${v(sellerInfo)}</td></tr>
+    <tr><td><b>Сотувчи / мулк эгаси</b></td><td>${v(sellerInfo)}</td></tr>
+    <tr><td><b>Харидорни топган</b></td><td>${v(buyerFinderName)}${attribution.buyer_source==='realtor'?' (риелтор)':' (Admin)'}</td></tr>
+    <tr><td><b>Уйни топган</b></td><td>${v(homeFinderName)}${attribution.home_source==='realtor'?' (риелтор)':' (Admin)'}</td></tr>
+    <tr><td><b>Битимни якунлаган риелтор</b></td><td>${v(dealOwnerName)}</td></tr>
     <tr><td><b>Хона сони</b></td><td>${v(h.rooms)}</td></tr>
     <tr><td><b>Қавати</b></td><td>${v(floor)}</td></tr>
     <tr><td><b>Уй нархи</b></td><td>${v(d.price)}</td></tr>
@@ -1739,10 +1746,12 @@ function openActForDeal(dealId){
     <tr><td><b>Битим изоҳи</b></td><td>${v(cleanDealNote)}</td></tr>
   </table>
   <p style="font-size:12px;line-height:1.5;text-align:justify;margin-top:14px"><b>Харидор ушбу далолатномани ўқиб, сотиб олинган кўчмас мулкни шахсан кўздан кечирган ҳолда қабул қилиб олганини тасдиқлайди. Харидорнинг ушбу объект бўйича мулк эгаси (сотувчи)га ва риелторга нисбатан ҳеч қандай эътирози ва қўшимча талаби йўқ.</b></p>
-  <div class="sign">
+  <div class="sign" style="flex-wrap:wrap;align-items:flex-start">
     <div><b>«МУЛК ЭГАСИ / СОТУВЧИ»</b><br><br>${v(h.seller)}<br><br>Имзо: <span class="line"></span></div>
-    <div><b>«РИЕЛТОР»</b><br><br>${v(actRealtorName!=='—'?actRealtorName:dealOwnerName)}<br><br>Имзо: <span class="line"></span></div>
     <div><b>«ХАРИДОР»</b><br><br>${v(b.name)}<br><br>Имзо: <span class="line"></span></div>
+    <div><b>«ХАРИДОРНИ ТОПГАН»</b><br><br>${v(buyerFinderName)}<br><br>Имзо: <span class="line"></span></div>
+    <div><b>«УЙНИ ТОПГАН»</b><br><br>${v(homeFinderName)}<br><br>Имзо: <span class="line"></span></div>
+    <div><b>«БИТИМНИ ЯКУНЛАГАН РИЕЛТОР»</b><br><br>${v(dealOwnerName)}<br><br>Имзо: <span class="line"></span></div>
   </div>
   </section></body></html>`;
   const w=window.open('','_blank');
