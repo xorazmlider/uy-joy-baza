@@ -952,11 +952,11 @@ body{background:var(--ui-bg);color:var(--ui-text)}
 
 <div class="app">
 <aside class="side"><div class="brand">🏠 Xorazm Uylar CRM</div>
-<button type="button" class="nav active" data-page="dashboard" onclick="go('dashboard');return false;">📊 Bosh sahifa</button><button type="button" class="nav" data-page="homes" onclick="go('homes');return false;">🏠 Uylar</button><button type="button" class="nav" data-page="buyers" onclick="go('buyers');return false;">👤 Xaridorlar</button><button type="button" class="nav" data-page="sellers" onclick="go('sellers');return false;">🤝 Sotuvchilar</button><button type="button" class="nav" data-page="staff" onclick="go('staff');return false;">👥 Xodimlar</button><button type="button" class="nav" data-page="matches" onclick="go('matches');return false;">🎯 Moslashtirish</button><button type="button" class="nav" data-page="deals" onclick="go('deals');return false;">💰 Bitimlar</button><button type="button" class="nav" data-page="adSales" onclick="go('adSales');return false;">📣 Reklama savdosi</button><button type="button" class="nav" data-page="tasks" onclick="go('tasks');return false;">⏰ Eslatmalar</button><button type="button" class="nav" data-page="reports" onclick="go('reports');return false;">📈 Hisobot</button><button type="button" class="nav" data-page="documents" onclick="go('documents');return false;">📁 Hujjatlar</button><button type="button" class="nav" data-page="sold" onclick="go('sold');return false;">✅ Sotilgan</button><button type="button" class="nav" onclick="logoutCRM();return false;">🚪 Chiqish</button>
+<button type="button" class="nav active" data-page="dashboard" onclick="go('dashboard');return false;">📊 Bosh sahifa</button><button type="button" class="nav" data-page="homes" onclick="go('homes');return false;">🏠 Uylar</button><button type="button" class="nav" data-page="buyers" onclick="go('buyers');return false;">👤 Xaridorlar</button><button type="button" class="nav" data-page="sellers" onclick="go('sellers');return false;">🤝 Sotuvchilar</button><button type="button" class="nav" data-page="staff" onclick="go('staff');return false;">👥 Xodimlar</button><button type="button" class="nav" data-page="matches" onclick="go('matches');return false;">🎯 Moslashtirish</button><button type="button" class="nav" data-page="mortgage" onclick="go('mortgage');return false;">🏦 Ipoteka</button><button type="button" class="nav" data-page="deals" onclick="go('deals');return false;">💰 Bitimlar</button><button type="button" class="nav" data-page="adSales" onclick="go('adSales');return false;">📣 Reklama savdosi</button><button type="button" class="nav" data-page="tasks" onclick="go('tasks');return false;">⏰ Eslatmalar</button><button type="button" class="nav" data-page="reports" onclick="go('reports');return false;">📈 Hisobot</button><button type="button" class="nav" data-page="documents" onclick="go('documents');return false;">📁 Hujjatlar</button><button type="button" class="nav" data-page="sold" onclick="go('sold');return false;">✅ Sotilgan</button><button type="button" class="nav" onclick="logoutCRM();return false;">🚪 Chiqish</button>
 <div id="currentUserBadge" style="margin-top:20px;padding:10px;border:1px solid #334155;border-radius:10px;color:#e2e8f0;font-size:12px"></div><div style="margin-top:12px;color:#94a3b8;font-size:12px">Online versiya • ma'lumotlar Supabase bazasida saqlanadi</div></aside>
 <main class="main"><div id="page"></div></main>
 </div>
-<div class="mobile-nav"><button onclick="go('dashboard')">📊<br>Bosh</button><button onclick="go('homes')">🏠<br>Uylar</button><button onclick="go('buyers')">👤<br>Xaridor</button><button onclick="go('sellers')">🤝<br>Sotuvchi</button><button data-page="staff" onclick="go('staff')">👥<br>Xodim</button><button onclick="go('matches')">🎯<br>Mos</button><button onclick="go('deals')">💰<br>Bitim</button><button data-page="adSales" onclick="go('adSales')">📣<br>Reklama</button><button onclick="go('tasks')">⏰<br>Eslatma</button><button class="mobile-page-reports" onclick="go('reports')">📈<br>Hisobot</button><button onclick="go('documents')">📁<br>Hujjat</button><button onclick="go('sold')">✅<br>Sotilgan</button><button class="nav" onclick="logoutCRM()" style="color:#1683d8;">🚪 Chiqish</button></div>
+<div class="mobile-nav"><button onclick="go('dashboard')">📊<br>Bosh</button><button onclick="go('homes')">🏠<br>Uylar</button><button onclick="go('buyers')">👤<br>Xaridor</button><button onclick="go('sellers')">🤝<br>Sotuvchi</button><button data-page="staff" onclick="go('staff')">👥<br>Xodim</button><button onclick="go('matches')">🎯<br>Mos</button><button data-page="mortgage" onclick="go('mortgage')">🏦<br>Ipoteka</button><button onclick="go('deals')">💰<br>Bitim</button><button data-page="adSales" onclick="go('adSales')">📣<br>Reklama</button><button onclick="go('tasks')">⏰<br>Eslatma</button><button class="mobile-page-reports" onclick="go('reports')">📈<br>Hisobot</button><button onclick="go('documents')">📁<br>Hujjat</button><button onclick="go('sold')">✅<br>Sotilgan</button><button class="nav" onclick="logoutCRM()" style="color:#1683d8;">🚪 Chiqish</button></div>
 <div id="modal" class="modal"><div class="box" id="modalBox"></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -972,7 +972,9 @@ const ROLE_PAGES={
   Admin:['dashboard','homes','buyers','sellers','staff','matches','deals','adSales','tasks','reports','documents','contracts','sold'],
   Menejer:['dashboard','homes','buyers','sellers','matches','deals','adSales','tasks','reports','documents','contracts','sold'],
   Rieltor:['dashboard','homes','buyers','sellers','matches','deals','adSales','tasks','documents','contracts','sold'],
-  Agent:['dashboard','homes','buyers','sellers','matches','deals','adSales','tasks','reports','documents','contracts','sold']
+  Agent:['dashboard','homes','buyers','sellers','matches','deals','adSales','tasks','reports','documents','contracts','sold'],
+  'Ipoteka menejeri':['mortgage'],
+  'Ipoteka mutaxassisi':['mortgage']
 };
 
 function normalizeRole(role){
@@ -980,6 +982,8 @@ function normalizeRole(role){
   if(r==='admin')return 'Admin';
   if(r==='menejer'||r==='manager')return 'Menejer';
   if(r==='rieltor'||r==='realtor')return 'Rieltor';
+  if(r==='ipoteka menejeri'||r==='mortgage manager')return 'Ipoteka menejeri';
+  if(r==='ipoteka mutaxassisi'||r==='mortgage specialist')return 'Ipoteka mutaxassisi';
   return 'Agent';
 }
 function currentRole(){return normalizeRole(currentStaff?.role||'');}
@@ -1253,7 +1257,10 @@ async function showCRM(){
 }
 
 async function loadDb(){
-  const base=await Promise.all([
+  const mortgageOnly=['Ipoteka menejeri','Ipoteka mutaxassisi'].includes(currentRole());
+  const base=mortgageOnly ? [
+    {data:[],error:null},{data:[],error:null},{data:[],error:null},{data:[],error:null}
+  ] : await Promise.all([
     client.from('homes').select('*').order('created_at',{ascending:false}),
     client.from('buyers').select('*').order('created_at',{ascending:false}),
     client.from('sellers').select('*').order('created_at',{ascending:false}),
@@ -1265,7 +1272,7 @@ async function loadDb(){
   if(s.error) throw s.error;
   if(i.error) throw i.error;
   let staffData=[];
-  if(currentRole()==='Admin'||currentRole()==='Menejer'){
+  if(['Admin','Menejer','Ipoteka menejeri'].includes(currentRole())){
     const st=await client.from('staff').select('*').order('created_at',{ascending:false});
     if(st.error) throw st.error;
     staffData=st.data||[];
@@ -1295,7 +1302,11 @@ async function loadDb(){
     ['deals','crm_deals'],
     ['activities','crm_activities'],
     ['documents','crm_documents'],
-    ['adSales','crm_ad_sales']
+    ['adSales','crm_ad_sales'],
+    ['mortgageBanks','mortgage_banks'],
+    ['mortgagePrograms','mortgage_programs'],
+    ['mortgageApplications','mortgage_applications'],
+    ['mortgageAssignments','mortgage_assignments']
   ];
   await Promise.all(extraTables.map(async ([key,table])=>{
     try{
@@ -1303,7 +1314,7 @@ async function loadDb(){
       if(!r.error) db[key]=r.data||[];
     }catch(e){}
   }));
-  ['tasks','deals','activities','documents','adSales'].forEach(k=>{
+  ['tasks','deals','activities','documents','adSales','mortgageBanks','mortgagePrograms','mortgageApplications','mortgageAssignments'].forEach(k=>{
     const local=proLocalGet(k);
     if(local.length) db[k]=[...db[k],...local.filter(l=>!db[k].some(x=>String(x.id)===String(l.id)))];
   });
@@ -1485,6 +1496,7 @@ function render(p='dashboard'){
   if(p==='staff')h=staff();
   if(p==='matches')h=matches();
   if(p==='deals')h=dealsPage();
+  if(p==='mortgage')h=mortgagePage();
   if(p==='adSales')h=adSalesPage();
   if(p==='tasks')h=tasksPage();
   if(p==='reports')h=reportsPage();
@@ -2439,6 +2451,8 @@ function staffRoleLabel(role){
   if(r==='menejer')return '🧑‍💼 Menejer';
   if(r==='rieltor')return '🏠 Rieltor';
   if(r==='agent')return '🤝 Agent';
+  if(r==='ipoteka menejeri'||r==='mortgage manager')return '🏦 Ipoteka menejeri';
+  if(r==='ipoteka mutaxassisi'||r==='mortgage specialist')return '🏦 Ipoteka mutaxassisi';
   return role||'—';
 }
 function staffManagerName(id){
@@ -2550,7 +2564,7 @@ function filterStaff(q){
   if(box)box.innerHTML=staffRows(db.staff.filter(x=>JSON.stringify(x).toLowerCase().includes(q)));
 }
 function staffRoleOptions(selected=''){
-  return [{value:'Agent',label:'🤝 Agent'},{value:'Rieltor',label:'🏠 Rieltor'},{value:'Menejer',label:'🧑‍💼 Menejer'},{value:'Admin',label:'👑 Admin'}]
+  return [{value:'Agent',label:'🤝 Agent'},{value:'Rieltor',label:'🏠 Rieltor'},{value:'Menejer',label:'🧑‍💼 Menejer'},{value:'Ipoteka menejeri',label:'🏦 Ipoteka menejeri'},{value:'Ipoteka mutaxassisi',label:'🏦 Ipoteka mutaxassisi'},{value:'Admin',label:'👑 Admin'}]
     .map(o=>`<option value="${esc(o.value)}" ${selected===o.value?'selected':''}>${esc(o.label)}</option>`).join('');
 }
 function staffManagerOptions(selected=''){
@@ -2678,6 +2692,98 @@ async function deleteStaff(id){
 
 function matches(){return header('Moslashtirish','Xaridor ↔ uy parametrlarini avtomatik solishtirish','+ Xaridor','openBuyer()')+
   `<div class="panel"><h3>Kimga qanday uy?</h3>${db.buyers.map(b=>{let m=findHomes(b);return `<div class="match"><b>👤 ${esc(b.name)}</b> — ${m.length} ta mos uy<br><span class="muted">🗓️ ${esc(formatDateTime(b.created_at))} • ${esc(b.city)}, ${esc(b.area)}, ${b.rooms} xona, ${b.m2} m², ${money(b.budget)} gacha</span><div>${m.slice(0,3).map(x=>`<div style="margin-top:8px">🏠 <b>${esc(x.title)}</b> — ${money(x.price)} <button class="small primary" onclick="showHome(${x.id})">Ko‘rish</button></div>`).join('')||'<span class="muted">Mos uy topilmadi.</span>'}</div></div>`}).join('')||'<div class="empty">Xaridor bazasi bo‘sh.</div>'}</div>`}
+// ================= XORAZMLIDER IPOTEKA MODULI =================
+// UI qismi. Jadval/RLS migratsiyasi tasdiqlanmaguncha eski CRM jadvallariga
+// hech qanday o'zgartirish kiritmaydi. Mortgage jadvallari bo'lmasa, aniq xabar beradi.
+function mortgageCanManage(){return ['Admin','Ipoteka menejeri'].includes(currentRole());}
+function mortgageCanConfigure(){return currentRole()==='Admin';}
+function mortgageCanCreate(){return ['Admin','Menejer','Rieltor','Agent'].includes(currentRole());}
+function mortgagePage(){
+  if(!canPage('mortgage'))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2></div>';
+  const apps=db.mortgageApplications||[], banks=db.mortgageBanks||[], programs=db.mortgagePrograms||[];
+  const specialist=currentRole()==='Ipoteka mutaxassisi';
+  return header('🏦 Ipoteka markazi','Banklar, dasturlar va ipoteka arizalarini boshqarish',mortgageCanCreate()?'+ Ipoteka arizasi':null,'openMortgageApplication()')+
+    `<div class="stats">
+      <div class="stat"><div class="kpi">${apps.length}</div><div class="label">Ko‘rinayotgan arizalar</div></div>
+      <div class="stat"><div class="kpi">${apps.filter(a=>!['Maqqullandi','Rad etildi','Bekor qilindi'].includes(a.status)).length}</div><div class="label">Jarayondagi arizalar</div></div>
+      <div class="stat"><div class="kpi">${banks.filter(x=>x.is_active!==false).length}</div><div class="label">Faol banklar</div></div>
+      <div class="stat"><div class="kpi">${programs.filter(x=>x.is_active!==false).length}</div><div class="label">Faol dasturlar</div></div>
+    </div>
+    ${mortgageCanConfigure()?`<div class="panel"><h3>⚙️ Bank va dasturlar</h3><p class="muted">Banklar va ipoteka dasturlarini faqat Admin boshqaradi.</p><button class="btn" onclick="openMortgageBank()">+ Bank qo‘shish</button> <button class="btn light" onclick="openMortgageProgram()">+ Dastur qo‘shish</button></div>`:''}
+    <div class="panel"><div class="toolbar"><h3>📄 Ipoteka arizalari</h3><button class="btn light" onclick="refresh()">Yangilash</button></div>
+    ${apps.length?`<div class="tablewrap"><table class="table"><tr><th>Ariza</th><th>Bank</th><th>Uy narxi</th><th>Kredit</th><th>Holat</th><th>Amallar</th></tr>${apps.map(a=>{const bank=banks.find(b=>Number(b.id)===Number(a.bank_id));const ass=(db.mortgageAssignments||[]).find(x=>Number(x.application_id)===Number(a.id)&&x.is_current);return `<tr><td><b>#${a.id}</b><br><span class="muted">Xaridor ID: ${a.buyer_id}</span></td><td>${esc(bank?.name||'Bank #'+a.bank_id)}</td><td>${money(a.property_price)}</td><td>${money(a.loan_amount)}</td><td>${esc(a.status||'Yangi')}</td><td>${ass?`<span class="muted">Mutaxassis ID: ${ass.staff_id}</span><br>`:''}<button class="small" onclick="mortgageChangeStatus(${a.id})">Holat</button>${mortgageCanManage()?` <button class="small primary" onclick="mortgageAssign(${a.id},${a.bank_id})">Biriktirish</button>`:''}</td></tr>`}).join('')}</table></div>`:'<div class="empty">Hozircha ko‘rinadigan ipoteka arizalari yo‘q.</div>'}</div>
+    ${specialist?'<div class="panel"><p class="muted">Bank mutaxassisi kabineti: faqat o‘zingizga biriktirilgan va bankingizga tegishli arizalar ko‘rsatiladi. RLS bu cheklovni server tomonida ham majburiy tekshirishi shart.</p></div>':''}`;
+}
+function mortgageField(id,label,placeholder='',type='text'){return `<div><label class="muted">${label}</label><input id="${id}" class="field" type="${type}" placeholder="${placeholder}" /></div>`;}
+function openMortgageBank(){
+  if(!mortgageCanConfigure())return alert('Banklarni faqat Admin boshqaradi.');
+  modal(`<h2>🏦 Bank qo‘shish</h2><div class="formgrid">${mortgageField('mb_name','Bank nomi','Masalan: X bank')}${mortgageField('mb_code','Bank kodi','Ixtiyoriy')}${mortgageField('mb_phone','Telefon','+998...')}${mortgageField('mb_website','Veb-sayt','https://...')}</div><br><button class="btn" onclick="saveMortgageBank()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`);
+}
+async function saveMortgageBank(){
+  if(!mortgageCanConfigure())return;
+  const name=val('mb_name').trim();if(!name)return alert('Bank nomini kiriting.');
+  const payload={name,code:val('mb_code').trim()||null,phone:val('mb_phone').trim()||null,website:val('mb_website').trim()||null,is_active:true};
+  const {error}=await client.from('mortgage_banks').insert(payload);
+  if(error)return alert('Bank saqlanmadi: '+error.message);
+  closeModal();await refresh();
+}
+function openMortgageProgram(){
+  if(!mortgageCanConfigure())return alert('Dasturlarni faqat Admin boshqaradi.');
+  const opts=(db.mortgageBanks||[]).filter(b=>b.is_active!==false).map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('');
+  modal(`<h2>📋 Ipoteka dasturi</h2><div class="formgrid"><div><label class="muted">Bank</label><select id="mp_bank" class="field">${opts}</select></div>${mortgageField('mp_name','Dastur nomi','Masalan: Birlamchi uy-joy')}${mortgageField('mp_rate','Yillik foiz (%)','18','number')}${mortgageField('mp_down','Boshlang‘ich to‘lov (%)','20','number')}${mortgageField('mp_min','Minimal muddat (oy)','60','number')}${mortgageField('mp_max','Maksimal muddat (oy)','240','number')}${mortgageField('mp_cap','Kredit limiti (so‘m)','500000000','number')}</div><br><button class="btn" onclick="saveMortgageProgram()">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`);
+}
+async function saveMortgageProgram(){
+  if(!mortgageCanConfigure())return;
+  const bank_id=Number(val('mp_bank')),name=val('mp_name').trim();
+  if(!bank_id||!name)return alert('Bank va dastur nomini tanlang.');
+  const n=id=>val(id)===''?null:Number(val(id));
+  const payload={bank_id,name,annual_rate:n('mp_rate'),min_down_payment_percent:n('mp_down'),min_term_months:n('mp_min'),max_term_months:n('mp_max'),max_loan_amount:n('mp_cap'),is_active:true};
+  const {error}=await client.from('mortgage_programs').insert(payload);
+  if(error)return alert('Dastur saqlanmadi: '+error.message);
+  closeModal();await refresh();
+}
+function openMortgageApplication(){
+  if(!mortgageCanCreate())return alert('Sizda ariza yaratish huquqi yo‘q.');
+  const buyers=(db.buyers||[]).map(b=>`<option value="${b.id}">${esc(b.name||'Xaridor')} — ${esc(b.phone||'')}</option>`).join('');
+  const homes=(db.homes||[]).filter(h=>h.status!=='Sotildi').map(h=>`<option value="${h.id}" data-price="${Math.abs(Number(h.price)||0)}">${esc(h.title||'Uy')} — ${money(h.price)}</option>`).join('');
+  const banks=(db.mortgageBanks||[]).filter(b=>b.is_active!==false).map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('');
+  const programs=(db.mortgagePrograms||[]).filter(p=>p.is_active!==false).map(p=>`<option value="${p.id}" data-bank="${p.bank_id}">${esc(p.name)}</option>`).join('');
+  if(!buyers||!homes||!banks)return alert('Ariza uchun xaridor, sotilmagan uy va faol banklar bo‘lishi kerak. Bazadagi ipoteka jadvallari o‘rnatilganini ham tekshiring.');
+  modal(`<h2>📝 Yangi ipoteka arizasi</h2><div class="formgrid"><div><label class="muted">Xaridor</label><select id="ma_buyer" class="field">${buyers}</select></div><div><label class="muted">Uy</label><select id="ma_home" class="field" onchange="mortgageSetPrice()">${homes}</select></div><div><label class="muted">Bank</label><select id="ma_bank" class="field" onchange="mortgageFilterPrograms()">${banks}</select></div><div><label class="muted">Dastur</label><select id="ma_program" class="field"><option value="">Dastursiz</option>${programs}</select></div>${mortgageField('ma_price','Uy narxi (so‘m)','', 'number')}${mortgageField('ma_down','Boshlang‘ich to‘lov (so‘m)','', 'number')}${mortgageField('ma_income','Oylik daromad (so‘m)','', 'number')}${mortgageField('ma_term','Muddat (oy)','240','number')}</div><br><button class="btn" onclick="saveMortgageApplication()">Ariza yaratish</button> <button class="btn light" onclick="closeModal()">Bekor</button>`);
+  mortgageSetPrice();mortgageFilterPrograms();
+}
+function mortgageSetPrice(){const e=document.getElementById('ma_home'),p=document.getElementById('ma_price');if(e&&p){const o=e.options[e.selectedIndex];p.value=o?.dataset.price||'';}}
+function mortgageFilterPrograms(){const bank=String(val('ma_bank'));const e=document.getElementById('ma_program');if(!e)return;Array.from(e.options).forEach((o,i)=>{if(i===0)return;o.hidden=String(o.dataset.bank)!==bank;});if(e.selectedOptions[0]?.hidden)e.value='';}
+async function saveMortgageApplication(){
+  if(!mortgageCanCreate())return;
+  const property_price=Number(val('ma_price')),down_payment=Number(val('ma_down')),loan_amount=property_price-down_payment;
+  if(!Number(val('ma_buyer'))||!Number(val('ma_home'))||!Number(val('ma_bank'))||!(property_price>0)||down_payment<0||loan_amount<0)return alert('Xaridor, uy, bank va to‘lov summalarini to‘g‘ri kiriting.');
+  const payload={buyer_id:Number(val('ma_buyer')),home_id:Number(val('ma_home')),bank_id:Number(val('ma_bank')),program_id:Number(val('ma_program'))||null,created_by_staff_id:Number(currentStaff.id)||null,property_price,down_payment,loan_amount,buyer_monthly_income:Number(val('ma_income'))||null,term_months:Number(val('ma_term'))||null,status:'Yangi'};
+  const {error}=await client.from('mortgage_applications').insert(payload);
+  if(error)return alert('Ariza yaratilmadi: '+error.message);
+  closeModal();await refresh();
+}
+async function mortgageAssign(applicationId,bankId){
+  if(!mortgageCanManage())return alert('Biriktirish uchun ruxsat yo‘q.');
+  const specialists=(db.staff||[]).filter(s=>normalizeRole(s.role)==='Ipoteka mutaxassisi'&&s.is_active!==false&&Number(s.mortgage_bank_id)===Number(bankId));
+  if(!specialists.length)return alert('Ushbu bankka biriktirilgan faol ipoteka mutaxassisi topilmadi. Avval Admin xodim profilida bankni biriktirsin.');
+  const pick=prompt('Mutaxassis ID raqamini kiriting:\n'+specialists.map(s=>`${s.id} — ${s.name}`).join('\n'));
+  if(!pick)return;const staffId=Number(pick);if(!specialists.some(s=>Number(s.id)===staffId))return alert('Tanlangan mutaxassis ushbu bankka tegishli emas.');
+  const {data,error}=await client.rpc('mortgage_assign_specialist',{p_application_id:applicationId,p_staff_id:staffId});
+  if(error)return alert('Biriktirish bajarilmadi: '+error.message);
+  alert('Ariza mutaxassisga biriktirildi.');await refresh();
+}
+async function mortgageChangeStatus(applicationId){
+  const allowed=['Yangi','Hujjat kutilmoqda','Korib chiqilmoqda','Qoshimcha malumot kerak','Maqqullandi','Rad etildi','Bekor qilindi'];
+  const status=prompt('Yangi holatni aynan quyidagilardan kiriting:\n'+allowed.join(', '),'Korib chiqilmoqda');
+  if(!status)return;if(!allowed.includes(status))return alert('Holat qiymati ro‘yxatga mos emas.');
+  const note=prompt('Izoh (ixtiyoriy):','')||null;
+  const {error}=await client.rpc('mortgage_update_application_status',{p_application_id:applicationId,p_status:status,p_note:note});
+  if(error)return alert('Holat yangilanmadi: '+error.message);
+  await refresh();
+}
+// ================= IPOTEKA MODULI TUGADI =================
+
 function contracts(){
   if(!canPage('contracts'))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2><p>Sizning rolingizda bu bo‘lim yopiq.</p></div>';
   return header('Shartnomalar','Sotish va Olib berish shartnomalari','+ Shartnoma yaratish','openContract()')+
