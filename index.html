@@ -2773,7 +2773,8 @@ function mortgagePage(){
       <div class="stat"><div class="kpi">${banks.filter(x=>x.is_active!==false).length}</div><div class="label">Faol banklar</div></div>
       <div class="stat"><div class="kpi">${programs.filter(x=>x.is_active!==false).length}</div><div class="label">Faol dasturlar</div></div>
     </div>
-    <div class="panel"><div class="toolbar"><div><h3>🏦 Banklar ro‘yxati</h3><p class="muted">Faol banklar barcha tegishli xodimlarga ko‘rinadi. Bank ma’lumotlarini faqat Admin tahrirlaydi.</p></div>${mortgageCanConfigure()?`<div><button class="btn" onclick="openMortgageBank()">+ Bank qo‘shish</button> <button class="btn light" onclick="openMortgageProgram()">+ Dastur qo‘shish</button></div>`:''}</div>${mortgageBankManagementTable()}</div>
+    ${!specialist?`<div class="panel"><div class="toolbar"><div><h3>🏦 Banklar ro‘yxati</h3><p class="muted">Banklar rieltor va Admin ish jarayonida foydalanadi. Bank ma’lumotlarini faqat Admin boshqaradi.</p></div>${mortgageCanConfigure()?`<div><button class="btn" onclick="openMortgageBank()">+ Bank qo‘shish</button> <button class="btn light" onclick="openMortgageProgram()">+ Dastur qo‘shish</button></div>`:''}</div>${mortgageBankManagementTable()}</div>`:''}
+    ${mortgageCanConfigure()?`<div class="panel"><h3>📋 Ipoteka dasturlari</h3><p class="muted">Admin bank dasturlarini shu yerdan tahrirlaydi yoki o‘chiradi.</p>${mortgageProgramManagementTable()}</div>`:''}
     <div class="panel"><div class="toolbar"><h3>📄 Ipoteka arizalari</h3><button class="btn light" onclick="refresh()">Yangilash</button></div>
     ${apps.length?`<div class="tablewrap"><table class="table"><tr><th>Ariza</th><th>Bank</th><th>Uy narxi</th><th>Kredit</th><th>Holat</th><th>Amallar</th></tr>${apps.map(a=>{const bank=banks.find(b=>Number(b.id)===Number(a.bank_id));const ass=(db.mortgageAssignments||[]).find(x=>Number(x.application_id)===Number(a.id)&&x.is_current);return `<tr><td><b>#${a.id}</b><br><span class="muted">Xaridor ID: ${a.buyer_id}</span></td><td>${esc(bank?.name||'Bank #'+a.bank_id)}</td><td>${money(a.property_price)}</td><td>${money(a.loan_amount)}</td><td>${esc(a.status||'Yangi')}</td><td>${ass?`<span class="muted">Mutaxassis ID: ${ass.staff_id}</span><br>`:''}<button class="small" onclick="openMortgageApplicationDetails(${a.id})">Tafsilot</button> <button class="small" onclick="openMortgageDocuments(${a.id})">📎 Hujjatlar (${(db.mortgageDocuments||[]).filter(d=>Number(d.application_id)===Number(a.id)).length})</button> <button class="small" onclick="mortgageChangeStatus(${a.id})">Holat</button>${mortgageCanManage()?` <button class="small primary" onclick="mortgageAssign(${a.id},${a.bank_id})">Biriktirish</button>`:''}${currentRole()==='Admin'?` <button class="small" style="background:#b91c1c;color:#fff" onclick="deleteMortgageApplication(${a.id})">O‘chirish</button>`:''}</td></tr>`}).join('')}</table></div>`:'<div class="empty">Hozircha ko‘rinadigan ipoteka arizalari yo‘q.</div>'}</div>
     ${specialist?'<div class="panel"><p class="muted">Bank mutaxassisi kabineti: faqat o‘zingizga biriktirilgan va bankingizga tegishli arizalar ko‘rsatiladi. RLS bu cheklovni server tomonida ham majburiy tekshirishi shart.</p></div>':''}`;
@@ -2899,13 +2900,55 @@ async function saveMortgageProgram(){
   if(error)return alert('Dastur saqlanmadi: '+error.message);
   closeModal();await refresh();
 }
+function mortgageProgramManagementTable(){
+  if(!mortgageCanConfigure())return '';
+  const programs=db.mortgagePrograms||[],banks=db.mortgageBanks||[];
+  if(!programs.length)return '<div class="empty">Hozircha ipoteka dasturlari kiritilmagan.</div>';
+  return `<div class="tablewrap"><table class="table"><tr><th>Bank</th><th>Dastur</th><th>Foiz</th><th>Boshlang‘ich to‘lov</th><th>Muddat</th><th>Kredit limiti</th><th>Holat</th><th>Amallar</th></tr>${programs.map(p=>{const bank=banks.find(b=>Number(b.id)===Number(p.bank_id));return `<tr><td>${esc(bank?.name||'Bank #'+p.bank_id)}</td><td><b>${esc(p.name||'—')}</b></td><td>${p.annual_rate==null?'—':esc(p.annual_rate)+'%'}</td><td>${p.min_down_payment_percent==null?'—':esc(p.min_down_payment_percent)+'%'}</td><td>${p.min_term_months??'—'}–${p.max_term_months??'—'} oy</td><td>${p.max_loan_amount?money(p.max_loan_amount):'—'}</td><td>${p.is_active===false?'Nofaol':'Faol'}</td><td><button class="small" onclick="openMortgageProgramEdit(${Number(p.id)})">Tahrirlash</button> <button class="small" style="color:#b91c1c" onclick="deleteMortgageProgram(${Number(p.id)})">O‘chirish</button></td></tr>`}).join('')}</table></div>`;
+}
+function openMortgageProgramEdit(id){
+  if(!mortgageCanConfigure())return alert('Dasturlarni faqat Admin tahrirlaydi.');
+  const p=(db.mortgagePrograms||[]).find(x=>Number(x.id)===Number(id));if(!p)return alert('Dastur topilmadi.');
+  const opts=(db.mortgageBanks||[]).map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('');
+  modal(`<h2>📋 Ipoteka dasturini tahrirlash</h2><div class="formgrid"><div><label class="muted">Bank</label><select id="mp_bank" class="field">${opts}</select></div>${mortgageField('mp_name','Dastur nomi','Dastur nomi')}${mortgageField('mp_rate','Yillik foiz (%)','18','number')}${mortgageField('mp_down','Boshlang‘ich to‘lov (%)','20','number')}${mortgageField('mp_min','Minimal muddat (oy)','60','number')}${mortgageField('mp_max','Maksimal muddat (oy)','240','number')}${mortgageField('mp_cap','Kredit limiti (so‘m)','500000000','number')}</div><br><button class="btn" onclick="updateMortgageProgram(${Number(id)})">Saqlash</button> <button class="btn light" onclick="closeModal()">Bekor</button>`);
+  document.getElementById('mp_bank').value=String(p.bank_id||'');
+  document.getElementById('mp_name').value=p.name||'';
+  document.getElementById('mp_rate').value=p.annual_rate??'';
+  document.getElementById('mp_down').value=p.min_down_payment_percent??'';
+  document.getElementById('mp_min').value=p.min_term_months??'';
+  document.getElementById('mp_max').value=p.max_term_months??'';
+  document.getElementById('mp_cap').value=p.max_loan_amount??'';
+}
+async function updateMortgageProgram(id){
+  if(!mortgageCanConfigure())return;
+  const bank_id=Number(val('mp_bank')),name=val('mp_name').trim();
+  if(!bank_id||!name)return alert('Bank va dastur nomini tanlang.');
+  const n=id=>val(id)===''?null:Number(val(id));
+  const payload={bank_id,name,annual_rate:n('mp_rate'),min_down_payment_percent:n('mp_down'),min_term_months:n('mp_min'),max_term_months:n('mp_max'),max_loan_amount:n('mp_cap')};
+  const {data,error}=await client.from('mortgage_programs').update(payload).eq('id',id).select().single();
+  if(error)return alert('Dastur yangilanmadi: '+error.message);
+  const i=(db.mortgagePrograms||[]).findIndex(x=>Number(x.id)===Number(id));if(i>=0)db.mortgagePrograms[i]=data;
+  closeModal();render('mortgage');
+}
+async function deleteMortgageProgram(id){
+  if(!mortgageCanConfigure())return alert('Dasturlarni faqat Admin o‘chiradi.');
+  const p=(db.mortgagePrograms||[]).find(x=>Number(x.id)===Number(id));if(!p)return;
+  if((db.mortgageApplications||[]).some(a=>Number(a.program_id)===Number(id)))return alert('Bu dasturga ariza bog‘langan. Ariza tarixi saqlanishi uchun dastur o‘chirilmaydi. Uni tahrirlab yoki bank orqali nofaol qiling.');
+  if(!confirm(`«${p.name}» dasturini butunlay o‘chirasizmi?`))return;
+  const {error}=await client.from('mortgage_programs').delete().eq('id',id);
+  if(error)return alert('Dastur o‘chirilmadi: '+error.message);
+  db.mortgagePrograms=(db.mortgagePrograms||[]).filter(x=>Number(x.id)!==Number(id));render('mortgage');
+}
 function openMortgageApplication(preBuyerId=null,preHomeId=null,preBankId=null,preProgramId=null,preDownPercent=null,preTerm=null){
   if(!mortgageCanCreate())return alert('Sizda ariza yaratish huquqi yo‘q.');
   const buyers=(db.buyers||[]).map(b=>`<option value="${b.id}">${esc(b.name||'Xaridor')} — ${esc(b.phone||'')}</option>`).join('');
   const homes=(db.homes||[]).filter(h=>h.status!=='Sotildi').map(h=>`<option value="${h.id}" data-price="${Math.abs(Number(h.price)||0)}">${esc(h.title||'Uy')} — ${money(h.price)}</option>`).join('');
   const banks=(db.mortgageBanks||[]).filter(b=>b.is_active!==false).map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('');
   const programs=(db.mortgagePrograms||[]).filter(p=>p.is_active!==false).map(p=>`<option value="${p.id}" data-bank="${p.bank_id}">${esc(p.name)}</option>`).join('');
-  if(!buyers||!homes||!banks)return alert('Ariza uchun xaridor, sotilmagan uy va faol banklar bo‘lishi kerak. Bazadagi ipoteka jadvallari o‘rnatilganini ham tekshiring.');
+  if(!buyers||!homes||!banks){
+    const missing=[!buyers?'xaridorlar':null,!homes?'sotilmagan uylar':null,!banks?'faol banklar':null].filter(Boolean).join(', ');
+    return alert('Ariza ochish uchun quyidagi ma’lumotlar topilmadi: '+missing+'. Rieltor akkauntida xaridor va uylar ko‘rinishi hamda Supabase RLS ruxsatlarini tekshirish kerak.');
+  }
   modal(`<h2>📝 Yangi ipoteka arizasi</h2><div class="formgrid"><div><label class="muted">Xaridor</label><select id="ma_buyer" class="field">${buyers}</select></div><div><label class="muted">Uy</label><select id="ma_home" class="field" onchange="mortgageSetPrice()">${homes}</select></div><div><label class="muted">Bank</label><select id="ma_bank" class="field" onchange="mortgageFilterPrograms()">${banks}</select></div><div><label class="muted">Dastur</label><select id="ma_program" class="field"><option value="">Dastursiz</option>${programs}</select></div>${mortgageField('ma_price','Uy narxi (so‘m)','', 'number')}${mortgageField('ma_down','Boshlang‘ich to‘lov (so‘m)','', 'number')}${mortgageField('ma_income','Oylik daromad (so‘m)','', 'number')}${mortgageField('ma_term','Muddat (oy)','240','number')}</div><br><button class="btn" onclick="saveMortgageApplication()">Ariza yaratish</button> <button class="btn light" onclick="closeModal()">Bekor</button>`);
   if(preBuyerId)document.getElementById('ma_buyer').value=String(preBuyerId);
   if(preHomeId)document.getElementById('ma_home').value=String(preHomeId);
@@ -2921,7 +2964,7 @@ async function saveMortgageApplication(){
   if(!mortgageCanCreate())return;
   const property_price=Number(val('ma_price')),down_payment=Number(val('ma_down')),loan_amount=property_price-down_payment;
   if(!Number(val('ma_buyer'))||!Number(val('ma_home'))||!Number(val('ma_bank'))||!(property_price>0)||down_payment<0||loan_amount<0)return alert('Xaridor, uy, bank va to‘lov summalarini to‘g‘ri kiriting.');
-  const payload={buyer_id:Number(val('ma_buyer')),home_id:Number(val('ma_home')),bank_id:Number(val('ma_bank')),program_id:Number(val('ma_program'))||null,created_by_staff_id:Number(currentStaff.id)||null,property_price,down_payment,loan_amount,buyer_monthly_income:Number(val('ma_income'))||null,term_months:Number(val('ma_term'))||null,status:'Yangi'};
+  const payload={buyer_id:Number(val('ma_buyer')),home_id:Number(val('ma_home')),bank_id:Number(val('ma_bank')),program_id:Number(val('ma_program'))||null,created_by_staff_id:Number(currentStaff?.id)||null,property_price,down_payment,loan_amount,buyer_monthly_income:Number(val('ma_income'))||null,term_months:Number(val('ma_term'))||null,status:'Yangi'};
   const {error}=await client.from('mortgage_applications').insert(payload);
   if(error)return alert('Ariza yaratilmadi: '+error.message);
   closeModal();await refresh();
