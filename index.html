@@ -2795,7 +2795,7 @@ async function openMortgageApplicationDetails(applicationId){
     <div class="formgrid">
       <div><b>Xaridor</b><br>${esc(buyer?.name||'—')}<br><span class="muted">${esc(buyer?.phone||'')}</span></div>
       <div><b>Bank</b><br>${esc(bank?.name||'—')}</div>
-      <div><b>Uy</b><br>${esc(home?.title||'—')}<br><span class="muted">${esc([home?.city,home?.area].filter(Boolean).join(', '))}</span></div>
+      <div><b>Uy</b><br>${esc(home?.title||(a.home_id?'Uy ma’lumoti topilmadi':'Uy bazadan o‘chirilgan — ipoteka arizasi tarixi saqlangan'))}<br><span class="muted">${esc(home?[home.city,home.area].filter(Boolean).join(', '):'')}</span></div>
       <div><b>Ipoteka dasturi</b><br>${esc(program?.name||'Dastursiz')}</div>
       <div><b>Uy narxi</b><br>${money(a.property_price)}</div>
       <div><b>Boshlang‘ich to‘lov</b><br>${money(a.down_payment)}</div>
@@ -3782,10 +3782,22 @@ async function editBuyer(id){
 }
 async function deleteHomeFromEdit(id){
   if(!requireHomeDelete())return;
-  if(!confirm('Bu uyni butunlay o‘chirishni tasdiqlaysizmi?'))return;
+  const home=db.homes.find(x=>Number(x.id)===Number(id));
+  if(!home)return alert('Uy topilmadi. Ro‘yxatni yangilang.');
+  const linkedApps=(db.mortgageApplications||[]).filter(a=>Number(a.home_id)===Number(id)).length;
+  const confirmText=linkedApps
+    ? `Bu uyga ${linkedApps} ta ipoteka arizasi bog‘langan. Uyni o‘chirsangiz, ipoteka arizalari, hujjatlari va tarixi saqlanadi, faqat arizadagi uy bilan bog‘lanish uziladi. Davom etasizmi?`
+    : 'Bu uyni butunlay o‘chirishni tasdiqlaysizmi?';
+  if(!confirm(confirmText))return;
   const {error}=await client.from('homes').delete().eq('id',id);
-  if(error)return alert('O‘chirishda xatolik: '+error.message);
-  db.homes=db.homes.filter(x=>x.id!==id);
+  if(error){
+    if(error.code==='23503' || /mortgage_applications_home_id_fkey|foreign key/i.test(error.message||'')){
+      return alert('Uyni o‘chirib bo‘lmadi: unga ipoteka arizasi bog‘langan. Ipoteka arizasi tarixini saqlab, uyni o‘chirish uchun Supabase SQL Editor’da XORAZMLIDER_HOME_DELETE_KEEP_MORTGAGE_HISTORY.sql faylini bir marta ishga tushiring. Keyin CRM sahifasini yangilang.');
+    }
+    return alert('O‘chirishda xatolik: '+error.message);
+  }
+  db.homes=db.homes.filter(x=>Number(x.id)!==Number(id));
+  db.mortgageApplications=(db.mortgageApplications||[]).map(a=>Number(a.home_id)===Number(id)?{...a,home_id:null}:a);
   closeModal();
   go('homes');
 }
