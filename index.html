@@ -2773,7 +2773,7 @@ function mortgagePage(){
       <div class="stat"><div class="kpi">${banks.filter(x=>x.is_active!==false).length}</div><div class="label">Faol banklar</div></div>
       <div class="stat"><div class="kpi">${programs.filter(x=>x.is_active!==false).length}</div><div class="label">Faol dasturlar</div></div>
     </div>
-    ${mortgageCanConfigure()?`<div class="panel"><div class="toolbar"><div><h3>🏦 Banklar ro‘yxati</h3><p class="muted">Faol banklar barcha tegishli xodimlarga ko‘rinadi. Bank ma’lumotlarini faqat Admin tahrirlaydi.</p></div>${mortgageCanConfigure()?`<div><button class="btn" onclick="openMortgageBank()">+ Bank qo‘shish</button> <button class="btn light" onclick="openMortgageProgram()">+ Dastur qo‘shish</button></div>`:''}</div>${mortgageBankManagementTable()}</div>`: ''}
+    ${mortgageCanConfigure()?`<div class="panel"><div class="toolbar"><div><h3>🏦 Banklar ro‘yxati</h3><p class="muted">Faol banklar barcha tegishli xodimlarga ko‘rinadi. Bank ma’lumotlarini faqat Admin tahrirlaydi.</p></div>${mortgageCanConfigure()?`<div><button class="btn" onclick="openMortgageBank()">+ Bank qo‘shish</button> <button class="btn light" onclick="openMortgageProgram()">+ Dastur qo‘shish</button></div>`:''}</div>${mortgageBankManagementTable()}<div style="margin-top:18px"><h3>📋 Ipoteka dasturlari</h3><p class="muted">Har bir bank dasturini shu yerdan tahrirlash yoki o‘chirish mumkin. Arizalarga bog‘langan dastur o‘chirilsa, arizalar saqlanadi va dastur tarixi bazada qoladi.</p>${mortgageProgramManagementTable()}</div></div>`: ''}
     <div class="panel"><div class="toolbar"><h3>📄 Ipoteka arizalari</h3><button class="btn light" onclick="refresh()">Yangilash</button></div>
     ${apps.length?`<div class="tablewrap"><table class="table"><tr><th>Ariza</th><th>Bank</th><th>Uy narxi</th><th>Kredit</th><th>Holat</th><th>Amallar</th></tr>${apps.map(a=>{const bank=banks.find(b=>Number(b.id)===Number(a.bank_id));const ass=(db.mortgageAssignments||[]).find(x=>Number(x.application_id)===Number(a.id)&&x.is_current);return `<tr><td><b>#${a.id}</b><br><span class="muted">Xaridor ID: ${a.buyer_id}</span></td><td>${esc(bank?.name||'Bank #'+a.bank_id)}</td><td>${money(a.property_price)}</td><td>${money(a.loan_amount)}</td><td>${esc(a.status||'Yangi')}</td><td>${ass?`<span class="muted">Mutaxassis ID: ${ass.staff_id}</span><br>`:''}<button class="small" onclick="openMortgageApplicationDetails(${a.id})">Tafsilot</button> <button class="small" onclick="openMortgageDocuments(${a.id})">📎 Hujjatlar (${(db.mortgageDocuments||[]).filter(d=>Number(d.application_id)===Number(a.id)).length})</button> <button class="small" onclick="mortgageChangeStatus(${a.id})">Holat</button>${mortgageCanManage()?` <button class="small primary" onclick="mortgageAssign(${a.id},${a.bank_id})">Biriktirish</button>`:''}${currentRole()==='Admin'?` <button class="small" style="background:#b91c1c;color:#fff" onclick="deleteMortgageApplication(${a.id})">O‘chirish</button>`:''}</td></tr>`}).join('')}</table></div>`:'<div class="empty">Hozircha ko‘rinadigan ipoteka arizalari yo‘q.</div>'}</div>
     ${specialist?'<div class="panel"><p class="muted">Bank mutaxassisi kabineti: faqat o‘zingizga biriktirilgan va bankingizga tegishli arizalar ko‘rsatiladi. RLS bu cheklovni server tomonida ham majburiy tekshirishi shart.</p></div>':''}`;
@@ -2836,6 +2836,89 @@ function mortgageBankManagementTable(){
   if(!banks.length)return '<div class="empty">Hozircha bank qo‘shilmagan. «Bank qo‘shish» tugmasi orqali kiriting.</div>';
   return `<div class="tablewrap"><table class="table"><tr><th>Bank</th><th>Kodi</th><th>Telefon / sayt</th><th>Dasturlar</th><th>Holat</th><th>Amallar</th></tr>${banks.map(b=>{const pc=programs.filter(p=>Number(p.bank_id)===Number(b.id)).length;const ac=apps.filter(a=>Number(a.bank_id)===Number(b.id)).length;const active=b.is_active!==false;return `<tr><td><b>${esc(b.name||'—')}</b><br><span class="muted">ID: ${b.id}</span></td><td>${esc(b.code||'—')}</td><td>${esc(b.phone||'—')}<br>${b.website?`<a href="${esc(b.website)}" target="_blank" rel="noopener">Sayt</a>`:'<span class="muted">Sayt kiritilmagan</span>'}</td><td>${pc} ta dastur<br><span class="muted">${ac} ta ariza</span></td><td><span class="badge" style="background:${active?'#dcfce7':'#fee2e2'};color:${active?'#166534':'#991b1b'};padding:4px 8px;border-radius:20px">${active?'Faol':'Nofaol'}</span></td><td>${mortgageCanConfigure()?`<button class="small" onclick="openMortgageBankEdit(${Number(b.id)})">Tahrirlash</button> <button class="small" onclick="toggleMortgageBank(${Number(b.id)},${active?'false':'true'})">${active?'Nofaol qilish':'Faollashtirish'}</button> <button class="small" style="color:#b91c1c" onclick="deleteMortgageBank(${Number(b.id)})">O‘chirish</button>`:'<span class="muted">—</span>'}</td></tr>`}).join('')}</table></div>`;
 }
+function mortgageProgramManagementTable(){
+  const programs=db.mortgagePrograms||[], banks=db.mortgageBanks||[], apps=db.mortgageApplications||[];
+  if(!programs.length)return '<div class="empty">Hozircha ipoteka dasturlari qo‘shilmagan. «Dastur qo‘shish» tugmasi orqali kiriting.</div>';
+  return `<div class="tablewrap"><table class="table"><tr><th>Dastur</th><th>Bank</th><th>Yillik foiz</th><th>Boshlang‘ich to‘lov</th><th>Muddat</th><th>Kredit limiti</th><th>Holat</th><th>Amallar</th></tr>${programs.map(p=>{
+    const bank=banks.find(b=>Number(b.id)===Number(p.bank_id));
+    const active=p.is_active!==false;
+    const linked=apps.filter(a=>Number(a.program_id)===Number(p.id)).length;
+    const term=[p.min_term_months,p.max_term_months].filter(x=>x!==null&&x!==undefined&&x!=='').join('–');
+    return `<tr>
+      <td><b>${esc(p.name||'—')}</b><br><span class="muted">ID: ${Number(p.id)}</span></td>
+      <td>${esc(bank?.name||'Bank #'+p.bank_id)}</td>
+      <td>${p.annual_rate==null?'—':esc(String(p.annual_rate))+'%'}</td>
+      <td>${p.min_down_payment_percent==null?'—':esc(String(p.min_down_payment_percent))+'%'}</td>
+      <td>${term?esc(term)+' oy':'—'}</td>
+      <td>${p.max_loan_amount?money(p.max_loan_amount):'—'}</td>
+      <td><span class="badge" style="background:${active?'#dcfce7':'#fee2e2'};color:${active?'#166534':'#991b1b'};padding:4px 8px;border-radius:20px">${active?'Faol':'Nofaol'}</span></td>
+      <td><button class="small" onclick="openMortgageProgramEdit(${Number(p.id)})">Tahrirlash</button> <button class="small" style="color:#b91c1c" onclick="deleteMortgageProgram(${Number(p.id)})">O‘chirish</button><br><span class="muted">${linked} ta arizaga bog‘langan</span></td>
+    </tr>`;
+  }).join('')}</table></div>`;
+}
+function openMortgageProgramEdit(id){
+  if(!mortgageCanConfigure())return alert('Dasturlarni faqat Admin tahrirlaydi.');
+  const p=(db.mortgagePrograms||[]).find(x=>Number(x.id)===Number(id));
+  if(!p)return alert('Ipoteka dasturi topilmadi.');
+  const opts=(db.mortgageBanks||[]).map(b=>`<option value="${Number(b.id)}" ${Number(b.id)===Number(p.bank_id)?'selected':''}>${esc(b.name)}</option>`).join('');
+  modal(`<h2>📋 Ipoteka dasturini tahrirlash</h2>
+    <div class="formgrid">
+      <div><label class="muted">Bank</label><select id="mp_bank" class="field">${opts}</select></div>
+      ${mortgageField('mp_name','Dastur nomi','Dastur nomi')}
+      ${mortgageField('mp_rate','Yillik foiz (%)','','number')}
+      ${mortgageField('mp_down','Boshlang‘ich to‘lov (%)','','number')}
+      ${mortgageField('mp_min','Minimal muddat (oy)','','number')}
+      ${mortgageField('mp_max','Maksimal muddat (oy)','','number')}
+      ${mortgageField('mp_cap','Kredit limiti (so‘m)','','number')}
+      <div><label class="muted">Holat</label><select id="mp_active" class="field"><option value="true">Faol</option><option value="false">Nofaol</option></select></div>
+    </div><br>
+    <button class="btn" onclick="saveMortgageProgramEdit(${Number(id)})">Saqlash</button>
+    <button class="btn light" onclick="closeModal()">Bekor</button>`);
+  document.getElementById('mp_bank').value=String(p.bank_id);
+  document.getElementById('mp_name').value=p.name||'';
+  document.getElementById('mp_rate').value=p.annual_rate??'';
+  document.getElementById('mp_down').value=p.min_down_payment_percent??'';
+  document.getElementById('mp_min').value=p.min_term_months??'';
+  document.getElementById('mp_max').value=p.max_term_months??'';
+  document.getElementById('mp_cap').value=p.max_loan_amount??'';
+  document.getElementById('mp_active').value=p.is_active===false?'false':'true';
+}
+async function saveMortgageProgramEdit(id){
+  if(!mortgageCanConfigure())return alert('Dasturlarni faqat Admin tahrirlaydi.');
+  const bank_id=Number(val('mp_bank')),name=val('mp_name').trim();
+  if(!bank_id||!name)return alert('Bank va dastur nomini kiriting.');
+  const n=id=>val(id)===''?null:Number(val(id));
+  const minTerm=n('mp_min'),maxTerm=n('mp_max');
+  if(minTerm!==null&&minTerm<=0)return alert('Minimal muddat 0 dan katta bo‘lishi kerak.');
+  if(maxTerm!==null&&maxTerm<=0)return alert('Maksimal muddat 0 dan katta bo‘lishi kerak.');
+  if(minTerm!==null&&maxTerm!==null&&minTerm>maxTerm)return alert('Maksimal muddat minimal muddatdan kichik bo‘lishi mumkin emas.');
+  const rate=n('mp_rate'),down=n('mp_down'),cap=n('mp_cap');
+  if(rate!==null&&rate<0)return alert('Yillik foiz manfiy bo‘lishi mumkin emas.');
+  if(down!==null&&(down<0||down>100))return alert('Boshlang‘ich to‘lov 0–100 oralig‘ida bo‘lishi kerak.');
+  if(cap!==null&&cap<0)return alert('Kredit limiti manfiy bo‘lishi mumkin emas.');
+  const payload={bank_id,name,annual_rate:rate,min_down_payment_percent:down,min_term_months:minTerm,max_term_months:maxTerm,max_loan_amount:cap,is_active:val('mp_active')!=='false'};
+  const {data,error}=await client.from('mortgage_programs').update(payload).eq('id',id).select().single();
+  if(error)return alert('Dastur yangilanmadi: '+error.message);
+  const i=(db.mortgagePrograms||[]).findIndex(x=>Number(x.id)===Number(id));
+  if(i>=0)db.mortgagePrograms[i]=data;
+  closeModal();render('mortgage');
+}
+async function deleteMortgageProgram(id){
+  if(!mortgageCanConfigure())return alert('Dasturlarni faqat Admin o‘chiradi.');
+  const p=(db.mortgagePrograms||[]).find(x=>Number(x.id)===Number(id));
+  if(!p)return alert('Ipoteka dasturi topilmadi.');
+  const linked=(db.mortgageApplications||[]).filter(a=>Number(a.program_id)===Number(id)).length;
+  const warning=linked
+    ? `\\n\\nDiqqat: ${linked} ta arizaga bog‘langan. O‘chirilganda arizalardagi dastur havolasi bo‘shatiladi, arizalarning o‘zi saqlanadi. Dastur o‘zgarishlari tarixi ham bazada qoladi.`
+    : '';
+  if(!confirm(`«${p.name}» dasturini butunlay o‘chirishni tasdiqlaysizmi?${warning}`))return;
+  const {data,error}=await client.from('mortgage_programs').delete().eq('id',id).select('id');
+  if(error)return alert('Dastur o‘chirilmadi: '+error.message);
+  if(!data||!data.length)return alert('Dastur o‘chirilmadi. Admin huquqi yoki RLS siyosatini tekshiring.');
+  db.mortgagePrograms=(db.mortgagePrograms||[]).filter(x=>Number(x.id)!==Number(id));
+  render('mortgage');
+}
+
 function openMortgageBankEdit(id){
   if(!mortgageCanConfigure())return alert('Banklarni faqat Admin tahrirlaydi.');
   const b=(db.mortgageBanks||[]).find(x=>Number(x.id)===Number(id));if(!b)return alert('Bank topilmadi.');
@@ -2894,7 +2977,14 @@ async function saveMortgageProgram(){
   const bank_id=Number(val('mp_bank')),name=val('mp_name').trim();
   if(!bank_id||!name)return alert('Bank va dastur nomini tanlang.');
   const n=id=>val(id)===''?null:Number(val(id));
-  const payload={bank_id,name,annual_rate:n('mp_rate'),min_down_payment_percent:n('mp_down'),min_term_months:n('mp_min'),max_term_months:n('mp_max'),max_loan_amount:n('mp_cap'),is_active:true};
+  const minTerm=n('mp_min'),maxTerm=n('mp_max'),rate=n('mp_rate'),down=n('mp_down'),cap=n('mp_cap');
+  if(minTerm!==null&&minTerm<=0)return alert('Minimal muddat 0 dan katta bo‘lishi kerak.');
+  if(maxTerm!==null&&maxTerm<=0)return alert('Maksimal muddat 0 dan katta bo‘lishi kerak.');
+  if(minTerm!==null&&maxTerm!==null&&minTerm>maxTerm)return alert('Maksimal muddat minimal muddatdan kichik bo‘lishi mumkin emas.');
+  if(rate!==null&&rate<0)return alert('Yillik foiz manfiy bo‘lishi mumkin emas.');
+  if(down!==null&&(down<0||down>100))return alert('Boshlang‘ich to‘lov 0–100 oralig‘ida bo‘lishi kerak.');
+  if(cap!==null&&cap<0)return alert('Kredit limiti manfiy bo‘lishi mumkin emas.');
+  const payload={bank_id,name,annual_rate:rate,min_down_payment_percent:down,min_term_months:minTerm,max_term_months:maxTerm,max_loan_amount:cap,is_active:true};
   const {error}=await client.from('mortgage_programs').insert(payload);
   if(error)return alert('Dastur saqlanmadi: '+error.message);
   closeModal();await refresh();
