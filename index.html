@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- XORAZMLIDER MORTGAGE V2: Admin/CRM roles, bank assignment and recommendation UI -->
 <html lang="uz">
 <head>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -969,10 +970,10 @@ let currentUser=null;
 let currentStaff=null;
 
 const ROLE_PAGES={
-  Admin:['dashboard','homes','buyers','sellers','staff','matches','deals','adSales','tasks','reports','documents','contracts','sold'],
-  Menejer:['dashboard','homes','buyers','sellers','matches','deals','adSales','tasks','reports','documents','contracts','sold'],
-  Rieltor:['dashboard','homes','buyers','sellers','matches','deals','adSales','tasks','documents','contracts','sold'],
-  Agent:['dashboard','homes','buyers','sellers','matches','deals','adSales','tasks','reports','documents','contracts','sold'],
+  Admin:['dashboard','homes','buyers','sellers','staff','matches','mortgage','deals','adSales','tasks','reports','documents','contracts','sold'],
+  Menejer:['dashboard','homes','buyers','sellers','matches','mortgage','deals','adSales','tasks','reports','documents','contracts','sold'],
+  Rieltor:['dashboard','homes','buyers','sellers','matches','mortgage','deals','adSales','tasks','documents','contracts','sold'],
+  Agent:['dashboard','homes','buyers','sellers','matches','mortgage','deals','adSales','tasks','reports','documents','contracts','sold'],
   'Ipoteka menejeri':['mortgage'],
   'Ipoteka mutaxassisi':['mortgage']
 };
@@ -2464,7 +2465,7 @@ function staffRows(a){
   <tr><th>Xodim</th><th>Telefon</th><th>Rol</th><th>Menejer</th><th>Holat</th><th>Amallar</th></tr>
   ${a.map(x=>`<tr>
     <td><b>${esc(x.name)}</b>${x.login?`<br><span class="muted">🔑 ${esc(x.login)}</span>`:''}${x.email?`<br><span class="muted">✉️ ${esc(x.email)}</span>`:''}</td>
-    <td>${esc(x.phone||'—')}</td><td>${staffRoleLabel(x.role)}</td>
+    <td>${esc(x.phone||'—')}</td><td>${staffRoleLabel(x.role)}${normalizeRole(x.role)==='Ipoteka mutaxassisi'?`<br><span class="muted">🏦 ${esc((db.mortgageBanks||[]).find(b=>Number(b.id)===Number(x.mortgage_bank_id))?.name||'Bank biriktirilmagan')}</span>`:''}</td>
     <td>${esc(staffManagerName(x.manager_id))}</td>
     <td>${x.is_active===false?'🔴 Faol emas':'🟢 Faol'}</td>
     <td>
@@ -2638,6 +2639,7 @@ function editStaff(id){
       ${input('staff_email','Email (Admin keyin qo‘shishi/o‘zgartirishi mumkin)','',0)}
       <div><label class="muted">Rol</label><select id="f_staff_role" class="field">${staffRoleOptions(x.role||'Agent')}</select></div>
       <div><label class="muted">Menejer</label><select id="f_staff_manager" class="field">${staffManagerOptions(x.manager_id)}</select></div>
+      <div><label class="muted">Bank (faqat Ipoteka mutaxassisi uchun)</label><select id="f_staff_mortgage_bank" class="field"><option value="">Bank tanlanmagan</option>${(db.mortgageBanks||[]).filter(b=>b.is_active!==false).map(b=>`<option value="${b.id}" ${String(x.mortgage_bank_id||'')===String(b.id)?'selected':''}>${esc(b.name)}</option>`).join('')}</select></div>
       <div><label class="muted">Holati</label><select id="f_staff_active" class="field">
         <option value="true" ${x.is_active!==false?'selected':''}>🟢 Faol</option>
         <option value="false" ${x.is_active===false?'selected':''}>🔴 Faol emas</option>
@@ -2660,7 +2662,10 @@ async function saveStaff(id){
   const name=val('staff_name'),phone=val('staff_phone'),newPassword=String(val('staff_password')||'');
   if(!name||!phone){alert('Ism va telefonni kiriting.');return;}
   const managerVal=val('staff_manager');
-  const row={name,phone,email:val('staff_email')||null,role:val('staff_role')||'Agent',manager_id:managerVal?Number(managerVal):null,is_active:val('staff_active')!=='false'};
+  const selectedRole=val('staff_role')||'Agent';
+  const bankVal=val('staff_mortgage_bank');
+  if(selectedRole==='Ipoteka mutaxassisi'&&!bankVal)return alert('Ipoteka mutaxassisiga bank biriktiring.');
+  const row={name,phone,email:val('staff_email')||null,role:selectedRole,manager_id:managerVal?Number(managerVal):null,mortgage_bank_id:selectedRole==='Ipoteka mutaxassisi'&&bankVal?Number(bankVal):null,is_active:val('staff_active')!=='false'};
   const {data,error}=await client.from('staff').update(row).eq('id',id).select().single();
   if(error)return alert('Xodimni yangilashda xatolik: '+error.message);
   if(newPassword){
@@ -2697,12 +2702,58 @@ function matches(){return header('Moslashtirish','Xaridor ↔ uy parametrlarini 
 // hech qanday o'zgartirish kiritmaydi. Mortgage jadvallari bo'lmasa, aniq xabar beradi.
 function mortgageCanManage(){return ['Admin','Ipoteka menejeri'].includes(currentRole());}
 function mortgageCanConfigure(){return currentRole()==='Admin';}
-function mortgageCanCreate(){return ['Admin','Menejer','Rieltor','Agent'].includes(currentRole());}
+function mortgageCanCreate(){return ['Admin','Menejer','Rieltor','Agent','Ipoteka menejeri'].includes(currentRole());}
+function mortgageMonthlyPayment(principal,annualRate,months){
+  const P=Number(principal),n=Number(months),r=Number(annualRate)/1200;
+  if(!(P>=0)||!(n>0)||!Number.isFinite(P)||!Number.isFinite(n))return null;
+  if(!Number.isFinite(r)||r<0)return null;
+  if(r===0)return P/n;
+  const pow=Math.pow(1+r,n);
+  return P*r*pow/(pow-1);
+}
+function mortgageRecommendationData(buyerId,downPercent,termMonths){
+  const buyer=(db.buyers||[]).find(b=>String(b.id)===String(buyerId));
+  if(!buyer)return {buyer:null,homes:[],offers:[]};
+  const homes=findHomes(buyer).filter(h=>Number(h.price)>0); // DB ipoteka summalari so'mda; USD narxlar alohida konvertatsiyasiz tavsiya qilinmaydi.
+  const banks=db.mortgageBanks||[], programs=(db.mortgagePrograms||[]).filter(p=>p.is_active!==false);
+  const dp=Math.max(0,Math.min(100,Number(downPercent)||0)), term=Math.max(1,Number(termMonths)||240);
+  const offers=[];
+  homes.forEach(home=>{
+    const price=Number(home.price);
+    programs.forEach(program=>{
+      const bank=banks.find(b=>Number(b.id)===Number(program.bank_id));
+      if(!bank||bank.is_active===false)return;
+      const minDown=Number(program.min_down_payment_percent||0);
+      const loan=price*(1-dp/100);
+      const reasons=[];
+      if(dp<minDown)reasons.push('Boshlang‘ich to‘lov kamida '+minDown+'% bo‘lishi kerak');
+      if(program.max_loan_amount!=null&&loan>Number(program.max_loan_amount))reasons.push('Kredit limiti yetmaydi');
+      if(program.min_term_months!=null&&term<Number(program.min_term_months))reasons.push('Muddat minimal talabdan kam');
+      if(program.max_term_months!=null&&term>Number(program.max_term_months))reasons.push('Muddat maksimal talabdan ko‘p');
+      const rate=program.annual_rate==null?null:Number(program.annual_rate);
+      offers.push({home,program,bank,price,down:price*dp/100,loan,term,rate,payment:rate==null?null:mortgageMonthlyPayment(loan,rate,term),eligible:reasons.length===0,reasons});
+    });
+  });
+  offers.sort((a,b)=>(Number(b.eligible)-Number(a.eligible))||(Number(a.rate??999)-Number(b.rate??999))||a.loan-b.loan);
+  return {buyer,homes,offers};
+}
+function renderMortgageRecommendations(){
+  const target=document.getElementById('mortgageRecommendationResults');if(!target)return;
+  const buyerId=document.getElementById('mortgageRecBuyer')?.value;
+  const dp=document.getElementById('mortgageRecDown')?.value||20;
+  const term=document.getElementById('mortgageRecTerm')?.value||240;
+  const result=mortgageRecommendationData(buyerId,dp,term);
+  if(!result.buyer){target.innerHTML='<div class="empty">Tavsiyalar uchun xaridor tanlang.</div>';return;}
+  if(!result.homes.length){target.innerHTML='<div class="empty">«Moslashtirish» mezonlari bo‘yicha mos uy topilmadi. Xaridorning budjeti va uy talablarini tekshiring. USD narxli uylar so‘m kursi kiritilmagani sababli avtomatik ipoteka hisobiga qo‘shilmaydi.</div>';return;}
+  if(!result.offers.length){target.innerHTML='<div class="empty">Mos uylar bor, ammo faol bank dasturlari topilmadi. Admin bank va dasturlarni kiritsin.</div>';return;}
+  target.innerHTML=result.offers.map(o=>`<div class="match" style="margin-top:10px"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>🏠 ${esc(o.home.title||'Uy')} — ${esc(o.bank.name)} / ${esc(o.program.name)}</b><span class="badge" style="background:${o.eligible?'#dcfce7':'#fee2e2'};color:${o.eligible?'#166534':'#991b1b'};padding:4px 8px;border-radius:20px">${o.eligible?'Dastlabki mezonlarga mos':'Talab mos emas'}</span></div><div class="muted">Uy: ${money(o.price)} • Boshlang‘ich: ${money(o.down)} (${Number(dp)}%) • Kredit: ${money(o.loan)} • Muddat: ${o.term} oy • Foiz: ${o.rate==null?'ko‘rsatilmagan':o.rate+'%'}</div><div><b>Taxminiy oylik to‘lov:</b> ${o.payment==null?'Hisoblab bo‘lmaydi':money(Math.round(o.payment))}</div>${o.reasons.length?`<div class="muted">${o.reasons.map(esc).join(' • ')}</div>`:''}<button class="small primary" ${o.eligible?'':'disabled'} onclick="openMortgageApplication(${Number(result.buyer.id)},${Number(o.home.id)},${Number(o.bank.id)},${Number(o.program.id)},${Number(dp)},${Number(term)})">Ariza tayyorlash</button></div>`).join('');
+}
 function mortgagePage(){
   if(!canPage('mortgage'))return '<div class="panel"><h2>🔒 Kirish cheklangan</h2></div>';
   const apps=db.mortgageApplications||[], banks=db.mortgageBanks||[], programs=db.mortgagePrograms||[];
   const specialist=currentRole()==='Ipoteka mutaxassisi';
   return header('🏦 Ipoteka markazi','Banklar, dasturlar va ipoteka arizalarini boshqarish',mortgageCanCreate()?'+ Ipoteka arizasi':null,'openMortgageApplication()')+
+    `${!specialist?`<div class="panel"><h3>🎯 Xaridor uchun avtomatik uy + bank tavsiyasi</h3><p class="muted">Avvalgi «Moslashtirish» algoritmi mos uylarni topadi. So‘ng faol bank dasturlari boshlang‘ich to‘lov, kredit limiti va muddat bo‘yicha solishtiriladi. Bu dastlabki saralash, bankning yakuniy kredit qarori emas.</p><div class="formgrid"><div><label class="muted">Xaridor</label><select id="mortgageRecBuyer" class="field" onchange="renderMortgageRecommendations()"><option value="">Xaridor tanlang</option>${(db.buyers||[]).map(b=>`<option value="${b.id}">${esc(b.name||'Xaridor')} — ${esc(b.phone||'')}</option>`).join('')}</select></div><div><label class="muted">Boshlang‘ich to‘lov (%)</label><input id="mortgageRecDown" class="field" type="number" min="0" max="100" value="20" oninput="renderMortgageRecommendations()"></div><div><label class="muted">Kredit muddati (oy)</label><input id="mortgageRecTerm" class="field" type="number" min="1" value="240" oninput="renderMortgageRecommendations()"></div></div><div id="mortgageRecommendationResults" class="muted" style="margin-top:10px">Xaridor tanlang — tizim mos uylar va bank dasturlarini hisoblaydi.</div></div>`:''}`+
     `<div class="stats">
       <div class="stat"><div class="kpi">${apps.length}</div><div class="label">Ko‘rinayotgan arizalar</div></div>
       <div class="stat"><div class="kpi">${apps.filter(a=>!['Maqqullandi','Rad etildi','Bekor qilindi'].includes(a.status)).length}</div><div class="label">Jarayondagi arizalar</div></div>
@@ -2742,7 +2793,7 @@ async function saveMortgageProgram(){
   if(error)return alert('Dastur saqlanmadi: '+error.message);
   closeModal();await refresh();
 }
-function openMortgageApplication(){
+function openMortgageApplication(preBuyerId=null,preHomeId=null,preBankId=null,preProgramId=null,preDownPercent=null,preTerm=null){
   if(!mortgageCanCreate())return alert('Sizda ariza yaratish huquqi yo‘q.');
   const buyers=(db.buyers||[]).map(b=>`<option value="${b.id}">${esc(b.name||'Xaridor')} — ${esc(b.phone||'')}</option>`).join('');
   const homes=(db.homes||[]).filter(h=>h.status!=='Sotildi').map(h=>`<option value="${h.id}" data-price="${Math.abs(Number(h.price)||0)}">${esc(h.title||'Uy')} — ${money(h.price)}</option>`).join('');
@@ -2750,7 +2801,13 @@ function openMortgageApplication(){
   const programs=(db.mortgagePrograms||[]).filter(p=>p.is_active!==false).map(p=>`<option value="${p.id}" data-bank="${p.bank_id}">${esc(p.name)}</option>`).join('');
   if(!buyers||!homes||!banks)return alert('Ariza uchun xaridor, sotilmagan uy va faol banklar bo‘lishi kerak. Bazadagi ipoteka jadvallari o‘rnatilganini ham tekshiring.');
   modal(`<h2>📝 Yangi ipoteka arizasi</h2><div class="formgrid"><div><label class="muted">Xaridor</label><select id="ma_buyer" class="field">${buyers}</select></div><div><label class="muted">Uy</label><select id="ma_home" class="field" onchange="mortgageSetPrice()">${homes}</select></div><div><label class="muted">Bank</label><select id="ma_bank" class="field" onchange="mortgageFilterPrograms()">${banks}</select></div><div><label class="muted">Dastur</label><select id="ma_program" class="field"><option value="">Dastursiz</option>${programs}</select></div>${mortgageField('ma_price','Uy narxi (so‘m)','', 'number')}${mortgageField('ma_down','Boshlang‘ich to‘lov (so‘m)','', 'number')}${mortgageField('ma_income','Oylik daromad (so‘m)','', 'number')}${mortgageField('ma_term','Muddat (oy)','240','number')}</div><br><button class="btn" onclick="saveMortgageApplication()">Ariza yaratish</button> <button class="btn light" onclick="closeModal()">Bekor</button>`);
+  if(preBuyerId)document.getElementById('ma_buyer').value=String(preBuyerId);
+  if(preHomeId)document.getElementById('ma_home').value=String(preHomeId);
+  if(preBankId)document.getElementById('ma_bank').value=String(preBankId);
   mortgageSetPrice();mortgageFilterPrograms();
+  if(preProgramId)document.getElementById('ma_program').value=String(preProgramId);
+  if(preDownPercent!=null){const price=Number(val('ma_price'))||0;document.getElementById('ma_down').value=Math.round(price*Number(preDownPercent)/100);}
+  if(preTerm)document.getElementById('ma_term').value=String(preTerm);
 }
 function mortgageSetPrice(){const e=document.getElementById('ma_home'),p=document.getElementById('ma_price');if(e&&p){const o=e.options[e.selectedIndex];p.value=o?.dataset.price||'';}}
 function mortgageFilterPrograms(){const bank=String(val('ma_bank'));const e=document.getElementById('ma_program');if(!e)return;Array.from(e.options).forEach((o,i)=>{if(i===0)return;o.hidden=String(o.dataset.bank)!==bank;});if(e.selectedOptions[0]?.hidden)e.value='';}
@@ -2774,6 +2831,7 @@ async function mortgageAssign(applicationId,bankId){
   alert('Ariza mutaxassisga biriktirildi.');await refresh();
 }
 async function mortgageChangeStatus(applicationId){
+  if(!['Admin','Menejer','Rieltor','Agent','Ipoteka menejeri','Ipoteka mutaxassisi'].includes(currentRole()))return alert('Sizda ipoteka arizasi holatini ko‘rish huquqi yo‘q.');
   const allowed=['Yangi','Hujjat kutilmoqda','Korib chiqilmoqda','Qoshimcha malumot kerak','Maqqullandi','Rad etildi','Bekor qilindi'];
   const status=prompt('Yangi holatni aynan quyidagilardan kiriting:\n'+allowed.join(', '),'Korib chiqilmoqda');
   if(!status)return;if(!allowed.includes(status))return alert('Holat qiymati ro‘yxatga mos emas.');
