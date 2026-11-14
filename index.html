@@ -1317,8 +1317,7 @@ async function loadDb(){
     ['mortgageBanks','mortgage_banks'],
     ['mortgagePrograms','mortgage_programs'],
     ['mortgageApplications','mortgage_applications'],
-    ['mortgageAssignments','mortgage_assignments'],
-    ['mortgageDocuments','mortgage_documents']
+    ['mortgageAssignments','mortgage_assignments']
   ];
   await Promise.all(extraTables.map(async ([key,table])=>{
     try{
@@ -1326,7 +1325,7 @@ async function loadDb(){
       if(!r.error) db[key]=r.data||[];
     }catch(e){}
   }));
-  ['tasks','deals','activities','documents','adSales','mortgageBanks','mortgagePrograms','mortgageApplications','mortgageAssignments','mortgageDocuments'].forEach(k=>{
+  ['tasks','deals','activities','documents','adSales','mortgageBanks','mortgagePrograms','mortgageApplications','mortgageAssignments'].forEach(k=>{
     const local=proLocalGet(k);
     if(local.length) db[k]=[...db[k],...local.filter(l=>!db[k].some(x=>String(x.id)===String(l.id)))];
   });
@@ -2773,10 +2772,26 @@ function mortgagePage(){
       <div class="stat"><div class="kpi">${banks.filter(x=>x.is_active!==false).length}</div><div class="label">Faol banklar</div></div>
       <div class="stat"><div class="kpi">${programs.filter(x=>x.is_active!==false).length}</div><div class="label">Faol dasturlar</div></div>
     </div>
-    ${mortgageCanConfigure()?`<div class="panel"><h3>⚙️ Bank va dasturlar</h3><p class="muted">Banklar va ipoteka dasturlarini faqat Admin boshqaradi.</p><button class="btn" onclick="openMortgageBank()">+ Bank qo‘shish</button> <button class="btn light" onclick="openMortgageProgram()">+ Dastur qo‘shish</button></div>`:''}
+    <div class="panel"><div class="toolbar"><h3>🏦 Banklar ro‘yxati</h3>${mortgageCanConfigure()?`<span class="muted">Banklarni faqat Admin boshqaradi.</span>`:''}</div>
+      ${banks.filter(b=>b.is_active!==false).length?`<div class="tablewrap"><table class="table"><tr><th>Bank nomi</th><th>Telefon</th><th>Veb-sayt</th></tr>${banks.filter(b=>b.is_active!==false).map(b=>`<tr><td><b>${esc(b.name||'—')}</b></td><td>${esc(b.phone||'—')}</td><td>${b.website?`<a href="${esc(b.website)}" target="_blank" rel="noopener">${esc(b.website)}</a>`:'—'}</td></tr>`).join('')}</table></div>`:'<div class="empty">Hozircha faol banklar ro‘yxatga kiritilmagan.</div>'}
+      ${mortgageCanConfigure()?`<div style="margin-top:12px"><button class="btn" onclick="openMortgageBank()">+ Bank qo‘shish</button> <button class="btn light" onclick="openMortgageProgram()">+ Dastur qo‘shish</button></div>`:''}
+    </div>
     <div class="panel"><div class="toolbar"><h3>📄 Ipoteka arizalari</h3><button class="btn light" onclick="refresh()">Yangilash</button></div>
-    ${apps.length?`<div class="tablewrap"><table class="table"><tr><th>Ariza</th><th>Bank</th><th>Uy narxi</th><th>Kredit</th><th>Holat</th><th>Amallar</th></tr>${apps.map(a=>{const bank=banks.find(b=>Number(b.id)===Number(a.bank_id));const ass=(db.mortgageAssignments||[]).find(x=>Number(x.application_id)===Number(a.id)&&x.is_current);return `<tr><td><b>#${a.id}</b><br><span class="muted">Xaridor ID: ${a.buyer_id}</span></td><td>${esc(bank?.name||'Bank #'+a.bank_id)}</td><td>${money(a.property_price)}</td><td>${money(a.loan_amount)}</td><td>${esc(a.status||'Yangi')}</td><td>${ass?`<span class="muted">Mutaxassis ID: ${ass.staff_id}</span><br>`:''}<button class="small" onclick="openMortgageDocuments(${a.id})">📎 Hujjatlar (${(db.mortgageDocuments||[]).filter(d=>Number(d.application_id)===Number(a.id)).length})</button> <button class="small" onclick="mortgageChangeStatus(${a.id})">Holat</button>${mortgageCanManage()?` <button class="small primary" onclick="mortgageAssign(${a.id},${a.bank_id})">Biriktirish</button>`:''}</td></tr>`}).join('')}</table></div>`:'<div class="empty">Hozircha ko‘rinadigan ipoteka arizalari yo‘q.</div>'}</div>
+    ${apps.length?`<div class="tablewrap"><table class="table"><tr><th>Ariza</th><th>Bank</th><th>Uy narxi</th><th>Kredit</th><th>Holat</th><th>Amallar</th></tr>${apps.map(a=>{const bank=banks.find(b=>Number(b.id)===Number(a.bank_id));const ass=(db.mortgageAssignments||[]).find(x=>Number(x.application_id)===Number(a.id)&&x.is_current);return `<tr><td><b>#${a.id}</b><br><span class="muted">Xaridor ID: ${a.buyer_id}</span></td><td>${esc(bank?.name||'Bank #'+a.bank_id)}</td><td>${money(a.property_price)}</td><td>${money(a.loan_amount)}</td><td>${esc(a.status||'Yangi')}</td><td>${ass?`<span class="muted">Mutaxassis ID: ${ass.staff_id}</span><br>`:''}<button class="small" onclick="mortgageChangeStatus(${a.id})">Holat</button>${mortgageCanManage()?` <button class="small primary" onclick="mortgageAssign(${a.id},${a.bank_id})">Biriktirish</button>`:''}${currentRole()==='Admin'?` <button class="small" style="background:#b91c1c;color:#fff" onclick="deleteMortgageApplication(${a.id})">O‘chirish</button>`:''}</td></tr>`}).join('')}</table></div>`:'<div class="empty">Hozircha ko‘rinadigan ipoteka arizalari yo‘q.</div>'}</div>
     ${specialist?'<div class="panel"><p class="muted">Bank mutaxassisi kabineti: faqat o‘zingizga biriktirilgan va bankingizga tegishli arizalar ko‘rsatiladi. RLS bu cheklovni server tomonida ham majburiy tekshirishi shart.</p></div>':''}`;
+}
+async function deleteMortgageApplication(id){
+  if(currentRole()!=='Admin')return alert('Ipoteka arizasini faqat Admin o‘chira oladi.');
+  const app=(db.mortgageApplications||[]).find(x=>Number(x.id)===Number(id));
+  if(!app)return alert('Ariza topilmadi yoki sizda ko‘rish huquqi yo‘q.');
+  if(!confirm(`#${id} ipoteka arizasini butunlay o‘chirishni tasdiqlaysizmi? Arizaga bog‘langan hujjatlar va tarix yozuvlari ham o‘chadi.`))return;
+  const {error}=await client.from('mortgage_applications').delete().eq('id',id);
+  if(error)return alert('Arizani o‘chirishda xatolik: '+error.message);
+  db.mortgageApplications=(db.mortgageApplications||[]).filter(x=>Number(x.id)!==Number(id));
+  db.mortgageAssignments=(db.mortgageAssignments||[]).filter(x=>Number(x.application_id)!==Number(id));
+  db.mortgageDocuments=(db.mortgageDocuments||[]).filter(x=>Number(x.application_id)!==Number(id));
+  db.mortgageHistory=(db.mortgageHistory||[]).filter(x=>Number(x.application_id)!==Number(id));
+  render('mortgage');
 }
 function mortgageField(id,label,placeholder='',type='text'){return `<div><label class="muted">${label}</label><input id="${id}" class="field" type="${type}" placeholder="${placeholder}" /></div>`;}
 function openMortgageBank(){
@@ -2785,11 +2800,38 @@ function openMortgageBank(){
 }
 async function saveMortgageBank(){
   if(!mortgageCanConfigure())return;
-  const name=val('mb_name').trim();if(!name)return alert('Bank nomini kiriting.');
-  const payload={name,code:val('mb_code').trim()||null,phone:val('mb_phone').trim()||null,website:val('mb_website').trim()||null,is_active:true};
-  const {error}=await client.from('mortgage_banks').insert(payload);
-  if(error)return alert('Bank saqlanmadi: '+error.message);
-  closeModal();await refresh();
+
+  // Bank modalidagi inputlarni aynan o'z ID'si orqali o'qiymiz.
+  // Umumiy val() funksiyasi avval f_ prefiksli maydonni qidiradi;
+  // boshqa forma ichidagi f_mb_name topilib qolmasligi uchun bu yerda ishlatilmaydi.
+  const readBankField = id => String(document.getElementById(id)?.value ?? '').trim();
+  const name = readBankField('mb_name');
+  const code = readBankField('mb_code');
+  const phone = readBankField('mb_phone');
+  const website = readBankField('mb_website');
+
+  if(!name){
+    alert('Bank nomini kiriting.');
+    document.getElementById('mb_name')?.focus();
+    return;
+  }
+
+  const payload = {
+    name,
+    code: code || null,
+    phone: phone || null,
+    website: website || null,
+    is_active: true
+  };
+
+  const {error} = await client.from('mortgage_banks').insert(payload);
+  if(error){
+    alert('Bank saqlanmadi: ' + error.message);
+    return;
+  }
+
+  closeModal();
+  await refresh();
 }
 function openMortgageProgram(){
   if(!mortgageCanConfigure())return alert('Dasturlarni faqat Admin boshqaradi.');
@@ -2843,48 +2885,6 @@ async function mortgageAssign(applicationId,bankId){
   if(error)return alert('Biriktirish bajarilmadi: '+error.message);
   alert('Ariza mutaxassisga biriktirildi.');await refresh();
 }
-// Ipoteka arizasi uchun fayllar: alohida bo‘lim emas, arizaning o‘zidagi Hujjatlar tugmasi.
-const MORTGAGE_DOC_BUCKET='mortgage-documents';
-async function openMortgageDocuments(applicationId){
-  const app=(db.mortgageApplications||[]).find(x=>Number(x.id)===Number(applicationId));
-  if(!app)return alert('Ipoteka arizasi topilmadi.');
-  const {data:docs,error}=await client.from('mortgage_documents').select('*').eq('application_id',applicationId).order('created_at',{ascending:false});
-  if(error)return alert('Hujjatlar yuklanmadi: '+error.message);
-  db.mortgageDocuments=(db.mortgageDocuments||[]).filter(d=>Number(d.application_id)!==Number(applicationId)).concat(docs||[]);
-  const links=await Promise.all((docs||[]).map(async d=>{
-    const signed=await client.storage.from(MORTGAGE_DOC_BUCKET).createSignedUrl(d.storage_path,300);
-    return {...d,signedUrl:signed.error?'':signed.data?.signedUrl||''};
-  }));
-  const list=links.length?links.map(d=>`<div class="match" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><b>📄 ${esc(d.title||'Hujjat')}</b><div class="muted">${esc(formatDateTime(d.created_at))}</div></div>${d.signedUrl?`<a class="small primary" href="${esc(d.signedUrl)}" target="_blank" rel="noopener">Ochish / yuklab olish</a>`:'<span class="muted">Fayl havolasi olinmadi</span>'}</div>`).join(''):'<div class="empty">Hozircha hujjat biriktirilmagan.</div>';
-  modal(`<h2>📎 Ipoteka arizasi #${applicationId} — Hujjatlar</h2>
-    <p class="muted">Pasport, daromad ma’lumotnomasi va boshqa fayllarni shu yerga yuklang. PDF, JPG yoki PNG, har biri 15 MB gacha.</p>
-    <div class="panel"><label class="muted" for="mortgageDocFiles">Fayllarni tanlang</label><input id="mortgageDocFiles" class="field" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" multiple><br><button class="btn" onclick="uploadMortgageDocuments(${applicationId})">⬆ Fayllarni yuklash</button></div>
-    <h3>Biriktirilgan fayllar</h3><div id="mortgageDocList">${list}</div>
-    <br><button class="btn light" onclick="closeModal()">Yopish</button>`);
-}
-async function uploadMortgageDocuments(applicationId){
-  const input=document.getElementById('mortgageDocFiles');
-  const files=Array.from(input?.files||[]);
-  if(!files.length)return alert('Avval yuklanadigan fayllarni tanlang.');
-  const allowed=['application/pdf','image/jpeg','image/png'];
-  for(const file of files){
-    if(!allowed.includes(file.type))return alert('Faqat PDF, JPG yoki PNG fayllar qabul qilinadi.');
-    if(file.size>15*1024*1024)return alert(file.name+' fayli 15 MB dan katta.');
-  }
-  const btn=document.querySelector('#modalBox button[onclick^="uploadMortgageDocuments"]');
-  if(btn){btn.disabled=true;btn.textContent='Yuklanmoqda...';}
-  for(const file of files){
-    const safeName=String(file.name||'document').normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g,'_').slice(-100)||'document';
-    const path=`${applicationId}/${Date.now()}_${Math.random().toString(36).slice(2,8)}_${safeName}`;
-    const uploaded=await client.storage.from(MORTGAGE_DOC_BUCKET).upload(path,file,{contentType:file.type,upsert:false});
-    if(uploaded.error){if(btn){btn.disabled=false;btn.textContent='⬆ Fayllarni yuklash';}return alert('Fayl yuklanmadi: '+uploaded.error.message);}
-    const saved=await client.from('mortgage_documents').insert({application_id:Number(applicationId),title:file.name,storage_path:path,uploaded_by_staff_id:Number(currentStaff?.id)||null});
-    if(saved.error){await client.storage.from(MORTGAGE_DOC_BUCKET).remove([path]);if(btn){btn.disabled=false;btn.textContent='⬆ Fayllarni yuklash';}return alert('Fayl ro‘yxatga saqlanmadi: '+saved.error.message);}
-  }
-  await refresh();
-  await openMortgageDocuments(applicationId);
-}
-
 async function mortgageChangeStatus(applicationId){
   if(!['Admin','Menejer','Rieltor','Agent','Ipoteka menejeri','Ipoteka mutaxassisi'].includes(currentRole()))return alert('Sizda ipoteka arizasi holatini ko‘rish huquqi yo‘q.');
   const allowed=['Yangi','Hujjat kutilmoqda','Korib chiqilmoqda','Qoshimcha malumot kerak','Maqqullandi','Rad etildi','Bekor qilindi'];
