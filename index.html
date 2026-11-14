@@ -2784,11 +2784,38 @@ function openMortgageBank(){
 }
 async function saveMortgageBank(){
   if(!mortgageCanConfigure())return;
-  const name=val('mb_name').trim();if(!name)return alert('Bank nomini kiriting.');
-  const payload={name,code:val('mb_code').trim()||null,phone:val('mb_phone').trim()||null,website:val('mb_website').trim()||null,is_active:true};
-  const {error}=await client.from('mortgage_banks').insert(payload);
-  if(error)return alert('Bank saqlanmadi: '+error.message);
-  closeModal();await refresh();
+
+  // Bank modalidagi inputlarni aynan o'z ID'si orqali o'qiymiz.
+  // Umumiy val() funksiyasi avval f_ prefiksli maydonni qidiradi;
+  // boshqa forma ichidagi f_mb_name topilib qolmasligi uchun bu yerda ishlatilmaydi.
+  const readBankField = id => String(document.getElementById(id)?.value ?? '').trim();
+  const name = readBankField('mb_name');
+  const code = readBankField('mb_code');
+  const phone = readBankField('mb_phone');
+  const website = readBankField('mb_website');
+
+  if(!name){
+    alert('Bank nomini kiriting.');
+    document.getElementById('mb_name')?.focus();
+    return;
+  }
+
+  const payload = {
+    name,
+    code: code || null,
+    phone: phone || null,
+    website: website || null,
+    is_active: true
+  };
+
+  const {error} = await client.from('mortgage_banks').insert(payload);
+  if(error){
+    alert('Bank saqlanmadi: ' + error.message);
+    return;
+  }
+
+  closeModal();
+  await refresh();
 }
 function openMortgageProgram(){
   if(!mortgageCanConfigure())return alert('Dasturlarni faqat Admin boshqaradi.');
