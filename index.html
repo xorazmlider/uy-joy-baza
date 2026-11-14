@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- XORAZMLIDER MORTGAGE V2: Admin/CRM roles, bank assignment and recommendation UI -->
+<!-- XORAZMLIDER MORTGAGE V3: mortgage-role navigation fix; V2 features preserved -->
 <html lang="uz">
 <head>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -988,7 +988,17 @@ function normalizeRole(role){
   return 'Agent';
 }
 function currentRole(){return normalizeRole(currentStaff?.role||'');}
-function canPage(page){return !!currentStaff && (ROLE_PAGES[currentRole()]||[]).includes(page);}
+function isMortgageStaffRole(){
+  const raw=String(currentStaff?.role||'').trim().toLowerCase();
+  return ['ipoteka menejeri','mortgage manager','ipoteka mutaxassisi','mortgage specialist'].includes(raw)
+    || raw.includes('ipoteka menejer') || raw.includes('ipoteka mutaxassis')
+    || raw.includes('mortgage manager') || raw.includes('mortgage specialist');
+}
+function canPage(page){
+  if(!currentStaff)return false;
+  if(page==='mortgage' && isMortgageStaffRole())return true;
+  return (ROLE_PAGES[currentRole()]||[]).includes(page);
+}
 function applyRoleInterface(){
   document.querySelectorAll('.mobile-page-reports').forEach(el=>{
     el.style.display=canPage('reports')?'':'none';
@@ -1488,7 +1498,9 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&l
 function go(p){if(!requirePage(p))return;document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x.dataset.page===p));document.querySelectorAll('.mobile-nav [data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===p));render(p)}
 function header(t,sub,btn,fn){return `<div class="top"><div><div class="title">${t}</div><div class="sub">${sub}</div></div>${btn?`<button class="btn" onclick="${fn}">${btn}</button>`:''}</div>`}
 function render(p='dashboard'){
-  if(!canPage(p))p='dashboard';
+  // Ipoteka xodimlari uchun ruxsat etilmagan dashboardga qaytarmaymiz:
+  // ularning birinchi ruxsat etilgan sahifasi — Ipoteka markazi.
+  if(!canPage(p))p=(ROLE_PAGES[currentRole()]||[]).find(page=>canPage(page))|| (isMortgageStaffRole()?'mortgage':'dashboard');
   let h='';
   if(p==='dashboard')h=dashboard();
   if(p==='homes')h=homes();
@@ -3365,7 +3377,7 @@ const XORAZM_HUDUDLARI=[
 ];
 function input(id,label,ph,required,full){return `<div class="${full?'full':''}"><label class="muted">${label}</label><input id="f_${id}" class="field" placeholder="${ph}" ${required?'required':''}></div>`}
 function selectField(id,label,options,required=false,full=false){return `<div class="${full?'full':''}"><label class="muted">${label}</label><select id="f_${id}" class="field" ${required?'required':''}>${options.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('')}</select></div>`}
-function val(k){return document.getElementById('f_'+k)?.value.trim()||''}
+function val(k){const el=document.getElementById('f_'+k)||document.getElementById(k);return String(el?.value??'').trim()}
 
 function previewHomeImages(event){
   const files=[...(event.target.files||[])];
